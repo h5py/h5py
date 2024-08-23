@@ -266,6 +266,19 @@ Reference
             >>> group.visit(find_foo)
             'some/subgroup/foo'
 
+        The traversal order is lexicographic, account taken of the division in
+        groups and subgroups::
+
+            >>> l = []
+            >>> group.visit(l.append)
+            >>> assert l == sorted(l, key=lambda x: x.split('/'))
+
+        The assertion in the above code fragment should never fail, since list
+        ``l`` is already sorted.
+        Please note that the traversal order does not depend on the ``track_order``
+        parameter specified when the objects were created
+        (see :meth:`create_group` and :meth:`create_dataset`).
+        All ``visit`` methods share this same traversal order.
 
     .. method:: visititems(callable)
 
