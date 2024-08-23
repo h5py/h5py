@@ -1313,8 +1313,8 @@ cdef class PropFAID(PropInstanceID):
         Set the compatibility level for file format. Legal values are:
 
         - h5f.LIBVER_EARLIEST
-        - h5f.LIBVER_V18 (HDF5 1.10.2 or later)
-        - h5f.LIBVER_V110 (HDF5 1.10.2 or later)
+        - h5f.LIBVER_V18
+        - h5f.LIBVER_V110
         - h5f.LIBVER_V112 (HDF5 1.11.4 or later)
         - h5f.LIBVER_V114 (HDF5 1.13.0 or later)
         - h5f.LIBVER_LATEST
@@ -1346,8 +1346,8 @@ cdef class PropFAID(PropInstanceID):
         Get the compatibility level for file format. Returned values are from:
 
         - h5f.LIBVER_EARLIEST
-        - h5f.LIBVER_V18 (HDF5 1.10.2 or later)
-        - h5f.LIBVER_V110 (HDF5 1.10.2 or later)
+        - h5f.LIBVER_V18
+        - h5f.LIBVER_V110
         - h5f.LIBVER_V112 (HDF5 1.11.4 or later)
         - h5f.LIBVER_V114 (HDF5 1.13.0 or later)
         - h5f.LIBVER_LATEST

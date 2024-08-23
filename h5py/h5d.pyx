@@ -533,8 +533,6 @@ cdef class DatasetID(ObjectID):
         If the `out` argument is not None, it must be a writeable
         contiguous 1D array-like of bytes (e.g., `bytearray` or
         `numpy.ndarray`) and large enough to contain the whole chunk.
-
-        Feature requires: 1.10.2 HDF5
         """
         cdef hid_t dset_id
         cdef hid_t dxpl_id
@@ -588,8 +586,6 @@ cdef class DatasetID(ObjectID):
         specified dataspace. Currently, this function only gets the number
         of all written chunks, regardless of the dataspace.
 
-        Feature requires: HDF5 1.10.5
-
         .. versionadded:: 3.0
         """
         cdef hsize_t num_chunks
@@ -604,8 +600,6 @@ cdef class DatasetID(ObjectID):
         """ (hsize_t index, SpaceID space=None) => StoreInfo
 
         Retrieve storage information about a chunk specified by its index.
-
-        Feature requires: HDF5 1.10.5
 
         .. versionadded:: 3.0
         """
@@ -643,8 +637,6 @@ cdef class DatasetID(ObjectID):
 
         Retrieve information about a chunk specified by the array
         address of the chunk’s first element in each dimension.
-
-        Feature requires: HDF5 1.10.5
 
         .. versionadded:: 3.0
         """
