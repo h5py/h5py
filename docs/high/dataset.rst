@@ -214,6 +214,11 @@ axes using ``None``::
 
     >>> dset = f.create_dataset("unlimited", (10, 10), maxshape=(None, 10))
 
+While integers can be passed to ``maxshape`` for one-dimensional datasets, a tuple
+of length 1 must be passed for an unlimited maximum shape of the 1D-shaped dataset,
+i.e. ``(None,)``. Using only ``None`` instead of an integer will lead to the default 
+behaviour, having a ``maxshape`` identical to ``shape``.
+
 .. note:: Resizing an array with existing data works differently than in NumPy; if
     any axis shrinks, the data in the missing region is discarded.  Data does
     not "rearrange" itself as it does when resizing a NumPy array.
