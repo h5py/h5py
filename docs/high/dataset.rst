@@ -216,7 +216,7 @@ axes using ``None``::
 
 While integers can be passed to ``maxshape`` for one-dimensional datasets, a tuple
 of length 1 must be passed for an unlimited maximum shape of the 1D-shaped dataset,
-i.e. ``(None,)``. Using only ``None`` instead of an integer will lead to the default 
+i.e. ``(None,)``. Using only ``None`` instead of an integer will lead to the default
 behaviour, having a ``maxshape`` identical to ``shape``.
 
 .. note:: Resizing an array with existing data works differently than in NumPy; if
