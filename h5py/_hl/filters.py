@@ -264,18 +264,13 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
     if chunks is not None:
         plist.set_chunk(chunks)
 
-    if fill_time is None:
-        if chunks is None:
-            fill_time = 'ifset'
+    if fill_time is not None:
+        if (ft := _FILL_TIME_ENUM.get(fill_time)) is not None:
+            plist.set_fill_time(ft)
         else:
-            fill_time = 'alloc'  # prevent resize glitch
-    else:
-        if fill_time not in _FILL_TIME_ENUM:
             msg = ("fill_time must be one of the following choices: 'alloc', "
                    f"'never' or 'ifset', but it is {fill_time}.")
             raise ValueError(msg)
-
-    plist.set_fill_time(_FILL_TIME_ENUM[fill_time])
 
     # scale-offset must come before shuffle and compression
     if scaleoffset is not None:

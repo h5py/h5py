@@ -482,29 +482,21 @@ class TestFillTime(BaseDataset):
         Feature: Datasets created with specified fill time property
     """
 
-    def test_contiguous_default(self):
-        """ Fill time default to IFSET for contiguous storage """
+    def test_fill_time_default(self):
+        """ Fill time default to IFSET """
         dset = self.f.create_dataset('foo', (10,), fillvalue=4.0)
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
         self.assertEqual(dset[0], 4.0)
         self.assertEqual(dset[7], 4.0)
 
-    def test_chunk_default(self):
-        """ Fill time default to ALLOC for chunked storage """
-        dset = self.f.create_dataset('foo', (10,), chunks=(2,), fillvalue=4.0)
-        plist = dset.id.get_create_plist()
-        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_ALLOC)
-        self.assertEqual(dset[0], 4.0)
-        self.assertEqual(dset[7], 4.0)
-
     @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
     def test_compressed_default(self):
-        """ Fill time is ALLOC for compressed dataset (chunked) """
+        """ Fill time is IFSET for compressed dataset (chunked) """
         dset = self.f.create_dataset('foo', (10,), compression='gzip',
                                      fillvalue=4.0)
         plist = dset.id.get_create_plist()
-        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_ALLOC)
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
         self.assertEqual(dset[0], 4.0)
         self.assertEqual(dset[7], 4.0)
 
@@ -519,16 +511,14 @@ class TestFillTime(BaseDataset):
         self.assertNotEqual(dset[7], 4.0)
 
     def test_fill_time_alloc(self):
-        """ Fill time explicitly set to ALLOC (default is IFSET for contiguous
-        storage """
+        """ Fill time explicitly set to ALLOC """
         dset = self.f.create_dataset('foo', (10,), fillvalue=4.0,
                                      fill_time='alloc')
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_ALLOC)
 
     def test_fill_time_ifset(self):
-        """ Fill time explicitly set to IFSET (default is ALLOC for chunked
-        storage """
+        """ Fill time explicitly set to IFSET """
         dset = self.f.create_dataset('foo', (10,), chunks=(2,), fillvalue=4.0,
                                      fill_time='ifset')
         plist = dset.id.get_create_plist()
