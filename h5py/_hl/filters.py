@@ -270,11 +270,7 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
         else:
             fill_time = 'alloc'  # prevent resize glitch
     else:
-        invalid_fill_time = (isinstance(fill_time, str) and
-                             fill_time.lower() not in
-                             ('alloc', 'never', 'ifset'))
-        fill_time_not_str = not isinstance(fill_time, str)
-        if invalid_fill_time or fill_time_not_str:
+        if fill_time not in _FILL_TIME_ENUM:
             msg = ("fill_time must be one of the following choices: 'alloc', "
                    f"'never' or 'ifset', but it is {fill_time}.")
             raise ValueError(msg)
