@@ -41,6 +41,9 @@ class TestLexicographic(TestCase):
         h5py.h5l.visit(..., idx_type=H5_INDEX_NAME, order=H5_ITER_INC, ...)
     """
 
+    import operator
+    split_parts = operator.methodcaller('split', '/')
+
     def setUp(self):
         """ Populate example hdf5 file, with track_order=True """
 
@@ -50,41 +53,51 @@ class TestLexicographic(TestCase):
         grp = self.f.create_group('B', track_order=True)
         grp.create_dataset('b', (10,))
         grp.create_dataset('a', (10,))
-        # check that example is non trivial: key order is not sorted
-        assert list(grp) != sorted(grp)
 
         grp = self.f.create_group('z', track_order=True)
         grp.create_dataset('b', (10,))
         grp.create_dataset('a', (10,))
-        assert list(grp) != sorted(grp)
 
         self.f.create_dataset('a', (10,))
-        assert list(self.f) != sorted(self.f)
+        # note that 'z-' < 'z/...' but traversal order is ['z', 'z/...', 'z-']
+        self.f.create_dataset('z-', (10,))
 
         # create some links
         self.f['A/x'] = self.f['B/b']
         self.f['y'] = self.f['z/a']
+        self.f['A$'] = self.f['y']
+        self.f['A/B/C'] = self.f['A']
+        self.f['A/a'] = self.f['A']
+
+        # create vistor
+        self.v = Visitor()
+
+    def test_nontrivial_sort_visit(self):
+        """check that test example is not trivially sorted"""
+        self.f.visit(self.v)
+        assert self.v.names != sorted(self.v.names)
 
     def test_visit(self):
         """check that File.visit iterates in lexicographic order"""
-        v = Visitor()
-        self.f.visit(v)
-        assert v.names == sorted(v.names)
+        self.f.visit(self.v)
+        assert self.v.names == sorted(self.v.names, key=self.split_parts)
 
     def test_visit_links(self):
         """check that File.visit_links iterates in lexicographic order"""
-        v = Visitor()
-        self.f.visit_links(v)
-        assert v.names == sorted(v.names)
+        self.f.visit_links(self.v)
+        assert self.v.names == sorted(self.v.names, key=self.split_parts)
 
     def test_visititems(self):
         """check that File.visititems iterates in lexicographic order"""
-        v = Visitor()
-        self.f.visititems(v)
-        assert v.names == sorted(v.names)
+        self.f.visititems(self.v)
+        assert self.v.names == sorted(self.v.names, key=self.split_parts)
 
     def test_visititems_links(self):
         """check that File.visititems_links iterates in lexicographic order"""
-        v = Visitor()
-        self.f.visititems_links(v)
-        assert v.names == sorted(v.names)
+        self.f.visititems_links(self.v)
+        assert self.v.names == sorted(self.v.names, key=self.split_parts)
+
+    def test_visit_group(self):
+        """check that Group.visit iterates in lexicographic order"""
+        self.f['A'].visit(self.v)
+        assert self.v.names == sorted(self.v.names, key=self.split_parts)
