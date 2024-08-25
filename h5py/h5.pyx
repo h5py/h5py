@@ -131,26 +131,17 @@ cdef class H5PYConfig:
     property mpi:
         """ Boolean indicating if Parallel HDF5 is available """
         def __get__(self):
-            IF MPI:
-                return True
-            ELSE:
-                return False
+            return MPI
 
     property ros3:
         """ Boolean indicating if ROS3 VDS is available """
         def __get__(self):
-            IF ROS3:
-                return True
-            ELSE:
-                return False
+            return ROS3
 
     property direct_vfd:
         """ Boolean indicating if DIRECT VFD is available """
         def __get__(self):
-            IF DIRECT_VFD:
-                return True
-            ELSE:
-                return False
+            return DIRECT_VFD
 
     property swmr_min_hdf5_version:
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
