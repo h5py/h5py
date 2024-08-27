@@ -386,10 +386,10 @@ Reference
             following choices: `alloc`, write fill value before writing
             application data values or when the dataset is created; `never`,
             never write fill value; `ifset`, write fill value if it is defined.
-            Default to `alloc` for chunked storage, `ifset` for contiguous
-            storage. If the whole dataset is going to be written by the
-            application, setting this to `never` can avoid unnecessary writing
-            of fill value and potentially improve performance.
+            Default to `ifset`, which is the default of HDF5 library. If the
+            whole dataset is going to be written by the application, setting
+            this to `never` can avoid unnecessary writing of fill value and
+            potentially improve performance.
 
         :keyword track_times: Enable dataset creation timestamps (**T**/F).
 
