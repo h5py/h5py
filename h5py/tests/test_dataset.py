@@ -534,6 +534,31 @@ class TestFillTime(BaseDataset):
         with self.assertRaises(ValueError):
             dset = self.f.create_dataset('foo', (10,), fill_time=2)
 
+    def test_resize_chunk_fill_time_default(self):
+        """ The resize dataset will be filled (by default fill value 0) """
+        dset = self.f.create_dataset('foo', (50, ), maxshape=(100, ),
+                                     chunks=(5, ))
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
+
+        assert np.isclose(dset[:], 0.0).all()
+
+        dset.resize((100, ))
+        assert np.isclose(dset[:], 0.0).all()
+
+    def test_resize_chunk_fill_time_never(self):
+        """ The resize dataset won't be filled """
+        dset = self.f.create_dataset('foo', (50, ), maxshape=(100, ),
+                                     fillvalue=4.0, fill_time='never',
+                                     chunks=(5, ))
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_NEVER)
+
+        assert not np.isclose(dset[:], 4.0).any()
+
+        dset.resize((100, ))
+        assert not np.isclose(dset[:], 4.0).any()
+
 
 @pytest.mark.parametrize('dt,expected', [
     (int, 0),
