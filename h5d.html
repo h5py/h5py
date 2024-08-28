@@ -115,7 +115,6 @@ dataset changes.</p>
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_chunk_info">
 <span class="sig-name descname"><span class="pre">get_chunk_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hsize_t</span> <span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve storage information about a chunk specified by its index.</p>
-<p>Feature requires: HDF5 1.10.5</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 3.0.</span></p>
 </div>
@@ -126,7 +125,6 @@ dataset changes.</p>
 <span class="sig-name descname"><span class="pre">get_chunk_info_by_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">chunk_offset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve information about a chunk specified by the array
 address of the chunk’s first element in each dimension.</p>
-<p>Feature requires: HDF5 1.10.5</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 3.0.</span></p>
 </div>
@@ -145,7 +143,6 @@ used when this dataset was created.</p>
 <dd><p>Retrieve the number of chunks that have nonempty intersection with a
 specified dataspace. Currently, this function only gets the number
 of all written chunks, regardless of the dataspace.</p>
-<p>Feature requires: HDF5 1.10.5</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 3.0.</span></p>
 </div>
@@ -239,7 +236,6 @@ defined filters have been applied to the raw data.</p>
 <p>If the <cite>out</cite> argument is not None, it must be a writeable
 contiguous 1D array-like of bytes (e.g., <cite>bytearray</cite> or
 <cite>numpy.ndarray</cite>) and large enough to contain the whole chunk.</p>
-<p>Feature requires: 1.10.2 HDF5</p>
 </dd></dl>
 
 <dl class="py method">
@@ -541,7 +537,7 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 25, 2024.
+      Last updated on Aug 28, 2024.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
