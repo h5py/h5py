@@ -397,8 +397,7 @@ class File(Group):
             recommended), 'core', 'sec2', 'direct', 'stdio', 'mpio', 'ros3'.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
-            'v110', 'v112'  and 'latest'. The 'v108', 'v110' and 'v112'
-            options can only be specified with the HDF5 1.10.2 library or later.
+            'v110', 'v112'  and 'latest'.
         userblock_size
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).

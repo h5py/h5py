@@ -825,11 +825,10 @@ class TestExternal(BaseDataset):
             contents = fid.read()
         assert contents == testdata.tobytes()
 
-        # check efile_prefix, only for 1.10.0 due to HDFFV-9716
-        if h5py.version.hdf5_version_tuple >= (1,10,0):
-            efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
-            parent = pathlib.Path(ext_file).parent.as_posix()
-            assert efile_prefix == parent
+        # check efile_prefix
+        efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
+        parent = pathlib.Path(ext_file).parent.as_posix()
+        assert efile_prefix == parent
 
         dset2 = self.f.require_dataset('foo', shape, testdata.dtype, efile_prefix=os.path.dirname(ext_file))
         assert dset2.external is not None
@@ -1809,8 +1808,6 @@ class TestLowOpen(BaseDataset):
         self.assertIsInstance(dsid, h5py.h5d.DatasetID)
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 5),
-               "chunk info requires  HDF5 >= 1.10.5")
 def test_get_chunk_details():
     from io import BytesIO
     buf = BytesIO()

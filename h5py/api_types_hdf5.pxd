@@ -335,18 +335,17 @@ cdef extern from "hdf5.h":
     hsize_t alignment           # Allocation alignment
     hbool_t paged_aggr          # Paged aggregation for file space is enabled or not
 
-  IF HDF5_VERSION >= (1, 10, 6):
-    ctypedef struct H5FD_ros3_fapl_t:
-      int32_t version
-      hbool_t authenticate
-      char    aws_region[33]
-      char    secret_id[129]
-      char    secret_key[129]
+  ctypedef struct H5FD_ros3_fapl_t:
+    int32_t version
+    hbool_t authenticate
+    char    aws_region[33]
+    char    secret_id[129]
+    char    secret_key[129]
 
-    unsigned int H5FD_CURR_ROS3_FAPL_T_VERSION # version of struct
+  unsigned int H5FD_CURR_ROS3_FAPL_T_VERSION # version of struct
 
-    IF HDF5_VERSION >= (1, 14, 2):
-      size_t H5FD_ROS3_MAX_SECRET_TOK_LEN
+  IF HDF5_VERSION >= (1, 14, 2):
+    size_t H5FD_ROS3_MAX_SECRET_TOK_LEN
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:

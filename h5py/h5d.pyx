@@ -64,9 +64,8 @@ VIRTUAL = H5D_VIRTUAL
 VDS_FIRST_MISSING   = H5D_VDS_FIRST_MISSING
 VDS_LAST_AVAILABLE  = H5D_VDS_LAST_AVAILABLE
 
-IF HDF5_VERSION >= (1, 10, 5):
-    StoreInfo = namedtuple('StoreInfo',
-                           'chunk_offset, filter_mask, byte_offset, size')
+StoreInfo = namedtuple('StoreInfo',
+                       'chunk_offset, filter_mask, byte_offset, size')
 
 # === Dataset chunk iterator ==================================================
 
@@ -534,8 +533,6 @@ cdef class DatasetID(ObjectID):
         If the `out` argument is not None, it must be a writeable
         contiguous 1D array-like of bytes (e.g., `bytearray` or
         `numpy.ndarray`) and large enough to contain the whole chunk.
-
-        Feature requires: 1.10.2 HDF5
         """
         cdef hid_t dset_id
         cdef hid_t dxpl_id
@@ -581,98 +578,89 @@ cdef class DatasetID(ObjectID):
 
         return filters, retval
 
+    @with_phil
+    def get_num_chunks(self, SpaceID space=None):
+        """ (SpaceID space=None) => INT num_chunks
 
-    IF HDF5_VERSION >= (1, 10, 5):
+        Retrieve the number of chunks that have nonempty intersection with a
+        specified dataspace. Currently, this function only gets the number
+        of all written chunks, regardless of the dataspace.
 
-        @with_phil
-        def get_num_chunks(self, SpaceID space=None):
-            """ (SpaceID space=None) => INT num_chunks
+        .. versionadded:: 3.0
+        """
+        cdef hsize_t num_chunks
 
-            Retrieve the number of chunks that have nonempty intersection with a
-            specified dataspace. Currently, this function only gets the number
-            of all written chunks, regardless of the dataspace.
+        if space is None:
+            space = self.get_space()
+        H5Dget_num_chunks(self.id, space.id, &num_chunks)
+        return num_chunks
 
-            Feature requires: HDF5 1.10.5
+    @with_phil
+    def get_chunk_info(self, hsize_t index, SpaceID space=None):
+        """ (hsize_t index, SpaceID space=None) => StoreInfo
 
-            .. versionadded:: 3.0
-            """
-            cdef hsize_t num_chunks
+        Retrieve storage information about a chunk specified by its index.
 
-            if space is None:
-                space = self.get_space()
-            H5Dget_num_chunks(self.id, space.id, &num_chunks)
-            return num_chunks
+        .. versionadded:: 3.0
+        """
+        cdef haddr_t byte_offset
+        cdef hsize_t size
+        cdef hsize_t *chunk_offset
+        cdef unsigned filter_mask
+        cdef hid_t space_id = 0
+        cdef int rank
 
-        @with_phil
-        def get_chunk_info(self, hsize_t index, SpaceID space=None):
-            """ (hsize_t index, SpaceID space=None) => StoreInfo
-
-            Retrieve storage information about a chunk specified by its index.
-
-            Feature requires: HDF5 1.10.5
-
-            .. versionadded:: 3.0
-            """
-            cdef haddr_t byte_offset
-            cdef hsize_t size
-            cdef hsize_t *chunk_offset
-            cdef unsigned filter_mask
-            cdef hid_t space_id = 0
-            cdef int rank
-
-            if space is None:
-                space_id = H5Dget_space(self.id)
-            else:
-                space_id = space.id
-
-            rank = H5Sget_simple_extent_ndims(space_id)
-            chunk_offset = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
-            H5Dget_chunk_info(self.id, space_id, index, chunk_offset,
-                              &filter_mask, &byte_offset, &size)
-            cdef tuple cot = convert_dims(chunk_offset, <hsize_t>rank)
-            efree(chunk_offset)
-
-            if space is None:
-                H5Sclose(space_id)
-
-            return StoreInfo(cot if byte_offset != HADDR_UNDEF else None,
-                             filter_mask,
-                             byte_offset if byte_offset != HADDR_UNDEF else None,
-                             size)
-
-
-        @with_phil
-        def get_chunk_info_by_coord(self, tuple chunk_offset not None):
-            """ (TUPLE chunk_offset) => StoreInfo
-
-            Retrieve information about a chunk specified by the array
-            address of the chunk’s first element in each dimension.
-
-            Feature requires: HDF5 1.10.5
-
-            .. versionadded:: 3.0
-            """
-            cdef haddr_t byte_offset
-            cdef hsize_t size
-            cdef unsigned filter_mask
-            cdef hid_t space_id = 0
-            cdef int rank
-            cdef hsize_t *co = NULL
-
+        if space is None:
             space_id = H5Dget_space(self.id)
-            rank = H5Sget_simple_extent_ndims(space_id)
-            H5Sclose(space_id)
-            co = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
-            convert_tuple(chunk_offset, co, rank)
-            H5Dget_chunk_info_by_coord(self.id, co,
-                                       &filter_mask, &byte_offset,
-                                       &size)
-            efree(co)
+        else:
+            space_id = space.id
 
-            return StoreInfo(chunk_offset if byte_offset != HADDR_UNDEF else None,
-                             filter_mask,
-                             byte_offset if byte_offset != HADDR_UNDEF else None,
-                             size)
+        rank = H5Sget_simple_extent_ndims(space_id)
+        chunk_offset = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
+        H5Dget_chunk_info(self.id, space_id, index, chunk_offset,
+                          &filter_mask, &byte_offset, &size)
+        cdef tuple cot = convert_dims(chunk_offset, <hsize_t>rank)
+        efree(chunk_offset)
+
+        if space is None:
+            H5Sclose(space_id)
+
+        return StoreInfo(cot if byte_offset != HADDR_UNDEF else None,
+                         filter_mask,
+                         byte_offset if byte_offset != HADDR_UNDEF else None,
+                         size)
+
+
+    @with_phil
+    def get_chunk_info_by_coord(self, tuple chunk_offset not None):
+        """ (TUPLE chunk_offset) => StoreInfo
+
+        Retrieve information about a chunk specified by the array
+        address of the chunk’s first element in each dimension.
+
+        .. versionadded:: 3.0
+        """
+        cdef haddr_t byte_offset
+        cdef hsize_t size
+        cdef unsigned filter_mask
+        cdef hid_t space_id = 0
+        cdef int rank
+        cdef hsize_t *co = NULL
+
+        space_id = H5Dget_space(self.id)
+        rank = H5Sget_simple_extent_ndims(space_id)
+        H5Sclose(space_id)
+        co = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
+        convert_tuple(chunk_offset, co, rank)
+        H5Dget_chunk_info_by_coord(self.id, co,
+                                   &filter_mask, &byte_offset,
+                                   &size)
+        efree(co)
+
+        return StoreInfo(chunk_offset if byte_offset != HADDR_UNDEF else None,
+                         filter_mask,
+                         byte_offset if byte_offset != HADDR_UNDEF else None,
+                         size)
 
     IF HDF5_VERSION >= (1, 12, 3) or (HDF5_VERSION >= (1, 10, 10) and HDF5_VERSION < (1, 10, 99)):
 

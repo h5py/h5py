@@ -8,7 +8,7 @@ variables:
 jobs:
 - job: 'static_checks'
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   variables:
     TOXENV: docs,checkreadme,rever
   steps:
@@ -25,7 +25,7 @@ jobs:
 
 - job: 'ubuntu'
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
@@ -67,7 +67,7 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
-      py39-deps-hdf51105-mpi:
+      py39-deps-hdf51122-mpi:
         python.version: '3.9'
         TOXENV: py39-test-mindeps-mpi4py
         HDF5_VERSION: 1.12.2
