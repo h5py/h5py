@@ -382,6 +382,15 @@ Reference
         :keyword fillvalue: This value will be used when reading
                             uninitialized parts of the dataset.
 
+        :keyword fill_time: Control when to write the fill value. One of the
+            following choices: `alloc`, write fill value before writing
+            application data values or when the dataset is created; `never`,
+            never write fill value; `ifset`, write fill value if it is defined.
+            Default to `ifset`, which is the default of HDF5 library. If the
+            whole dataset is going to be written by the application, setting
+            this to `never` can avoid unnecessary writing of fill value and
+            potentially improve performance.
+
         :keyword track_times: Enable dataset creation timestamps (**T**/F).
 
         :keyword track_order: Track attribute creation order if

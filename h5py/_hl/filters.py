@@ -52,6 +52,10 @@ _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
                 'shuffle': h5z.FILTER_SHUFFLE,
                 'fletcher32': h5z.FILTER_FLETCHER32,
                 'scaleoffset': h5z.FILTER_SCALEOFFSET }
+_FILL_TIME_ENUM = {'alloc': h5d.FILL_TIME_ALLOC,
+                   'never': h5d.FILL_TIME_NEVER,
+                   'ifset': h5d.FILL_TIME_IFSET,
+                   }
 
 DEFAULT_GZIP = 4
 DEFAULT_SZIP = ('nn', 8)
@@ -146,7 +150,7 @@ class Gzip(FilterRefBase):
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external,
-              allow_unknown_filter=False):
+              allow_unknown_filter=False, *, fill_time=None):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
@@ -259,7 +263,14 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
 
     if chunks is not None:
         plist.set_chunk(chunks)
-        plist.set_fill_time(h5d.FILL_TIME_ALLOC)  # prevent resize glitch
+
+    if fill_time is not None:
+        if (ft := _FILL_TIME_ENUM.get(fill_time)) is not None:
+            plist.set_fill_time(ft)
+        else:
+            msg = ("fill_time must be one of the following choices: 'alloc', "
+                   f"'never' or 'ifset', but it is {fill_time}.")
+            raise ValueError(msg)
 
     # scale-offset must come before shuffle and compression
     if scaleoffset is not None:

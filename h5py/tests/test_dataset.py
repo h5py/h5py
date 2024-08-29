@@ -476,6 +476,90 @@ class TestCreateFillvalue(BaseDataset):
                     dtype=[('a', 'i'), ('b', 'f')], fillvalue=42)
 
 
+class TestFillTime(BaseDataset):
+
+    """
+        Feature: Datasets created with specified fill time property
+    """
+
+    def test_fill_time_default(self):
+        """ Fill time default to IFSET """
+        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0)
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
+        self.assertEqual(dset[0], 4.0)
+        self.assertEqual(dset[7], 4.0)
+
+    @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+    def test_compressed_default(self):
+        """ Fill time is IFSET for compressed dataset (chunked) """
+        dset = self.f.create_dataset('foo', (10,), compression='gzip',
+                                     fillvalue=4.0)
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
+        self.assertEqual(dset[0], 4.0)
+        self.assertEqual(dset[7], 4.0)
+
+    def test_fill_time_never(self):
+        """ Fill time set to NEVER """
+        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0,
+                                     fill_time='never')
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_NEVER)
+        # should not be equal to the explicitly set fillvalue
+        self.assertNotEqual(dset[0], 4.0)
+        self.assertNotEqual(dset[7], 4.0)
+
+    def test_fill_time_alloc(self):
+        """ Fill time explicitly set to ALLOC """
+        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0,
+                                     fill_time='alloc')
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_ALLOC)
+
+    def test_fill_time_ifset(self):
+        """ Fill time explicitly set to IFSET """
+        dset = self.f.create_dataset('foo', (10,), chunks=(2,), fillvalue=4.0,
+                                     fill_time='ifset')
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
+
+    def test_invalid_fill_time(self):
+        """ Choice of fill_time is 'alloc', 'never', 'ifset' """
+        with self.assertRaises(ValueError):
+            dset = self.f.create_dataset('foo', (10,), fill_time='fill_bad')
+
+    def test_non_str_fill_time(self):
+        """ fill_time must be a string """
+        with self.assertRaises(ValueError):
+            dset = self.f.create_dataset('foo', (10,), fill_time=2)
+
+    def test_resize_chunk_fill_time_default(self):
+        """ The resize dataset will be filled (by default fill value 0) """
+        dset = self.f.create_dataset('foo', (50, ), maxshape=(100, ),
+                                     chunks=(5, ))
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
+
+        assert np.isclose(dset[:], 0.0).all()
+
+        dset.resize((100, ))
+        assert np.isclose(dset[:], 0.0).all()
+
+    def test_resize_chunk_fill_time_never(self):
+        """ The resize dataset won't be filled """
+        dset = self.f.create_dataset('foo', (50, ), maxshape=(100, ),
+                                     fillvalue=4.0, fill_time='never',
+                                     chunks=(5, ))
+        plist = dset.id.get_create_plist()
+        self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_NEVER)
+
+        assert not np.isclose(dset[:], 4.0).any()
+
+        dset.resize((100, ))
+        assert not np.isclose(dset[:], 4.0).any()
+
+
 @pytest.mark.parametrize('dt,expected', [
     (int, 0),
     (np.int32, 0),
