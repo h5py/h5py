@@ -28,9 +28,9 @@ from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
 
 # Python imports
 import codecs
+import os
 import sys
 from collections import namedtuple
-import sys
 import numpy as np
 from .h5 import get_config
 
@@ -38,7 +38,13 @@ from ._objects import phil, with_phil
 
 cfg = get_config()
 
-DEF MACHINE = UNAME_MACHINE  # processor architecture, provided by Cython
+if sys.platform.startswith("win"):
+    _IS_PPC64 = False
+    _IS_PPC64LE = False
+else:
+    _IS_PPC64 = os.uname() == "ppc64"
+    _IS_PPC64LE = os.uname() == "ppc64le"
+
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 
 # === Custom C API ============================================================
@@ -291,12 +297,12 @@ cdef (int, int, int) _correct_float_info(ftype_, finfo):
     maxexp = finfo.maxexp
     minexp = finfo.minexp
     # workaround for numpy's buggy finfo on float128 on ppc64 archs
-    if ftype_ == np.longdouble and MACHINE == 'ppc64':
+    if ftype_ == np.longdouble and _IS_PPC64:
         # values reported by hdf5
         nmant = 116
         maxexp = 1024
         minexp = -1022
-    elif ftype_ == np.longdouble and MACHINE == 'ppc64le':
+    elif ftype_ == np.longdouble and _IS_PPC64LE:
         # values reported by hdf5
         nmant = 52
         maxexp = 1024
