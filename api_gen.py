@@ -185,6 +185,9 @@ from ._errors cimport set_exception, set_default_error_handler
 
 class LineProcessor:
 
+    def __init__(self, config) -> None:
+        self.config = config
+
     def run(self):
 
         # Function definitions file
@@ -232,51 +235,42 @@ class LineProcessor:
         replace_or_remove(path_cython_defs)
         replace_or_remove(path_raw_defs)
 
-    def add_cython_if(self, block):
-        """ Wrap a block of code in the required "IF" checks """
-
-        def wrapif(condition, code):
-            code = code.replace('\n', '\n    ', code.count('\n') - 1)  # Yes, -1.
-            code = "IF {0}:\n    {1}".format(condition, code)
-            return code
-
-        if self.line.mpi:
-            block = wrapif('MPI', block)
-
-        if self.line.ros3:
-            block = wrapif('ROS3', block)
-
-        if self.line.direct_vfd:
-            block = wrapif('DIRECT_VFD', block)
-
-        if self.line.min_version is not None and self.line.max_version is not None:
-            block = wrapif('HDF5_VERSION >= {0.min_version} and HDF5_VERSION <= {0.max_version}'.format(self.line), block)
-        elif self.line.min_version is not None:
-            block = wrapif('HDF5_VERSION >= {0.min_version}'.format(self.line), block)
-        elif self.line.max_version is not None:
-            block = wrapif('HDF5_VERSION <= {0.max_version}'.format(self.line), block)
-
-        return block
+    def check_settings(self) -> bool:
+        """ Return True if and only if the code block should be compiled within given settings """
+        if (
+            (self.line.mpi and not self.config.mpi)
+            or (self.line.ros3 and not self.config.ros3)
+            or (self.line.direct_vfd and not self.config.direct_vfd)
+            or (self.line.min_version is not None and self.config.hdf5_version < self.line.min_version)
+            or (self.line.max_version is not None and self.config.hdf5_version > self.line.max_version)
+        ):
+            return False
+        else:
+            return True
 
     def write_raw_sig(self):
         """ Write out "cdef extern"-style definition for an HDF5 function """
+        if not self.check_settings():
+            return
         raw_sig = "{0.code} {0.fname}({0.sig}) {0.nogil}\n".format(self.line)
-        raw_sig = self.add_cython_if(raw_sig)
         raw_sig = "\n".join(("    " + x if x.strip() else x) for x in raw_sig.split("\n"))
         self.raw_defs.write(raw_sig)
 
     def write_cython_sig(self):
         """ Write out Cython signature for wrapper function """
+        if not self.check_settings():
+            return
         if self.line.fname == 'H5Dget_storage_size':
             # Special case: https://github.com/h5py/h5py/issues/1475
             cython_sig = "cdef {0.code} {0.fname}({0.sig}) except? {0.err_value}\n".format(self.line)
         else:
             cython_sig = "cdef {0.code} {0.fname}({0.sig}) except {0.err_value}\n".format(self.line)
-        cython_sig = self.add_cython_if(cython_sig)
         self.cython_defs.write(cython_sig)
 
     def write_cython_imp(self):
         """ Write out Cython wrapper implementation """
+        if not self.check_settings():
+            return
         if self.line.nogil:
             imp = """\
 cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
@@ -321,12 +315,11 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
 
 """
         imp = imp.format(self.line)
-        imp = self.add_cython_if(imp)
         self.cython_imp.write(imp)
 
 
-def run():
-    lp = LineProcessor()
+def run(config):
+    lp = LineProcessor(config)
     lp.run()
 
 
