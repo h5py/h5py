@@ -275,10 +275,11 @@ Reference
 
         The assertion in the above code fragment should never fail, since list
         ``l`` is already sorted.
-        Please note that the traversal order does not depend on the ``track_order``
-        parameter specified when the objects were created
-        (see :meth:`create_group` and :meth:`create_dataset`).
-        All ``visit`` methods share this same traversal order.
+
+        The traversal order is independent of the ``track_order`` parameter specified
+        when the objects were created (see :meth:`create_group` and
+        :meth:`create_dataset`).
+        All ``visit`` methods share this same fixed traversal order.
 
     .. method:: visititems(callable)
 
