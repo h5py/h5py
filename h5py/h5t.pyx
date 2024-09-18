@@ -28,7 +28,7 @@ from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
 
 # Python imports
 import codecs
-import os
+import platform
 import sys
 from collections import namedtuple
 import numpy as np
@@ -38,12 +38,9 @@ from ._objects import phil, with_phil
 
 cfg = get_config()
 
-if sys.platform.startswith("win"):
-    _IS_PPC64 = False
-    _IS_PPC64LE = False
-else:
-    _IS_PPC64 = os.uname() == "ppc64"
-    _IS_PPC64LE = os.uname() == "ppc64le"
+_UNAME_MACHINE = platform.uname()[4]
+_IS_PPC64 = _UNAME_MACHINE == "ppc64"
+_IS_PPC64LE = _UNAME_MACHINE == "ppc64le"
 
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 
