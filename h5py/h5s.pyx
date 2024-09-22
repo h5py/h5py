@@ -133,12 +133,12 @@ cdef class SpaceID(ObjectID):
         * Equality: Unimplemented
     """
 
-    property shape:
+    @property
+    def shape(self):
         """ Numpy-style shape tuple representing dimensions.  () == scalar.
         """
-        def __get__(self):
-            with phil:
-                return self.get_simple_extent_dims()
+        with phil:
+            return self.get_simple_extent_dims()
 
 
     @with_phil

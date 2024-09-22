@@ -163,22 +163,25 @@ cdef class AttrInfo:
 
     cdef H5A_info_t info
 
-    property corder_valid:
+    @property
+    def corder_valid(self):
         """Indicates if the creation order is valid"""
-        def __get__(self):
-            return <bint>self.info.corder_valid
-    property corder:
+        return <bint>self.info.corder_valid
+
+    @property
+    def corder(self):
         """Creation order"""
-        def __get__(self):
-            return <int>self.info.corder
-    property cset:
+        return <int>self.info.corder
+
+    @property
+    def cset(self):
         """Character set of attribute name (integer typecode from h5t)"""
-        def __get__(self):
-            return <int>self.info.cset
-    property data_size:
+        return <int>self.info.cset
+
+    @property
+    def data_size(self):
         """Size of raw data"""
-        def __get__(self):
-            return self.info.data_size
+        return self.info.data_size
 
     def _hash(self):
         return hash((self.corder_valid, self.corder, self.cset, self.data_size))
@@ -313,27 +316,27 @@ cdef class AttrID(ObjectID):
         * Equality: Identifier comparison
     """
 
-    property name:
+    @property
+    def name(self):
         """The attribute's name"""
-        def __get__(self):
-            with phil:
-                return self.get_name()
+        with phil:
+            return self.get_name()
 
-    property shape:
+    @property
+    def shape(self):
         """A Numpy-style shape tuple representing the attribute's dataspace"""
-        def __get__(self):
-            cdef SpaceID space
-            with phil:
-                space = self.get_space()
-                return space.get_simple_extent_dims()
+        cdef SpaceID space
+        with phil:
+            space = self.get_space()
+            return space.get_simple_extent_dims()
 
-    property dtype:
+    @property
+    def dtype(self):
         """A Numpy-stype dtype object representing the attribute's datatype"""
-        def __get__(self):
-            cdef TypeID tid
-            with phil:
-                tid = self.get_type()
-                return tid.py_dtype()
+        cdef TypeID tid
+        with phil:
+            tid = self.get_type()
+            return tid.py_dtype()
 
 
     @with_phil

@@ -30,29 +30,33 @@ cdef class LinkInfo:
 
     cdef H5L_info_t infostruct
 
-    property type:
+    @property
+    def type(self):
         """ Integer type code for link (h5l.TYPE_*) """
-        def __get__(self):
-            return <int>self.infostruct.type
-    property corder_valid:
+        return <int>self.infostruct.type
+
+    @property
+    def corder_valid(self):
         """ Indicates if the creation order is valid """
-        def __get__(self):
-            return <bint>self.infostruct.corder_valid
-    property corder:
+        return <bint>self.infostruct.corder_valid
+
+    @property
+    def corder(self):
         """ Creation order """
-        def __get__(self):
-            return self.infostruct.corder
-    property cset:
+        return self.infostruct.corder
+
+    @property
+    def cset(self):
         """ Integer type code for character set (h5t.CSET_*) """
-        def __get__(self):
-            return self.infostruct.cset
-    property u:
+        return self.infostruct.cset
+
+    @property
+    def u(self):
         """ Either the address of a hard link or the size of a soft/UD link """
-        def __get__(self):
-            if self.infostruct.type == H5L_TYPE_HARD:
-                return self.infostruct.u.address
-            else:
-                return self.infostruct.u.val_size
+        if self.infostruct.type == H5L_TYPE_HARD:
+            return self.infostruct.u.address
+        else:
+            return self.infostruct.u.val_size
 
 cdef class _LinkVisitor:
 

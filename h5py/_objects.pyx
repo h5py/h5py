@@ -170,17 +170,17 @@ cdef class ObjectID:
     cdef size_t _pyid
     """
 
-    property fileno:
-        def __get__(self):
-            cdef H5G_stat_t stat
-            with _phil:
-                H5Gget_objinfo(self.id, '.', 0, &stat)
-                return (stat.fileno[0], stat.fileno[1])
+    @property
+    def fileno(self):
+        cdef H5G_stat_t stat
+        with _phil:
+            H5Gget_objinfo(self.id, '.', 0, &stat)
+            return (stat.fileno[0], stat.fileno[1])
 
 
-    property valid:
-        def __get__(self):
-            return is_h5py_obj_valid(self)
+    @property
+    def valid(self):
+        return is_h5py_obj_valid(self)
 
 
     def __cinit__(self, id_):

@@ -172,33 +172,33 @@ cdef class DatasetID(ObjectID):
         * Equality: True HDF5 identity if unless anonymous
     """
 
-    property dtype:
+    @property
+    def dtype(self):
         """ Numpy dtype object representing the dataset type """
-        def __get__(self):
-            # Dataset type can't change
-            cdef TypeID tid
-            with phil:
-                if self._dtype is None:
-                    tid = self.get_type()
-                    self._dtype = tid.dtype
-                return self._dtype
+        # Dataset type can't change
+        cdef TypeID tid
+        with phil:
+            if self._dtype is None:
+                tid = self.get_type()
+                self._dtype = tid.dtype
+            return self._dtype
 
-    property shape:
+    @property
+    def shape(self):
         """ Numpy-style shape tuple representing the dataspace """
-        def __get__(self):
-            # Shape can change (DatasetID.extend), so don't cache it
-            cdef SpaceID sid
-            with phil:
-                sid = self.get_space()
-                return sid.get_simple_extent_dims()
+        # Shape can change (DatasetID.extend), so don't cache it
+        cdef SpaceID sid
+        with phil:
+            sid = self.get_space()
+            return sid.get_simple_extent_dims()
 
-    property rank:
+    @property
+    def rank(self):
         """ Integer giving the dataset rank (0 = scalar) """
-        def __get__(self):
-            cdef SpaceID sid
-            with phil:
-                sid = self.get_space()
-                return sid.get_simple_extent_ndims()
+        cdef SpaceID sid
+        with phil:
+            sid = self.get_space()
+            return sid.get_simple_extent_ndims()
 
 
     @with_phil

@@ -23,164 +23,213 @@ cdef class CacheConfig:
     def __cinit__(self):
         self.cache_config.version = H5AC__CURR_CACHE_CONFIG_VERSION
 
-    property version:
-        def __get__(self):
-            return self.cache_config.version
-        def __set__(self, int val):
-            self.cache_config.version = val
+    @property
+    def version(self):
+        return self.cache_config.version
 
-    property rpt_fcn_enabled:
-        def __get__(self):
-            return self.cache_config.rpt_fcn_enabled
-        def __set__(self, hbool_t val):
-            self.cache_config.rpt_fcn_enabled = val
+    @version.setter
+    def version(self, int val):
+        self.cache_config.version = val
 
-    property evictions_enabled:
-        def __get__(self):
-            return self.cache_config.evictions_enabled
-        def __set__(self, hbool_t val):
-            self.cache_config.evictions_enabled = val
+    @property
+    def rpt_fcn_enabled(self):
+        return self.cache_config.rpt_fcn_enabled
 
-    property set_initial_size:
-        def __get__(self):
-            return self.cache_config.set_initial_size
-        def __set__(self, hbool_t val):
-            self.cache_config.set_initial_size = val
+    @rpt_fcn_enabled.setter
+    def rpt_fcn_enabled(self, hbool_t val):
+        self.cache_config.rpt_fcn_enabled = val
 
-    property initial_size:
-        def __get__(self):
-            return self.cache_config.initial_size
-        def __set__(self, size_t val):
-            self.cache_config.initial_size = val
+    @property
+    def evictions_enabled(self):
+        return self.cache_config.evictions_enabled
 
-    property min_clean_fraction:
-        def __get__(self):
-            return self.cache_config.min_clean_fraction
-        def __set__(self, double val):
-            self.cache_config.min_clean_fraction = val
+    @evictions_enabled.setter
+    def evictions_enabled(self, hbool_t val):
+        self.cache_config.evictions_enabled = val
 
-    property max_size:
-        def __get__(self):
-            return self.cache_config.max_size
-        def __set__(self, size_t val):
-            self.cache_config.max_size = val
+    @property
+    def set_initial_size(self):
+        return self.cache_config.set_initial_size
 
-    property min_size:
-        def __get__(self):
-            return self.cache_config.min_size
-        def __set__(self, size_t val):
-            self.cache_config.min_size = val
+    @set_initial_size.setter
+    def set_initial_size(self, hbool_t val):
+        self.cache_config.set_initial_size = val
 
-    property epoch_length:
-        def __get__(self):
-            return self.cache_config.epoch_length
-        def __set__(self, long int val):
-            self.cache_config.epoch_length = val
+    @property
+    def initial_size(self):
+        return self.cache_config.initial_size
+
+    @initial_size.setter
+    def initial_size(self, size_t val):
+        self.cache_config.initial_size = val
+
+    @property
+    def min_clean_fraction(self):
+        return self.cache_config.min_clean_fraction
+
+    @min_clean_fraction.setter
+    def min_clean_fraction(self, double val):
+        self.cache_config.min_clean_fraction = val
+
+    @property
+    def max_size(self):
+        return self.cache_config.max_size
+
+    @max_size.setter
+    def max_size(self, size_t val):
+        self.cache_config.max_size = val
+
+    @property
+    def min_size(self):
+        return self.cache_config.min_size
+
+    @min_size.setter
+    def min_size(self, size_t val):
+        self.cache_config.min_size = val
+
+    @property
+    def epoch_length(self):
+        return self.cache_config.epoch_length
+
+    @epoch_length.setter
+    def epoch_length(self, long int val):
+        self.cache_config.epoch_length = val
 
     #    /* size increase control fields: */
-    property incr_mode:
-        def __get__(self):
-            return self.cache_config.incr_mode
-        def __set__(self, H5C_cache_incr_mode val):
-            self.cache_config.incr_mode = val
+    @property
+    def incr_mode(self):
+        return self.cache_config.incr_mode
 
-    property lower_hr_threshold:
-        def __get__(self):
-            return self.cache_config.lower_hr_threshold
-        def __set__(self, double val):
-            self.cache_config.lower_hr_threshold = val
+    @incr_mode.setter
+    def incr_mode(self, H5C_cache_incr_mode val):
+        self.cache_config.incr_mode = val
 
-    property increment:
-        def __get__(self):
-            return self.cache_config.increment
-        def __set__(self, double val):
-            self.cache_config.increment = val
+    @property
+    def lower_hr_threshold(self):
+        return self.cache_config.lower_hr_threshold
 
-    property apply_max_increment:
-        def __get__(self):
-            return self.cache_config.apply_max_increment
-        def __set__(self, hbool_t val):
-            self.cache_config.apply_max_increment = val
+    @lower_hr_threshold.setter
+    def lower_hr_threshold(self, double val):
+        self.cache_config.lower_hr_threshold = val
 
-    property max_increment:
-        def __get__(self):
-            return self.cache_config.max_increment
-        def __set__(self, size_t val):
-            self.cache_config.max_increment = val
+    @property
+    def increment(self):
+        return self.cache_config.increment
 
-    property flash_incr_mode:
-        def __get__(self):
-            return self.cache_config.flash_incr_mode
-        def __set__(self, H5C_cache_flash_incr_mode val):
-            self.cache_config.flash_incr_mode = val
+    @increment.setter
+    def increment(self, double val):
+        self.cache_config.increment = val
 
-    property flash_multiple:
-        def __get__(self):
-            return self.cache_config.flash_multiple
-        def __set__(self, double val):
-            self.cache_config.flash_multiple = val
+    @property
+    def apply_max_increment(self):
+        return self.cache_config.apply_max_increment
 
-    property flash_threshold:
-        def __get__(self):
-            return self.cache_config.flash_threshold
-        def __set__(self, double val):
-            self.cache_config.flash_threshold = val
+    @apply_max_increment.setter
+    def apply_max_increment(self, hbool_t val):
+        self.cache_config.apply_max_increment = val
+
+    @property
+    def max_increment(self):
+        return self.cache_config.max_increment
+
+    @max_increment.setter
+    def max_increment(self, size_t val):
+        self.cache_config.max_increment = val
+
+    @property
+    def flash_incr_mode(self):
+        return self.cache_config.flash_incr_mode
+
+    @flash_incr_mode.setter
+    def flash_incr_mode(self, H5C_cache_flash_incr_mode val):
+        self.cache_config.flash_incr_mode = val
+
+    @property
+    def flash_multiple(self):
+        return self.cache_config.flash_multiple
+
+    @flash_multiple.setter
+    def flash_multiple(self, double val):
+        self.cache_config.flash_multiple = val
+
+    @property
+    def flash_threshold(self):
+        return self.cache_config.flash_threshold
+
+    @flash_threshold.setter
+    def flash_threshold(self, double val):
+        self.cache_config.flash_threshold = val
 
     # /* size decrease control fields: */
-    property decr_mode:
-        def __get__(self):
-            return self.cache_config.decr_mode
-        def __set__(self, H5C_cache_decr_mode val):
-            self.cache_config.decr_mode = val
+    @property
+    def decr_mode(self):
+        return self.cache_config.decr_mode
 
-    property upper_hr_threshold:
-        def __get__(self):
-            return self.cache_config.upper_hr_threshold
-        def __set__(self, double val):
-            self.cache_config.upper_hr_threshold = val
+    @decr_mode.setter
+    def decr_mode(self, H5C_cache_decr_mode val):
+        self.cache_config.decr_mode = val
 
-    property decrement:
-        def __get__(self):
-            return self.cache_config.decrement
-        def __set__(self, double val):
-            self.cache_config.decrement = val
+    @property
+    def upper_hr_threshold(self):
+        return self.cache_config.upper_hr_threshold
 
-    property apply_max_decrement:
-        def __get__(self):
-            return self.cache_config.apply_max_decrement
-        def __set__(self, hbool_t val):
-            self.cache_config.apply_max_decrement = val
+    @upper_hr_threshold.setter
+    def upper_hr_threshold(self, double val):
+        self.cache_config.upper_hr_threshold = val
 
-    property max_decrement:
-        def __get__(self):
-            return self.cache_config.max_decrement
-        def __set__(self, size_t val):
-            self.cache_config.max_decrement = val
+    @property
+    def decrements(self):
+        return self.cache_config.decrement
 
-    property epochs_before_eviction:
-        def __get__(self):
-            return self.cache_config.epochs_before_eviction
-        def __set__(self, int val):
-            self.cache_config.epochs_before_eviction = val
+    @decrements.setter
+    def decrements(self, double val):
+        self.cache_config.decrement = val
 
+    @property
+    def apply_max_decrement(self):
+        return self.cache_config.apply_max_decrement
 
+    @apply_max_decrement.setter
+    def apply_max_decrement(self, hbool_t val):
+        self.cache_config.apply_max_decrement = val
 
-    property apply_empty_reserve:
-        def __get__(self):
-            return self.cache_config.apply_empty_reserve
-        def __set__(self, hbool_t val):
-            self.cache_config.apply_empty_reserve = val
+    @property
+    def max_decrement(self):
+        return self.cache_config.max_decrement
 
+    @max_decrement.setter
+    def max_decrement(self, size_t val):
+        self.cache_config.max_decrement = val
 
-    property empty_reserve:
-        def __get__(self):
-            return self.cache_config.empty_reserve
-        def __set__(self, double val):
-            self.cache_config.empty_reserve = val
+    @property
+    def epochs_before_eviction(self):
+        return self.cache_config.epochs_before_eviction
+
+    @epochs_before_eviction.setter
+    def epochs_before_eviction(self, int val):
+        self.cache_config.epochs_before_eviction = val
+
+    @property
+    def apply_empty_reserve(self):
+        return self.cache_config.apply_empty_reserve
+
+    @apply_empty_reserve.setter
+    def apply_empty_reserve(self, hbool_t val):
+        self.cache_config.apply_empty_reserve = val
+
+    @property
+    def empty_reserve(self):
+        return self.cache_config.empty_reserve
+
+    @empty_reserve.setter
+    def empty_reserve(self, double val):
+        self.cache_config.empty_reserve = val
 
     # /* parallel configuration fields: */
-    property dirty_bytes_threshold:
-        def __get__(self):
-            return self.cache_config.dirty_bytes_threshold
-        def __set__(self, int val):
-            self.cache_config.dirty_bytes_threshold = val
+    @property
+    def dirty_bytes_threshold(self):
+        return self.cache_config.dirty_bytes_threshold
+
+    @dirty_bytes_threshold.setter
+    def dirty_bytes_threshold(self, int val):
+        self.cache_config.dirty_bytes_threshold = val
