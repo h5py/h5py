@@ -45,30 +45,34 @@ cdef class _ObjInfoBase:
 
 cdef class _OHdrMesg(_ObjInfoBase):
 
-    property present:
-        def __get__(self):
-            return self.istr[0].hdr.mesg.present
-    property shared:
-        def __get__(self):
-            return self.istr[0].hdr.mesg.shared
+    @property
+    def present(self):
+        return self.istr[0].hdr.mesg.present
+
+    @property
+    def shared(self):
+        return self.istr[0].hdr.mesg.shared
 
     def _hash(self):
         return hash((self.present, self.shared))
 
 cdef class _OHdrSpace(_ObjInfoBase):
 
-    property total:
-        def __get__(self):
-            return self.istr[0].hdr.space.total
-    property meta:
-        def __get__(self):
-            return self.istr[0].hdr.space.meta
-    property mesg:
-        def __get__(self):
-            return self.istr[0].hdr.space.mesg
-    property free:
-        def __get__(self):
-            return self.istr[0].hdr.space.free
+    @property
+    def total(self):
+        return self.istr[0].hdr.space.total
+
+    @property
+    def meta(self):
+        return self.istr[0].hdr.space.meta
+
+    @property
+    def mesg(self):
+        return self.istr[0].hdr.space.mesg
+
+    @property
+    def free(self):
+        return self.istr[0].hdr.space.free
 
     def _hash(self):
         return hash((self.total, self.meta, self.mesg, self.free))
@@ -78,18 +82,21 @@ cdef class _OHdr(_ObjInfoBase):
     cdef public _OHdrSpace space
     cdef public _OHdrMesg mesg
 
-    property version:
-        def __get__(self):
-            return self.istr[0].hdr.version
-    property nmesgs:
-        def __get__(self):
-            return self.istr[0].hdr.nmesgs
-    property nchunks:
-        def __get__(self):
-            return self.istr[0].hdr.nchunks
-    property flags:
-        def __get__(self):
-            return self.istr[0].hdr.flags
+    @property
+    def version(self):
+        return self.istr[0].hdr.version
+
+    @property
+    def nmesgs(self):
+        return self.istr[0].hdr.nmesgs
+
+    @property
+    def nchunks(self):
+        return self.istr[0].hdr.nchunks
+
+    @property
+    def flags(self):
+        return self.istr[0].hdr.flags
 
     def __init__(self):
         self.space = _OHdrSpace()
@@ -102,12 +109,13 @@ cdef class _ObjMetaInfo:
 
     cdef H5_ih_info_t *istr
 
-    property index_size:
-        def __get__(self):
-            return self.istr[0].index_size
-    property heap_size:
-        def __get__(self):
-            return self.istr[0].heap_size
+    @property
+    def index_size(self):
+        return self.istr[0].index_size
+
+    @property
+    def heap_size(self):
+        return self.istr[0].heap_size
 
     def _hash(self):
         return hash((self.index_size, self.heap_size))
@@ -126,33 +134,41 @@ cdef class _OMetaSize(_ObjInfoBase):
 
 cdef class _ObjInfo(_ObjInfoBase):
 
-    property fileno:
-        def __get__(self):
-            return self.istr[0].fileno
-    property addr:
-        def __get__(self):
-            return self.istr[0].addr
-    property type:
-        def __get__(self):
-            return <int>self.istr[0].type
-    property rc:
-        def __get__(self):
-            return self.istr[0].rc
-    property atime:
-        def __get__(self):
-            return self.istr[0].atime
-    property mtime:
-        def __get__(self):
-            return self.istr[0].mtime
-    property ctime:
-        def __get__(self):
-            return self.istr[0].ctime
-    property btime:
-        def __get__(self):
-            return self.istr[0].btime
-    property num_attrs:
-        def __get__(self):
-            return self.istr[0].num_attrs
+    @property
+    def fileno(self):
+        return self.istr[0].fileno
+
+    @property
+    def addr(self):
+        return self.istr[0].addr
+
+    @property
+    def type(self):
+        return <int>self.istr[0].type
+
+    @property
+    def rc(self):
+        return self.istr[0].rc
+
+    @property
+    def atime(self):
+        return self.istr[0].atime
+
+    @property
+    def mtime(self):
+        return self.istr[0].mtime
+
+    @property
+    def ctime(self):
+        return self.istr[0].ctime
+
+    @property
+    def btime(self):
+        return self.istr[0].btime
+
+    @property
+    def num_attrs(self):
+        return self.istr[0].num_attrs
 
     def _hash(self):
         return hash((self.fileno, self.addr, self.type, self.rc, self.atime, self.mtime, self.ctime, self.btime, self.num_attrs))

@@ -68,134 +68,138 @@ cdef class H5PYConfig:
         self._bytestrings = ByteStringContext()
         self._track_order = False
 
-    property complex_names:
+    @property
+    def complex_names(self):
         """ Settable 2-tuple controlling how complex numbers are saved.
 
         Format is (real_name, imag_name), defaulting to ('r','i').
         """
+        with phil:
+            import sys
+            def handle_val(val):
+                return val.decode('utf8')
+            return (handle_val(self._r_name), handle_val(self._i_name))
 
-        def __get__(self):
-            with phil:
-                import sys
-                def handle_val(val):
-                    return val.decode('utf8')
-                return (handle_val(self._r_name), handle_val(self._i_name))
+    @complex_names.setter
+    def complex_names(self, val):
+        with phil:
+            def handle_val(val):
+                if isinstance(val, unicode):
+                    return val.encode('utf8')
+                elif isinstance(val, bytes):
+                    return val
+                else:
+                    return bytes(val)
+            try:
+                if len(val) != 2:
+                    raise TypeError()
+                r = handle_val(val[0])
+                i = handle_val(val[1])
+            except Exception:
+                raise TypeError("complex_names must be a length-2 sequence of strings (real, img)")
+            self._r_name = r
+            self._i_name = i
 
-        def __set__(self, val):
-            with phil:
-                def handle_val(val):
-                    if isinstance(val, unicode):
-                        return val.encode('utf8')
-                    elif isinstance(val, bytes):
-                        return val
-                    else:
-                        return bytes(val)
-                try:
-                    if len(val) != 2:
-                        raise TypeError()
-                    r = handle_val(val[0])
-                    i = handle_val(val[1])
-                except Exception:
-                    raise TypeError("complex_names must be a length-2 sequence of strings (real, img)")
-                self._r_name = r
-                self._i_name = i
-
-    property bool_names:
+    @property
+    def bool_names(self):
         """ Settable 2-tuple controlling HDF5 ENUM names for boolean types.
 
         Format is (false_name, real_name), defaulting to ('FALSE', 'TRUE').
         """
-        def __get__(self):
-            with phil:
-                return (self._f_name, self._t_name)
 
-        def __set__(self, val):
-            with phil:
-                try:
-                    if len(val) != 2: raise TypeError()
-                    f = str(val[0])
-                    t = str(val[1])
-                except Exception:
-                    raise TypeError("bool_names must be a length-2 sequence of of names (false, true)")
-                self._f_name = f
-                self._t_name = t
+        with phil:
+            return (self._f_name, self._t_name)
 
-    property read_byte_strings:
+    @bool_names.setter
+    def bool_names(self, val):
+        with phil:
+            try:
+                if len(val) != 2: raise TypeError()
+                f = str(val[0])
+                t = str(val[1])
+            except Exception:
+                raise TypeError("bool_names must be a length-2 sequence of of names (false, true)")
+            self._f_name = f
+            self._t_name = t
+
+    @property
+    def read_byte_strings(self):
         """ Returns a context manager which forces all strings to be returned
         as byte strings. """
+        with phil:
+            return self._bytestrings
 
-        def __get__(self):
-            with phil:
-                return self._bytestrings
-
-    property mpi:
+    @property
+    def mpi(self):
         """ Boolean indicating if Parallel HDF5 is available """
-        def __get__(self):
-            return MPI
+        return MPI
 
-    property ros3:
+    @property
+    def ros3(self):
         """ Boolean indicating if ROS3 VDS is available """
-        def __get__(self):
-            return ROS3
+        return ROS3
 
-    property direct_vfd:
+    @property
+    def direct_vfd(self):
         """ Boolean indicating if DIRECT VFD is available """
-        def __get__(self):
-            return DIRECT_VFD
+        return DIRECT_VFD
 
-    property swmr_min_hdf5_version:
+    @property
+    def swmr_min_hdf5_version(self):
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
-        def __get__(self):
-            warn(
-                "h5py.get_config().swmr_min_hdf5_version is deprecated. "
-                "This version of h5py does not support older HDF5 without SWMR.",
-                category=H5pyDeprecationWarning,
-            )
-            return (1, 9, 178)
+        warn(
+            "h5py.get_config().swmr_min_hdf5_version is deprecated. "
+            "This version of h5py does not support older HDF5 without SWMR.",
+            category=H5pyDeprecationWarning,
+        )
+        return (1, 9, 178)
 
-    property vds_min_hdf5_version:
+    @property
+    def vds_min_hdf5_version(self):
         """Tuple indicating the minimum HDF5 version required for virtual dataset (VDS) features"""
-        def __get__(self):
-            warn(
-                "h5py.get_config().vds_min_hdf5_version is deprecated. "
-                "This version of h5py does not support older HDF5 without VDS.",
-                category=H5pyDeprecationWarning,
-            )
-            return (1, 9, 233)
+        warn(
+            "h5py.get_config().vds_min_hdf5_version is deprecated. "
+            "This version of h5py does not support older HDF5 without VDS.",
+            category=H5pyDeprecationWarning,
+        )
+        return (1, 9, 233)
 
-    property track_order:
+    @property
+    def track_order(self):
         """ Default value for track_order argument of
         File.open()/Group.create_group()/Group.create_dataset() """
-        def __get__(self):
-            return self._track_order
-        def __set__(self, val):
-            self._track_order = val
+        return self._track_order
 
-    property default_file_mode:
+    @track_order.setter
+    def track_order(self, val):
+        self._track_order = val
+
+    @property
+    def default_file_mode(self):
         """Default mode for h5py.File()"""
-        def __get__(self):
+        warn(
+            "h5py.get_config().default_file_mode is deprecated. "
+            "The default mode is now always 'r' (read-only).",
+            category=H5pyDeprecationWarning,
+        )
+        return 'r'
+
+    @default_file_mode.setter
+    def default_file_mode(self, val):
+        if val == 'r':
             warn(
-                "h5py.get_config().default_file_mode is deprecated. "
-                "The default mode is now always 'r' (read-only).",
+                "Setting h5py.default_file_mode is deprecated. "
+                "'r' (read-only) is the default from h5py 3.0.",
                 category=H5pyDeprecationWarning,
             )
-            return 'r'
+        elif val in {'r+', 'x', 'w-', 'w', 'a'}:
+            raise ValueError(
+                "Using default_file_mode other than 'r' is no longer "
+                "supported. Pass the mode to h5py.File() instead."
 
-        def __set__(self, val):
-            if val == 'r':
-                warn(
-                    "Setting h5py.default_file_mode is deprecated. "
-                    "'r' (read-only) is the default from h5py 3.0.",
-                    category=H5pyDeprecationWarning,
-                )
-            elif val in {'r+', 'x', 'w-', 'w', 'a'}:
-                raise ValueError(
-                    "Using default_file_mode other than 'r' is no longer "
-                    "supported. Pass the mode to h5py.File() instead."
-
-                )
-            else:
-                raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
+            )
+        else:
+            raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
 
 cdef H5PYConfig cfg = H5PYConfig()
 

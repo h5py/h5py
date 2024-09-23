@@ -438,12 +438,12 @@ cdef class TypeID(ObjectID):
             return cpy
 
 
-    property dtype:
+    @property
+    def dtype(self):
         """ A Numpy-style dtype object representing this object.
         """
-        def __get__(self):
-            with phil:
-                return self.py_dtype()
+        with phil:
+            return self.py_dtype()
 
 
     cdef object py_dtype(self):

@@ -63,24 +63,29 @@ cdef class GroupStat:
     """
     cdef H5G_stat_t infostruct
 
-    property fileno:
-        def __get__(self):
-            return (self.infostruct.fileno[0], self.infostruct.fileno[1])
-    property objno:
-        def __get__(self):
-            return (self.infostruct.objno[0], self.infostruct.objno[1])
-    property nlink:
-        def __get__(self):
-            return self.infostruct.nlink
-    property type:
-        def __get__(self):
-            return self.infostruct.type
-    property mtime:
-        def __get__(self):
-            return self.infostruct.mtime
-    property linklen:
-        def __get__(self):
-            return self.infostruct.linklen
+    @property
+    def fileno(self):
+        return (self.infostruct.fileno[0], self.infostruct.fileno[1])
+
+    @property
+    def objno(self):
+        return (self.infostruct.objno[0], self.infostruct.objno[1])
+
+    @property
+    def nlink(self):
+        return self.infostruct.nlink
+
+    @property
+    def type(self):
+        return self.infostruct.type
+
+    @property
+    def mtime(self):
+        return self.infostruct.mtime
+
+    @property
+    def linklen(self):
+        return self.infostruct.linklen
 
     def _hash(self):
         return hash((self.fileno, self.objno, self.nlink, self.type, self.mtime, self.linklen))

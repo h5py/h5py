@@ -317,11 +317,11 @@ cdef class FileID(GroupID):
         * Equality: Hash comparison
     """
 
-    property name:
+    @property
+    def name(self):
         """ File name on disk (according to h5f.get_name()) """
-        def __get__(self):
-            with phil:
-                return get_name(self)
+        with phil:
+            return get_name(self)
 
 
     @with_phil
