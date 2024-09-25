@@ -1,0 +1,51 @@
+What's new in h5py 3.12
+=======================
+
+New features
+------------
+
+* h5py now has pre-built packages for Python 3.13.
+
+  * However, h5py is not yet compatible with the new free-threading mode;
+    we're tracking work on that in issue :issue:`2475`.
+
+Breaking changes
+----------------
+
+* Support for Python 3.8 was dropped (:pr:`2471`). Python 3.9 or newer is
+  required to build or install h5py 3.12.
+* The minimum supported version of HDF5 was increased to 1.10.6 (:pr:`2486`).
+  If you need h5py on HDF5 1.10.4 or .5, please use h5py 3.11.
+* The fill time for chunked storage was previously set to ``h5d.FILL_TIME_ALLOC``.
+  Now this the default comes from HDF5, which uses ``h5d.FILL_TIME_IFSET``
+  (equivalent to ``fill_time='ifset'``) (:pr:`2463`). Please use
+  ``fill_time='alloc'`` if the change is a problem for you.
+
+Exposing HDF5 functions
+-----------------------
+
+* Expose fill time option in dataset creation property list via the
+  ``fill_time`` parameter in :meth:`~.Group.create_dataset` (:pr:`2463`).
+
+Bug fixes
+---------
+
+* Fix an error where native float16 support is not available (:pr:`2422`).
+* Fixed values of ``H5F_close_degree_t`` enum (:pr:`2433`).
+* External links are now accessed with libhdf5's default access properties
+  (:pr:`2433`).
+* Fix the iteration order for the root group in a file with creation order
+  tracked (:pr:`2410`).
+* Fixed some deprecation warnings from NumPy (:pr:`2416`).
+
+Building h5py
+-------------
+
+* Require a newer version of mpi4py for Python 3.12 (:pr:`2418`).
+* The test suite is now configured to fail on unexpected warnings (:pr:`2428`).
+* The generated Cython wrapper code (``defs.*`` & ``_hdf5.pxd``) is now specific
+  to the version of HDF5 it's building for. If the version of HDF5 has changed,
+  ``api_gen.py`` should be run automatically to recreate this (:pr:`2479`,
+  :pr:`2480`).
+* Various PRs modernising & cleaning up old Cython code, see the `3.12 milestone
+  on Github <https://github.com/h5py/h5py/milestone/31?closed=1>`_ for details.
