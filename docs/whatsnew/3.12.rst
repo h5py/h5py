@@ -6,6 +6,9 @@ New features
 
 * h5py now has pre-built packages for Python 3.13.
 
+  * However, h5py is not yet compatible with the new free-threading mode;
+    we're tracking work on that in issue :issue:`2475`.
+
 Breaking changes
 ----------------
 
