@@ -49,3 +49,8 @@ Building h5py
   :pr:`2480`).
 * Various PRs modernising & cleaning up old Cython code, see the `3.12 milestone
   on Github <https://github.com/h5py/h5py/milestone/31?closed=1>`_ for details.
+
+3.12.1 bug fix release
+----------------------
+
+* Fix bundling HDF5 DLLs in pre-built packages for Windows (:pr:`2507`).
