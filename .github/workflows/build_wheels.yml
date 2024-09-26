@@ -121,6 +121,9 @@ jobs:
           CIBW_BEFORE_TEST: ${{ env.CIBW_BEFORE_TEST }}
         if: steps.triage.outputs.skip != '1'
 
+      - run: python ./ci/bundle_hdf5_whl.py wheelhouse
+        if: steps.triage.outputs.skip != '1' && runner.os == 'Windows'
+
       # And upload the results
       - uses: actions/upload-artifact@v4
         with:
