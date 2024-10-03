@@ -8,7 +8,7 @@ h5py also provides a low-level API, which more closely follows the HDF5 C API.
 .. seealso::
 
    - `h5py Low-Level API Reference <https://api.h5py.org/>`_
-   - `HDF5 C/Fortran Reference Manual <https://confluence.hdfgroup.org/display/HDF5/Core+Library>`_
+   - `HDF5 C/Fortran Reference Manual <https://support.hdfgroup.org/documentation/hdf5/latest/_r_m.html>`_
 
 You can easily switch between the two levels in your code:
 

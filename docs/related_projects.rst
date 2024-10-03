@@ -66,7 +66,7 @@ Exploring and Visualising HDF5 files
 h5py does not contain a tool for exploring or visualising HDF5 files, but tools
 that can display the structure of h5py include:
 
-* `HDFView <https://confluence.hdfgroup.org/display/HDFVIEW/HDFView>`_ is a
+* `HDFView <https://www.hdfgroup.org/download-hdfview/>`_ is a
   visual tool for browsing and editing HDF5 files.
 * `ViTables <https://vitables.org/>`_ is a GUI for browsing and editing files
   in both PyTables and HDF5 formats, and is built on top of PyTables.

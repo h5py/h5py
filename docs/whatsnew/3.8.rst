@@ -39,8 +39,8 @@ Exposing HDF5 functions
 -----------------------
 
 * ``H5Dchunk_iter`` as :meth:`h5py.h5d.DatasetID.chunk_iter`.
-* `H5Pset_meta_block_size <https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE>`_
-  and `H5Pget_meta_block_size <https://portal.hdfgroup.org/display/HDF5/H5P_GET_META_BLOCK_SIZE>`_
+* `H5Pset_meta_block_size <https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga8822e3dedc8e1414f20871a87d533cb1>`_
+  and `H5Pget_meta_block_size <https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gac17861181246af0209c0da5209305461>`_
   (:pr:`2106`).
 
 Bug fixes
