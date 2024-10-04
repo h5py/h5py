@@ -14,11 +14,6 @@ take advantage of some of HDF5's features. h5py provides a comparison between
 the two projects (see :ref:`h5py_pytable_cmp`), as does the
 `PyTables project <https://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
 
-.. seealso::
-
-   `HDF Group's list of HDF5 tools (TODO link)
-   <.>`_
-
 .. contents::
    :local:
 
