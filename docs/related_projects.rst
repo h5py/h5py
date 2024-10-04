@@ -16,8 +16,8 @@ the two projects (see :ref:`h5py_pytable_cmp`), as does the
 
 .. seealso::
 
-   `HDF Group's list of HDF5 tools
-   <https://portal.hdfgroup.org/display/HDF5/HDF5+Tools+by+Category>`_
+   `HDF Group's list of HDF5 tools (TODO link)
+   <.>`_
 
 .. contents::
    :local:

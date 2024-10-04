@@ -381,8 +381,8 @@ chunk cache*. They apply to all datasets unless specifically changed for each on
   ``rdcc_nbytes`` bytes. For maximum performance, this value should be set
   approximately 100 times that number of chunks. The default value is 521.
 
-Chunks and caching are described in greater detail in the `HDF5 documentation
-<https://portal.hdfgroup.org/display/HDF5/Chunking+in+HDF5>`_.
+Chunks and caching are described in greater detail in the `HDF5 documentation (TODO link)
+<.>`_.
 
 .. _file_alignment:
 
