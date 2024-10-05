@@ -382,7 +382,7 @@ chunk cache*. They apply to all datasets unless specifically changed for each on
   approximately 100 times that number of chunks. The default value is 521.
 
 Chunks and caching are described in greater detail in the `HDF5 documentation
-<https://portal.hdfgroup.org/display/HDF5/Chunking+in+HDF5>`_.
+<https://support.hdfgroup.org/documentation/hdf5-docs/advanced_topics/chunking_in_hdf5.html>`_.
 
 .. _file_alignment:
 
@@ -401,7 +401,7 @@ takes effect and the alignment in bytes within the file. The alignment is
 measured from the end of the user block.
 
 For more information, see the official HDF5 documentation `H5P_SET_ALIGNMENT
-<https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT>`_.
+<https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gab99d5af749aeb3896fd9e3ceb273677a>`_.
 
 .. _file_meta_block_size:
 
@@ -416,7 +416,7 @@ especially in combination with the ``libver`` option. This controls how the
 overall data and metadata are laid out within the file.
 
 For more information, see the official HDF5 documentation `H5P_SET_META_BLOCK_SIZE
-<https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE>`_.
+<https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga8822e3dedc8e1414f20871a87d533cb1>`_.
 
 Reference
 ---------

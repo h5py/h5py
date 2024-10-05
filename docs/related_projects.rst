@@ -14,11 +14,6 @@ take advantage of some of HDF5's features. h5py provides a comparison between
 the two projects (see :ref:`h5py_pytable_cmp`), as does the
 `PyTables project <https://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
 
-.. seealso::
-
-   `HDF Group's list of HDF5 tools
-   <https://portal.hdfgroup.org/display/HDF5/HDF5+Tools+by+Category>`_
-
 .. contents::
    :local:
 
@@ -66,7 +61,7 @@ Exploring and Visualising HDF5 files
 h5py does not contain a tool for exploring or visualising HDF5 files, but tools
 that can display the structure of h5py include:
 
-* `HDFView <https://confluence.hdfgroup.org/display/HDFVIEW/HDFView>`_ is a
+* `HDFView <https://www.hdfgroup.org/download-hdfview/>`_ is a
   visual tool for browsing and editing HDF5 files.
 * `ViTables <https://vitables.org/>`_ is a GUI for browsing and editing files
   in both PyTables and HDF5 formats, and is built on top of PyTables.

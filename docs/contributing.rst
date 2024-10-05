@@ -231,7 +231,7 @@ opening the various files as we work through the example.
 
 First, get ahold of
 the function signature; the easiest place for this is at the `online
-HDF5 Reference Manual <https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html>`_.
+HDF5 Reference Manual <https://support.hdfgroup.org/documentation/hdf5/latest/_r_m.htmll>`_.
 Then, add the function's C signature to the file ``api_functions.txt``::
 
   hsize_t   H5Dget_storage_size(hid_t dset_id)

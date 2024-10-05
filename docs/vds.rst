@@ -25,11 +25,11 @@ HDF5 dataset.
 
 .. Warning::
 
-   Virtual dataset files cannot be opened with versions of the hdf5 library
+   Virtual dataset files cannot be opened with versions of the HDF5 library
    older than 1.10.
 
-The HDF Group has documented the VDS features in detail on the website:
-`Virtual Datasets (VDS) Documentation <https://support.hdfgroup.org/HDF5/docNewFeatures/NewFeaturesVirtualDatasetDocs.html>`_.
+The HDF Group has overview of the VDS features on their website:
+`Virtual Datasets (VDS) Documentation <https://support.hdfgroup.org/documentation/hdf5/latest/_v_d_s.html>`_.
 
 .. _creating_vds:
 
@@ -89,7 +89,7 @@ found in the examples folder:
 - `dataset_concatenation.py <https://github.com/h5py/h5py/blob/master/examples/dataset_concatenation.py>`_
   illustrates virtually stacking datasets together along a new axis.
 - A number of examples are based on the sample use cases presented in the
-  `virtual datasets RFC <https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf>`__:
+  `virtual datasets RFC <https://support.hdfgroup.org/releases/hdf5/documentation/rfc/HDF5-VDS-requirements-use-cases-2014-12-10.pdf>`__:
 
   - `excalibur_detector_modules.py <https://github.com/h5py/h5py/blob/master/examples/excalibur_detector_modules.py>`_
   - `dual_pco_edge.py <https://github.com/h5py/h5py/blob/master/examples/dual_pco_edge.py>`_
@@ -125,7 +125,7 @@ Reference
 
    When `creating a virtual dataset <creating_vds_>`_, paths to sources present
    in the same file are changed to a ".", referring to the current file (see
-   `H5Pset_virtual <https://portal.hdfgroup.org/display/HDF5/H5P_SET_VIRTUAL>`_).
+   `H5Pset_virtual <https://support.hdfgroup.org/documentation/hdf5/latest/group___d_c_p_l.html#gadec895092dbbedb94f85d9cacf8924f5>`_).
    This will keep such sources valid in case the file is renamed.
 
    :param path_or_dataset:
