@@ -108,7 +108,7 @@ jobs:
         id: triage
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@v2.21.1
+      - uses: pypa/cibuildwheel@v2.21.2
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_ARCHS: ${{ matrix.arch }}
