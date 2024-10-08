@@ -23,7 +23,7 @@ if [[ "$ARCH" == "aarch64" ]]; then
     echo "TOX_TEST_LIMITED=1" | tee -a $GITHUB_ENV
     if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]] && [[ "$MSG" != *'[aarch64]'* ]]; then
         echo "Building limited $KIND wheels for PR with commit message: $MSG"
-        if [[ "$PYTHON" != "3.12" ]]; then
+        if [[ "$PYTHON" != "3.13" ]]; then
             echo "skip=1" >> $GITHUB_OUTPUT
         fi
         REPORTED=1
