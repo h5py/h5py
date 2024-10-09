@@ -1,3 +1,5 @@
+import numpy as np
+
 import h5py
 from h5py import h5f, h5p
 
@@ -33,3 +35,19 @@ class TestFileImage(TestCase):
         f = h5py.File(fid)
 
         self.assertTrue('test' in f)
+
+
+def test_in_memory():
+    arr = np.arange(10)
+    with h5py.File.in_memory() as f1:
+        f1['a'] = arr
+        f1.flush()
+        img = f1.id.get_file_image()
+
+        # Open while f1 is still open
+        with h5py.File.in_memory(img) as f2:
+            np.testing.assert_array_equal(f2['a'][:], arr)
+
+    # Reuse image now that previous files are closed
+    with h5py.File.in_memory(img) as f3:
+        np.testing.assert_array_equal(f3['a'][:], arr)

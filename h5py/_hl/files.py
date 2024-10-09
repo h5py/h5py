@@ -11,8 +11,9 @@
     Implements high-level support for HDF5 file objects.
 """
 
-import sys
+import inspect
 import os
+import sys
 from warnings import warn
 
 from .compat import filename_decode, filename_encode
@@ -108,10 +109,12 @@ def registered_drivers():
     return frozenset(_drivers)
 
 
-def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
-              page_buf_size, min_meta_keep, min_raw_keep,
-              alignment_threshold, alignment_interval, meta_block_size,
-              **kwds):
+def make_fapl(
+    driver, libver=None, rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
+    locking=None, page_buf_size=None, min_meta_keep=0, min_raw_keep=0,
+    alignment_threshold=1, alignment_interval=1, meta_block_size=None,
+    **kwds
+):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -566,6 +569,53 @@ class File(Group):
                 self._libver = (libver, 'latest')
 
         super().__init__(fid)
+
+    _in_memory_file_counter = 0
+
+    @classmethod
+    @with_phil
+    def in_memory(cls, file_image=None, **kwargs):
+        """Create an HDF5 file in memory, without an underlying file
+
+        file_image
+            The initial file contents as bytes (or anything that supports the
+            Python buffer interface). HDF5 takes a copy of this data.
+        block_size
+            Chunk size for new memory alloactions (default 1 MiB).
+
+        Other keyword arguments are like :class:`File`, although name, mode,
+        driver and locking can't be passed.
+        """
+        for k in ('driver', 'locking', 'backing_store'):
+            if k in kwargs:
+                raise TypeError(
+                    f"File.in_memory() got an unexpected keyword argument {k!r}"
+                )
+        fcpl_kwargs = {}
+        for k in inspect.signature(make_fcpl).parameters:
+            if k in kwargs:
+                fcpl_kwargs = kwargs.pop(k)
+        fcpl = make_fcpl(**fcpl_kwargs)
+
+        fapl = make_fapl(driver="core", backing_store=False, **kwargs)
+        if file_image:
+            if fcpl_kwargs:
+                kw = ', '.join(fcpl_kwargs)
+                raise TypeError(f"{kw} parameters cannot be used with file_image")
+            fapl.set_file_image(file_image)
+
+        # We have to give HDF5 a filename, but it should never use it.
+        # This is a hint both in memory, and in case a bug ever creates a file.
+        # The name also needs to be different from any other open file;
+        # we use a simple counter (protected by the 'phil' lock) for this.
+        name = b"h5py_in_memory_nonfile_%d"  % cls._in_memory_file_counter
+        cls._in_memory_file_counter += 1
+
+        if file_image:
+            fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
+        else:
+            fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
+        return cls(fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
