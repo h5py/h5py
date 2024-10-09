@@ -126,6 +126,28 @@ of supported drivers and their options:
            with ros3. Alternatively, use the :ref:`file-like object
            <file_fileobj>` support with a package like s3fs.
 
+.. _file_in_memory:
+
+In-memory 'files'
+-----------------
+
+HDF5 can make a file in memory, without reading or writing a real file.
+To do this with h5py, use the :meth:`.File.in_memory` class method::
+
+    # Start a new HDF5 file in memory
+    f = h5py.File.in_memory()
+    f['a'] = [1, 2, 3]
+
+    # Get the file data as bytes, e.g. to send over the network
+    f.flush()
+    hdf_data = f.id.get_file_image()
+
+    # Turn the bytes back into an h5py File object
+    f2 = h5py.File.in_memory(hdf_data)
+
+This uses HDF5's "core" :ref:`file driver <file_driver>`, which is likely to
+cause fewer odd problems than asking HDF5 to call back into a Python ``BytesIO``
+object (:ref:`described below <file_fileobj>`).
 
 .. _file_fileobj:
 
@@ -505,6 +527,15 @@ Reference
     :param meta_block_size: Determines the current minimum size, in bytes, of
             new metadata block allocations. See :ref:`file_meta_block_size`.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
+
+    .. classmethod:: in_memory(file_image=None, block_size=64*1024, **kwargs)
+
+        :param file_image: The initial file contents as bytes (or anything that
+            supports the Python buffer interface). HDF5 takes a copy of this data.
+        :param block_size: Chunk size for new memory alloactions (default 1 MiB).
+
+        Other keyword arguments are like :class:`File`, although name, mode,
+        driver and locking can't be passed.
 
     .. method:: __bool__()
 
