@@ -623,8 +623,8 @@ class Group(HLObject, MutableMappingHDF5):
             func(<member name>) => <None or return value>
 
         Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guaranteed.
+        and immediately returns that value from the visit method. The
+        iteration order is lexicographic.
 
         Example:
 
@@ -652,8 +652,8 @@ class Group(HLObject, MutableMappingHDF5):
             func(<member name>, <object>) => <None or return value>
 
         Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guaranteed.
+        and immediately returns that value from the visit method. The
+        iteration order is lexicographic.
 
         Example:
 
@@ -684,8 +684,8 @@ class Group(HLObject, MutableMappingHDF5):
             func(<member name>) => <None or return value>
 
         Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guaranteed.
+        and immediately returns that value from the visit method. The
+        iteration order is lexicographic.
 
         Example:
 
@@ -711,8 +711,8 @@ class Group(HLObject, MutableMappingHDF5):
             func(<member name>, <link>) => <None or return value>
 
         Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guaranteed.
+        and immediately returns that value from the visit method. The
+        iteration order is lexicographic.
 
         Example:
 
