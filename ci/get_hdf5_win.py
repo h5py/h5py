@@ -82,6 +82,7 @@ def download_hdf5(version, outfile):
 def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
                dl_zip):
     try:
+        run(["cmake", "--version"])  # Show what version of cmake we'll use
         with TemporaryDirectory() as hdf5_extract_path:
             generator_args = (
                 ["-G", cmake_generator]
