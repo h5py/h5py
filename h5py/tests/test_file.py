@@ -673,7 +673,8 @@ class TestUnicode(TestCase):
         """
         fname = self.mktemp(prefix=chr(0x201a))
         with File(fname, 'w') as f:
-            self.assertTrue(os.path.exists(fname))
+            print(os.listdir(self.tempdir))
+            assert os.path.exists(fname)
 
     def test_nonexistent_file_unicode(self):
         """
