@@ -8,7 +8,7 @@ if [[ "$1" == "" ]] ; then
 fi
 PROJECT_PATH="$1"
 ARCH=$(uname -m)
-export HDF5_VERSION="1.12.2"
+export HDF5_VERSION="1.14.5"
 export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION-$ARCH"
 # When compiling HDF5, we should use the minimum across all Python versions for a given
 # arch, for versions see for example a more updated version of the following:
