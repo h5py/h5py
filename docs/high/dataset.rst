@@ -214,7 +214,7 @@ axes using ``None``::
 
     >>> dset = f.create_dataset("unlimited", (10, 10), maxshape=(None, 10))
 
-For a 1D dataset, ``maxshape`` can be an integer instead of a tuple. But to make an 
+For a 1D dataset, ``maxshape`` can be an integer instead of a tuple. But to make an
 unlimited 1D dataset, ``maxshape`` must be a tuple ``(None,)``. Passing ``None`` gives
 the default behaviour, where the initial size is also the maximum.
 
