@@ -158,7 +158,7 @@ if (HDF5_ENABLE_SZIP_SUPPORT)
     set(SZIP_LIBRARIES szip-static)
     if (TARGET szip-shared)
       set(SZIP_LIBRARIES szip-shared)
-    endif()    
+    endif()
     if (NOT SZIP_FOUND)
       find_package (SZIP) # Legacy find
     endif ()
