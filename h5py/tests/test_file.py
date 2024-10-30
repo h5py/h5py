@@ -672,9 +672,10 @@ class TestUnicode(TestCase):
         """ Unicode filenames can be used, and seen correctly from python
         """
         fname = self.mktemp(prefix=chr(0x201a))
+        print("Creating {fname!r}")
         with File(fname, 'w') as f:
             print(os.listdir(self.tempdir))
-            assert os.path.exists(fname)
+        assert os.path.exists(fname)
 
     def test_nonexistent_file_unicode(self):
         """
