@@ -90,7 +90,7 @@ class Group(HLObject, MutableMappingHDF5):
         maxshape
             (Tuple or int) Make the dataset resizable up to this shape. Use None for
             axes within the tuple you want to be unlimited. Integers can be used for 1D shape.
-            For 1D datsets with quasi-unlimited maxshape, a shape tuple of length 1 must be
+            For 1D datsets with unlimited maxshape, a shape tuple of length 1 must be
             provided, ``(None,)``. Passing ``None`` sets ``maxshape` to `shape`, making the
             dataset un-resizable, which is the default.
         compression
