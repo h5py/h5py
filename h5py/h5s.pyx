@@ -396,7 +396,7 @@ cdef class SpaceID(ObjectID):
 
     @with_phil
     def select_shape_same(self, SpaceID space2):
-        return H5Sselect_shape_same(self.id, space2.id)
+        return <bint>H5Sselect_shape_same(self.id, space2.id)
 
     @with_phil
     def select_all(self):
