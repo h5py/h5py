@@ -126,9 +126,9 @@ jobs:
         installer: nuget
         shell: cmd
 
-- job: 'macOS12'
+- job: 'macOS'
   pool:
-    vmImage: macOS-12
+    vmImage: macOS-latest
   timeoutInMinutes: 70  # 60 is a little short for macOS sometimes
   strategy:
     matrix:
