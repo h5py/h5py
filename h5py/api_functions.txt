@@ -495,7 +495,7 @@ hdf5:
   htri_t H5Sis_regular_hyperslab(hid_t spaceid)
   htri_t H5Sget_regular_hyperslab(hid_t spaceid, hsize_t* start, hsize_t* stride, hsize_t* count, hsize_t* block)
 
-  htri_t H5Sselect_shape_same(hid_t space1_id, hid_t space2_id)
+  1.10.7 htri_t H5Sselect_shape_same(hid_t space1_id, hid_t space2_id)
 
 
   # === H5T - Datatypes =========================================================

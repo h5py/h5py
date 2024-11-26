@@ -1,4 +1,6 @@
-from h5py import h5s
+import pytest
+
+from h5py import h5s, version
 from h5py._selector import Selector
 
 class Helper:
@@ -14,6 +16,8 @@ class Helper:
         return space
 
 
+@pytest.mark.skipif(version.hdf5_version_tuple < (1, 10, 7),
+                    reason='H5Sselect_shape_same not available')
 def test_same_shape():
     s1 = Helper((5, 6))[:3, :4]
     s2 = Helper((5, 6))[2:, 2:]
