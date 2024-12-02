@@ -28,6 +28,7 @@ import re
 import os
 from hashlib import md5
 from pathlib import Path
+from setup_configure import BuildConfig
 
 
 def replace_or_remove(new: Path) -> None:
@@ -318,7 +319,9 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
         self.cython_imp.write(imp)
 
 
-def run(config):
+def run():
+    # Get configuration from environment variables
+    config = BuildConfig.from_env()
     lp = LineProcessor(config)
     lp.run()
 
