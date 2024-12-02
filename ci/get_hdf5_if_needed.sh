@@ -49,7 +49,7 @@ else
 
         if [[ "$OSTYPE" == "darwin"* ]]; then
             ARCH=$(uname -m)
-            ZLIB_VERSION="1.2.13"
+            ZLIB_VERSION="1.3.1"
 
             pushd /tmp
             curl -sLO https://zlib.net/fossils/zlib-$ZLIB_VERSION.tar.gz
