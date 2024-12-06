@@ -152,7 +152,7 @@ class h5py_build_ext(build_ext):
 
         # Refresh low-level defs if missing or stale
         print("Executing api_gen rebuild of defs")
-        api_gen.run(config)
+        api_gen.run()
 
         # Rewrite config.pxi file if needed
         s = f"""\
