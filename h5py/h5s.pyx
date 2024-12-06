@@ -394,6 +394,10 @@ cdef class SpaceID(ObjectID):
             efree(start)
             efree(end)
 
+    IF HDF5_VERSION >= (1, 10, 7):
+        @with_phil
+        def select_shape_same(self, SpaceID space2):
+            return <bint>H5Sselect_shape_same(self.id, space2.id)
 
     @with_phil
     def select_all(self):
