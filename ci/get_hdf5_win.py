@@ -8,7 +8,7 @@ CI environment which thrown away each time
 """
 
 from os import environ, makedirs, walk, getcwd, chdir
-from os.path import join as pjoin, exists, basename, dirname
+from os.path import join as pjoin, exists, basename, dirname, abspath
 from tempfile import TemporaryFile, TemporaryDirectory
 from sys import exit, stderr
 from shutil import copy
@@ -19,6 +19,8 @@ import requests
 
 HDF5_URL = "https://github.com/HDFGroup/hdf5/archive/refs/tags/{zip_file}"
 ZLIB_ROOT = environ.get('ZLIB_ROOT')
+
+CI_DIR = dirname(abspath(__file__))
 
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
@@ -82,6 +84,7 @@ def download_hdf5(version, outfile):
 def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
                dl_zip):
     try:
+        run(["cmake", "--version"])  # Show what version of cmake we'll use
         with TemporaryDirectory() as hdf5_extract_path:
             generator_args = (
                 ["-G", cmake_generator]
@@ -92,6 +95,8 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
 
             with ZipFile(hdf5_file) as z:
                 z.extractall(hdf5_extract_path)
+            replace_CMakeFilters_cmake(hdf5_extract_path, dl_zip)
+
             old_dir = getcwd()
 
             with TemporaryDirectory() as new_dir:
@@ -122,6 +127,17 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
             raise
     for f in glob(pjoin(install_path, 'bin/*.dll')):
         copy(f, pjoin(install_path, 'lib'))
+
+
+def replace_CMakeFilters_cmake(extract_point, zip_file):
+    src = pjoin(CI_DIR, "patched_CMakeFilters.cmake")
+    dir_suffix = basename(zip_file).removesuffix(".zip")
+    dest = pjoin(
+        extract_point,
+        REL_PATH_TO_CMAKE_CFG.format(dir_suffix=dir_suffix),
+        'CMakeFilters.cmake'
+    )
+    copy(src, dest)
 
 
 def get_cmake_config_path(extract_point, zip_file):
