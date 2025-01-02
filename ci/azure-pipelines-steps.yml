@@ -3,7 +3,7 @@ parameters:
   installer: none
 
 steps:
-- task: CacheBeta@0
+- task: Cache@2
   displayName: HDF5 cache
   inputs:
     # The key should specify enough to avoid restoring an incompatible build.
