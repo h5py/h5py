@@ -17,7 +17,7 @@ export LINK="/LIBPATH:$PROJECT_PATH\zlib-msvc-x64\build\native\lib_release"
 export ZLIB_ROOT="$PROJECT_PATH\zlib-msvc-x64\build\native"
 
 # HDF5
-export HDF5_VERSION="1.14.2"
+export HDF5_VERSION="1.14.5"
 export HDF5_VSVERSION="17-64"
 export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION"
 
