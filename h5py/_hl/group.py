@@ -31,19 +31,37 @@ class Group(HLObject, MutableMappingHDF5):
     """ Represents an HDF5 group.
     """
 
-    def __init__(self, bind):
+    def __init__(self, bind, lapl=None, lcpl=None):
         """ Create a new Group object by binding to a low-level GroupID.
         """
         with phil:
             if not isinstance(bind, h5g.GroupID):
                 raise ValueError("%s is not a GroupID" % bind)
             super().__init__(bind)
+            self._lapl_ = lapl
+            self._lcpl_ = lcpl
 
     _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
     _gcpl_crt_order.set_link_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
     _gcpl_crt_order.set_attr_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+
+    @property
+    def _lapl(self):
+        """ Fetch the link access property list appropriate for this object
+        """
+        if self._lapl_ is not None:
+            return self._lapl_
+        return super()._lapl
+
+    @property
+    def _lcpl(self):
+        """ Fetch the link creation property list appropriate for this object
+        """
+        if self._lcpl_ is not None:
+            return self._lcpl_
+        return super()._lcpl
 
     def create_group(self, name, track_order=None):
         """ Create and return a new subgroup.
@@ -62,7 +80,7 @@ class Group(HLObject, MutableMappingHDF5):
             name, lcpl = self._e(name, lcpl=True)
             gcpl = Group._gcpl_crt_order if track_order else None
             gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
-            return Group(gid)
+            return Group(gid, self._lapl_, self._lcpl_)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
         """ Create a new HDF5 dataset
@@ -364,7 +382,7 @@ class Group(HLObject, MutableMappingHDF5):
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
-            return Group(oid)
+            return Group(oid, self._lapl_, self._lcpl_)
         elif otype == h5i.DATASET:
             return dataset.Dataset(oid, readonly=(self.file.mode == 'r'))
         elif otype == h5i.DATATYPE:
@@ -598,7 +616,7 @@ class Group(HLObject, MutableMappingHDF5):
                 copypl = None
 
             h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path),
-                     copypl, base.dlcpl)
+                     copypl, self._lcpl)
 
     def move(self, source, dest):
         """ Move a link to a new location in the file.
