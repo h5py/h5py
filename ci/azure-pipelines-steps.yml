@@ -42,8 +42,8 @@ steps:
     displayName: 'Install nuget dependencies'
 - ${{ if eq(parameters.installer, 'brew') }}:
   - script: |
-      brew install pkg-config hdf5@1.10 ccache open-mpi
-      brew link --force hdf5@1.10
+      brew install pkg-config hdf5 ccache open-mpi
+      brew link --force hdf5
       ls /usr/local
       echo "$PATH"
     displayName: 'Install brew dependencies'
