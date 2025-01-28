@@ -7,8 +7,8 @@ from ..version import hdf5_built_version_tuple
 
 # HDF5 supported passing paths as UTF-8 for Windows from 1.10.6, but this
 # was broken again in 1.14.4 - https://github.com/HDFGroup/hdf5/issues/5037 .
-# Add an upper bound here when/if it works again.
-if hdf5_built_version_tuple >= (1, 14, 4):
+# The change was reverted in 1.14.6.
+if (1, 14, 4) <= hdf5_built_version_tuple < (1, 14, 6):
     WINDOWS_ENCODING = "mbcs"
 else:
     WINDOWS_ENCODING = "utf-8"
