@@ -66,8 +66,15 @@ else
         fi
 
         pushd /tmp
-        url_base="https://github.com/HDFGroup/hdf5/archive/refs/tags/"
-        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT1}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT2}.tar.gz"
+        if [[ "$HDF5_VERSION" == "1.14.6" ]]; then
+          # Temporary, for testing
+          echo "Downloading HDF5 1.14.6 from branch"
+          url="https://github.com/HDFGroup/hdf5/archive/refs/heads/hdf5_1_14_6.tar.gz"
+          curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url}"
+        else
+          url_base="https://github.com/HDFGroup/hdf5/archive/refs/tags/"
+          curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT1}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT2}.tar.gz"
+        fi
 
         mkdir -p hdf5-$HDF5_VERSION && tar -xzvf hdf5-$HDF5_VERSION.tar.gz --strip-components=1 -C hdf5-$HDF5_VERSION
 

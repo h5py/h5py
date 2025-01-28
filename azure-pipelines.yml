@@ -60,10 +60,10 @@ jobs:
         HDF5_VERSION: 1.12.2
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
-      py310-deps-hdf51142:
+      py310-deps-hdf51146:
         python.version: '3.10'
         TOXENV: py310-test-deps
-        HDF5_VERSION: 1.14.2
+        HDF5_VERSION: 1.14.5
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
