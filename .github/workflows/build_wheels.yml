@@ -10,6 +10,7 @@ concurrency:
 # 1. Move as much as possible to pyproject.toml instead of using env vars
 # 2. Use native compiling for macOS via -13 (Intel) and -14 (arm) runners
 # 3. Use native compiling for aarch64 using public beta runner
+#    https://github.blog/changelog/2025-01-16-linux-arm64-hosted-runners-now-available-for-free-in-public-repositories-public-preview/
 # 4. On pushes, build and test all wheels and push as release artifacts (in
 #    draft mode for main branch pushes).
 # 5. On scheduled runs, build and test all wheels against
