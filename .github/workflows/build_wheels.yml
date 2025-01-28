@@ -9,17 +9,12 @@ concurrency:
 
 # 1. Move as much as possible to pyproject.toml instead of using env vars
 # 2. Use native compiling for macOS via -13 (Intel) and -14 (arm) runners
-# 3. For aarch64, only ever test py312 and skip testing other python versions
-#    (for speed).
-# 4. Split aarch64 python version builds over jobs, for all other systems/archs build
-#    wheels for all Python versions in a single job (for speed).
-# 5. On pushes, build and test all wheels and push as release artifacts (in
+# 3. Use native compiling for aarch64 using public beta runner
+# 4. On pushes, build and test all wheels and push as release artifacts (in
 #    draft mode for main branch pushes).
-# 6. On scheduled runs, build and test all wheels against
+# 5. On scheduled runs, build and test all wheels against
 #    scientific-python-nightly-wheels NumPy dev, then upload the resulting wheels there.
-# 7. On PRs, only build one aarch64 wheel (for speed).
-# 8. On PRs, build against NumPy dev if [pip-pre] is in the commit message.
-# 9. On PRs, build all aarch64 variants if [aarch64] is in the commit message.
+# 6. On PRs, build against NumPy dev if [pip-pre] is in the commit message.
 
 on:
   # Run daily at 1:23 UTC to upload nightly wheels to Anaconda Cloud
@@ -47,19 +42,11 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        # Wheel builds are fast except for aarch64, so split that into multiple jobs,
-        # one for each Python version
-        os: [ubuntu-latest]
-        arch: [aarch64]
-        python:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
-          - "3.13"
         include:
           - os: ubuntu-latest
             arch: x86_64
+          - os: ubuntu-24.04-arm
+            arch: aarch64
           - os: windows-latest
             arch: AMD64
           - os: macos-14
@@ -96,16 +83,8 @@ jobs:
       - run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
         if: runner.os == 'macOS'
 
-      # Linux emulation for aarch64 support
-      # https://cibuildwheel.pypa.io/en/stable/faq/#emulation
-      - uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-        if: runner.os == 'Linux' && matrix.arch == 'aarch64'
-
-      # Triage build, and set outputs.skip = 1 if on aarch64 and we don't want to build the wheel
+      # Triage build
       - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}" "${{ matrix.python }}"
-        id: triage
 
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@v2.22.0
@@ -116,20 +95,17 @@ jobs:
           CIBW_SKIP: ${{ env.CIBW_SKIP }}
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
-          TOX_TEST_LIMITED: ${{ env.TOX_TEST_LIMITED }}
           CIBW_PRERELEASE_PYTHONS: ${{ env.CIBW_PRERELEASE_PYTHONS }}
           CIBW_BEFORE_TEST: ${{ env.CIBW_BEFORE_TEST }}
-        if: steps.triage.outputs.skip != '1'
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
-        if: steps.triage.outputs.skip != '1' && runner.os == 'Windows'
+        if: runner.os == 'Windows'
 
       # And upload the results
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
-        if: steps.triage.outputs.skip != '1'
 
   upload_wheels:
     name: Upload wheels
