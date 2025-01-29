@@ -12,11 +12,7 @@ WHEEL_PATH=$2
 echo "WHEEL_PATH=$WHEEL_PATH"
 
 export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])))")
-if [[ "$TOX_TEST_LIMITED" == "1" ]]; then  # e.g., aarch64
-    ENVLIST="py$PYVER-test-deps"
-else
-    ENVLIST="py$PYVER-test-deps,py$PYVER-test-mindeps,py$PYVER-test-deps-pre"
-fi
+ENVLIST="py$PYVER-test-deps,py$PYVER-test-mindeps,py$PYVER-test-deps-pre"
 export H5PY_TEST_CHECK_FILTERS=1
 echo "ENVLIST=$ENVLIST"
 cd $PROJECT_PATH
