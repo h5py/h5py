@@ -95,7 +95,6 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
 
             with ZipFile(hdf5_file) as z:
                 z.extractall(hdf5_extract_path)
-            replace_CMakeFilters_cmake(hdf5_extract_path, dl_zip)
 
             old_dir = getcwd()
 
