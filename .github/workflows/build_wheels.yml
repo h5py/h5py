@@ -67,7 +67,7 @@ jobs:
       - name: Cache built HDF5
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}-6
+          key: ${{ matrix.os }}-${{ matrix.arch }}-7
           path: cache/hdf5
 
       # Windows HDF5

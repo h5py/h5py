@@ -61,6 +61,9 @@ def download_hdf5(version, outfile):
     files = [HDF5_URL.format(zip_file=zip_fmt1),
              HDF5_URL.format(zip_file=zip_fmt2),
              ]
+    if version == "1.14.6":
+        print("Using HDF5 branch for testing 1.14.6")
+        files = ["https://github.com/HDFGroup/hdf5/archive/refs/heads/hdf5_1_14_6.zip"]
 
     for file in files:
         print(f"Downloading hdf5 from {file} ...", file=stderr)
@@ -95,7 +98,6 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
 
             with ZipFile(hdf5_file) as z:
                 z.extractall(hdf5_extract_path)
-            replace_CMakeFilters_cmake(hdf5_extract_path, dl_zip)
 
             old_dir = getcwd()
 
