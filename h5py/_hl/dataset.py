@@ -227,7 +227,7 @@ class AbstractView(ABC):
 
     @abstractmethod
     def __getitem__(self, idx):
-        ...
+        ...  # pragma: nocover
 
     def __array__(self, dtype=None, copy=None):
         if copy is False:
