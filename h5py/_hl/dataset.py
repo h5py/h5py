@@ -265,8 +265,6 @@ class AsStrView(AbstractView):
     """Wrapper to decode strings on reading the dataset"""
     def __init__(self, dset, encoding, errors='strict'):
         super().__init__(dset)
-        if encoding is None:
-            encoding = h5t.check_string_dtype(dset.dtype).encoding
         self.encoding = encoding
         self.errors = errors
 
