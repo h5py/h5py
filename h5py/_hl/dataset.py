@@ -13,6 +13,7 @@
 
 import posixpath as pp
 import sys
+from abc import ABC, abstractmethod
 
 import numpy
 
@@ -198,47 +199,79 @@ def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None,
     return dset_id
 
 
-class AstypeWrapper:
-    """Wrapper to convert data on reading from a dataset.
-    """
-    def __init__(self, dset, dtype):
-        self._dset = dset
-        self._dtype = numpy.dtype(dtype)
 
-    def __getitem__(self, args):
-        return self._dset.__getitem__(args, new_dtype=self._dtype)
+class AbstractView(ABC):
+    _dset: "Dataset"
+
+    def __init__(self, dset):
+        self._dset = dset
 
     def __len__(self):
-        """ Get the length of the underlying dataset
-
-        >>> length = len(dataset.astype('f8'))
-        """
         return len(self._dset)
 
-    def __array__(self, dtype=None, copy=True):
+    @property
+    def dtype(self):
+        return self._dset.dtype
+
+    @property
+    def ndim(self):
+        return self._dset.ndim
+
+    @property
+    def shape(self):
+        return self._dset.shape
+
+    @property
+    def size(self):
+        return self._dset.size
+
+    @abstractmethod
+    def __getitem__(self, idx):
+        ...
+
+    def __array__(self, dtype=None, copy=None):
         if copy is False:
             raise ValueError(
-                f"AstypeWrapper.__array__ received {copy=} "
-                f"but memory allocation cannot be avoided on read"
+                f"{self.__class__.__name__}.__array__ received {copy=} "
+                "but memory allocation cannot be avoided on read"
             )
 
-        data = self[:]
+        data = self[()]
+        if not self.ndim:
+            return numpy.asarray(data, dtype=dtype or self.dtype)
         if dtype is not None:
             return data.astype(dtype, copy=False)
         return data
 
+class AstypeView(AbstractView):
+    """Wrapper to convert data on reading from a dataset.
+    """
+    def __init__(self, dset, dtype):
+        super().__init__(dset)
+        self._dtype = numpy.dtype(dtype)
 
-class AsStrWrapper:
+    @property
+    def dtype(self):
+        return self._dtype
+
+    def __getitem__(self, idx):
+        return self._dset.__getitem__(idx, new_dtype=self._dtype)
+
+    def __array__(self, dtype=None, copy=None):
+        return self._dset.__array__(dtype or self._dtype, copy)
+
+
+class AsStrView(AbstractView):
     """Wrapper to decode strings on reading the dataset"""
     def __init__(self, dset, encoding, errors='strict'):
-        self._dset = dset
+        super().__init__(dset)
         if encoding is None:
             encoding = h5t.check_string_dtype(dset.dtype).encoding
         self.encoding = encoding
         self.errors = errors
 
-    def __getitem__(self, args):
-        bytes_arr = self._dset[args]
+    def __getitem__(self, idx):
+        bytes_arr = self._dset[idx]
         # numpy.char.decode() seems like the obvious thing to use. But it only
         # accepts numpy string arrays, not object arrays of bytes (which we
         # return from HDF5 variable-length strings). And the numpy
@@ -252,63 +285,31 @@ class AsStrWrapper:
             b.decode(self.encoding, self.errors) for b in bytes_arr.flat
         ], dtype=object).reshape(bytes_arr.shape)
 
-    def __len__(self):
-        """ Get the length of the underlying dataset
 
-        >>> length = len(dataset.asstr())
-        """
-        return len(self._dset)
-
-    def __array__(self, dtype=None, copy=True):
-        if dtype not in (None, object):
-            raise TypeError(
-                "AsStrWrapper.__array__ doesn't support the dtype argument"
-            )
-        if copy is False:
-            raise ValueError(
-                f"AsStrWrapper.__array__ received {copy=} "
-                f"but memory allocation cannot be avoided on read"
-            )
-        return numpy.array([
-            b.decode(self.encoding, self.errors) for b in self._dset
-        ], dtype=object).reshape(self._dset.shape)
-
-
-class FieldsWrapper:
+class FieldsView(AbstractView):
     """Wrapper to extract named fields from a dataset with a struct dtype"""
-    extract_field = None
 
     def __init__(self, dset, prior_dtype, names):
-        self._dset = dset
+        super().__init__(dset)
         if isinstance(names, str):
             self.extract_field = names
             names = [names]
+        else:
+            self.extract_field = None
         self.read_dtype = readtime_dtype(prior_dtype, names)
 
-    def __array__(self, dtype=None, copy=True):
-        if copy is False:
-            raise ValueError(
-                f"FieldsWrapper.__array__ received {copy=} "
-                f"but memory allocation cannot be avoided on read"
-            )
-        data = self[:]
-        if dtype is not None:
-            return data.astype(dtype, copy=False)
-        else:
-            return data
+    @property
+    def dtype(self):
+        t = self.read_dtype
+        if self.extract_field is not None:
+            t = t[self.extract_field]
+        return t
 
-    def __getitem__(self, args):
-        data = self._dset.__getitem__(args, new_dtype=self.read_dtype)
+    def __getitem__(self, idx):
+        data = self._dset.__getitem__(idx, new_dtype=self.read_dtype)
         if self.extract_field is not None:
             data = data[self.extract_field]
         return data
-
-    def __len__(self):
-        """ Get the length of the underlying dataset
-
-        >>> length = len(dataset.fields(['x', 'y']))
-        """
-        return len(self._dset)
 
 
 def readtime_dtype(basetype, names):
@@ -428,7 +429,7 @@ class Dataset(HLObject):
 
         >>> double_precision = dataset.astype('f8')[0:100:2]
         """
-        return AstypeWrapper(self, dtype)
+        return AstypeView(self, dtype)
 
     def asstr(self, encoding=None, errors='strict'):
         """Get a wrapper to read string data as Python strings:
@@ -447,7 +448,7 @@ class Dataset(HLObject):
             )
         if encoding is None:
             encoding = string_info.encoding
-        return AsStrWrapper(self, encoding, errors=errors)
+        return AsStrView(self, encoding, errors=errors)
 
     def fields(self, names, *, _prior_dtype=None):
         """Get a wrapper to read a subset of fields from a compound data type:
@@ -460,7 +461,7 @@ class Dataset(HLObject):
         """
         if _prior_dtype is None:
             _prior_dtype = self.dtype
-        return FieldsWrapper(self, _prior_dtype, names)
+        return FieldsView(self, _prior_dtype, names)
 
     if MPI:
         @property
@@ -1072,7 +1073,7 @@ class Dataset(HLObject):
                 self.id.write(mspace, fspace, source, dxpl=self._dxpl)
 
     @with_phil
-    def __array__(self, dtype=None, copy=True):
+    def __array__(self, dtype=None, copy=None):
         """ Create a Numpy array containing the whole dataset.  DON'T THINK
         THIS MEANS DATASETS ARE INTERCHANGEABLE WITH ARRAYS.  For one thing,
         you have to read the whole dataset every time this method is called.
@@ -1080,7 +1081,7 @@ class Dataset(HLObject):
         if copy is False:
             raise ValueError(
                 f"Dataset.__array__ received {copy=} "
-                f"but memory allocation cannot be avoided on read"
+                "but memory allocation cannot be avoided on read"
             )
         arr = numpy.zeros(self.shape, dtype=self.dtype if dtype is None else dtype)
 
