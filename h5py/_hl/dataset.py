@@ -656,6 +656,20 @@ class Dataset(HLObject):
         """Check if extent type is empty"""
         return self._extent_type == h5s.NULL
 
+    @cached_property
+    def _dcpl(self):
+        """
+        The dataset creation property list used when this dataset was created.
+        """
+        return self.id.get_create_plist()
+
+    @cached_property
+    def _filters(self):
+        """
+        The active filters of the dataset.
+        """
+        return filters.get_filters(self._dcpl)
+
     @with_phil
     def __init__(self, bind, *, readonly=False):
         """ Create a new Dataset object by binding to a low-level DatasetID.
@@ -664,9 +678,7 @@ class Dataset(HLObject):
             raise ValueError("%s is not a DatasetID" % bind)
         super().__init__(bind)
 
-        self._dcpl = self.id.get_create_plist()
         self._dxpl = h5p.create(h5p.DATASET_XFER)
-        self._filters = filters.get_filters(self._dcpl)
         self._readonly = readonly
         self._cache_props = {}
 
