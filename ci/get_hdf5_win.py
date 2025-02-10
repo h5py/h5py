@@ -95,7 +95,6 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
 
             with ZipFile(hdf5_file) as z:
                 z.extractall(hdf5_extract_path)
-            replace_CMakeFilters_cmake(hdf5_extract_path, dl_zip)
 
             old_dir = getcwd()
 
@@ -127,17 +126,6 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
             raise
     for f in glob(pjoin(install_path, 'bin/*.dll')):
         copy(f, pjoin(install_path, 'lib'))
-
-
-def replace_CMakeFilters_cmake(extract_point, zip_file):
-    src = pjoin(CI_DIR, "patched_CMakeFilters.cmake")
-    dir_suffix = basename(zip_file).removesuffix(".zip")
-    dest = pjoin(
-        extract_point,
-        REL_PATH_TO_CMAKE_CFG.format(dir_suffix=dir_suffix),
-        'CMakeFilters.cmake'
-    )
-    copy(src, dest)
 
 
 def get_cmake_config_path(extract_point, zip_file):
