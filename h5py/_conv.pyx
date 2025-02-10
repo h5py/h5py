@@ -27,7 +27,7 @@ cfg = get_config()
 
 # Initialization of numpy
 cimport numpy as cnp
-from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA, PyArray_DATA
+from numpy cimport npy_intp, NPY_ARRAY_WRITEABLE, NPY_ARRAY_C_CONTIGUOUS, NPY_ARRAY_OWNDATA, PyArray_DATA
 cnp._import_array()
 import numpy as np
 
@@ -695,7 +695,7 @@ cdef int conv_vlen2ndarray(void* ipt,
     cdef:
         PyObject** buf_obj = <PyObject**>opt
         vlen_t* in_vlen = <vlen_t*>ipt
-        int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS | NPY_OWNDATA
+        int flags = NPY_ARRAY_WRITEABLE | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_OWNDATA
         npy_intp dims[1]
         void* data
         char[:] buf

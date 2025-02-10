@@ -13,7 +13,7 @@
 from numpy cimport ndarray, import_array,\
                    NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp,\
                    PyArray_SimpleNew, PyArray_FROM_OTF,\
-                   NPY_CONTIGUOUS, NPY_NOTSWAPPED, NPY_FORCECAST
+                   NPY_ARRAY_C_CONTIGUOUS, NPY_ARRAY_NOTSWAPPED, NPY_ARRAY_FORCECAST
 
 # Initialization
 import_array()
@@ -164,7 +164,10 @@ cdef object create_hsize_array(object arr):
     else:
         raise RuntimeError("Can't map hsize_t %d to Numpy typecode" % sizeof(hsize_t))
 
-    return PyArray_FROM_OTF(arr, typecode, NPY_CONTIGUOUS | NPY_NOTSWAPPED | NPY_FORCECAST)
+    return PyArray_FROM_OTF(arr, typecode,
+        NPY_ARRAY_C_CONTIGUOUS
+        | NPY_ARRAY_NOTSWAPPED
+        | NPY_ARRAY_FORCECAST)
 
 
 # === Argument testing ========================================================
