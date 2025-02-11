@@ -99,6 +99,9 @@ class h5py_build_ext(build_ext):
             settings['library_dirs'].extend(config.msmpi_lib_dirs)
             settings['libraries'].append('msmpi')
 
+        if numpy.__version__ >= '2.0':
+            settings['define_macros'].append(('NPY_TARGET_VERSION', 0x00000012))
+
         try:
             numpy_includes = numpy.get_include()
         except AttributeError:

@@ -15,6 +15,10 @@
 
 include "config.pxi"
 
+import numpy as np
+cimport numpy as cnp
+cnp.import_array()
+
 cdef enum copy_dir:
     H5PY_SCATTER = 0,
     H5PY_GATHER
@@ -83,7 +87,8 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
 
 
 cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
-                    hid_t dxpl, void* progbuf, int read) except -1:
+                    hid_t dxpl, void* progbuf, PyArray_Descr* descr,
+                    int read) except -1:
 
     cdef htri_t need_bkg
     cdef hid_t dstype = -1      # Dataset datatype
@@ -138,7 +143,22 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 if read:
                     h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
-            if read:
+            if H5Tis_variable_str(mtype):
+                # numpy.dtypes.StringDType
+                # ABI needs numpy >=2.0; Cython API needs numpy >=2.3
+                assert H5Tis_variable_str(dstype)
+                IF NUMPY_BUILD_VERSION >= '2.3':
+                    if read:
+                        H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                        vstrings_copy(mspace, conv_buf, progbuf, descr, H5PY_SCATTER)
+                        H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
+                    else:
+                        vstrings_copy(mspace, conv_buf, progbuf, descr, H5PY_GATHER)
+                        H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                ELSE:
+                    raise AssertionError("All strings should have object dtype")
+
+            elif read:
                 H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_SCATTER)
@@ -195,7 +215,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
         finally:
             H5free_memory(member_name)
             member_name = NULL
-
+    
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
     # Second pass: pick out the matching fields and pack them in the new type
@@ -264,8 +284,8 @@ cdef herr_t h5py_gather_cb(void* elem, hid_t type_id, unsigned ndim,
 
 # Copy between a contiguous and non-contiguous buffer, with the layout
 # of the latter specified by a dataspace selection.
-cdef herr_t h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
-                 copy_dir op) except -1:
+cdef void h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
+                    copy_dir op):
 
     cdef h5py_scatter_t info
     cdef hsize_t elsize
@@ -281,9 +301,84 @@ cdef herr_t h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
     elif op == H5PY_GATHER:
         H5Diterate(noncontig, tid, space, h5py_gather_cb, &info)
     else:
-        raise RuntimeError("Illegal direction")
+        raise ValueError("Illegal direction")
 
-    return 0
+
+# =========================================================================
+# Scatter/gather routines for vlen strings to/from Numpy StringDType arrays
+#
+# NpyStrings were added to NumPy 2.0, but the Cython headers
+# were not available until NumPy 2.3
+
+IF NUMPY_BUILD_VERSION >= '2.3':
+    ctypedef struct vstrings_scatter_t:
+        size_t i
+        const char** buf
+        cnp.npy_string_allocator* allocator
+
+
+    cdef herr_t vstrings_scatter_cb(
+        void* elem, hid_t type_id, unsigned ndim,
+        const hsize_t *point, void *operator_data
+    ) except -1:
+        cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
+        cdef const char* buf = info[0].buf[info[0].i]
+        res = cnp.NpyString_pack(
+            info[0].allocator,
+            <cnp.npy_packed_static_string*>elem,
+            buf,
+            strlen(buf),
+        )
+        info[0].i += 1
+        return res
+
+
+    cdef herr_t vstrings_gather_cb(
+        void* elem, hid_t type_id, unsigned ndim,
+        const hsize_t *point, void *operator_data
+    ) except -1:
+        cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
+        cdef cnp.npy_static_string unpacked
+        res = cnp.NpyString_load(
+            info[0].allocator,
+            <cnp.npy_packed_static_string*>elem,
+            &unpacked,
+        )
+        info[0].buf[info[0].i] = unpacked.buf
+        info[0].i += 1
+        return res
+
+
+    cdef void vstrings_copy(hid_t space, void* contig, void* noncontig,
+                            PyArray_Descr* descr, copy_dir op):
+
+        cdef vstrings_scatter_t info
+        info.i = 0
+        info.buf = <const char**>contig
+        info.allocator = cnp.NpyString_acquire_allocator(
+            <cnp.PyArray_StringDTypeObject *>descr
+        )
+        if info.allocator is NULL:
+            raise RuntimeError("Failed to acquire string allocator")
+
+        # Disregard mtype from the caller.
+        # The memory type is actually npy_packed_static_string
+        # (an opaque struct *typically* 16 bytes per point),
+        # and not HDF5 variable length strings (char*; 8 bytes per point).
+        # Note: cnp.npy_packed_static_string is internal; can't call sizeof()
+        tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
+
+        try:
+            if op == H5PY_SCATTER:
+                H5Diterate(noncontig, tid, space, vstrings_scatter_cb, &info)
+            elif op == H5PY_GATHER:
+                H5Diterate(noncontig, tid, space, vstrings_gather_cb, &info)
+            else:
+                raise ValueError("Illegal direction")
+
+        finally:
+            cnp.NpyString_release_allocator(info.allocator)
+            H5Tclose(tid)
 
 # =============================================================================
 # VLEN support routines

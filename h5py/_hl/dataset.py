@@ -431,14 +431,22 @@ class Dataset(HLObject):
         return AsTypeView(self, dtype)
 
     def asstr(self, encoding=None, errors='strict'):
-        """Get a wrapper to read string data as Python strings:
+        """Get a wrapper to read string data as variable-length strings:
 
         >>> str_array = dataset.asstr()[:]
 
         The parameters have the same meaning as in ``bytes.decode()``.
         If ``encoding`` is unspecified, it will use the encoding in the HDF5
         datatype (either ascii or utf-8).
+
+        .. note::
+
+            This method is a no-op for UTF-8 strings on NumPy >= 2.0.
         """
+        # Variable-width strings (numpy >=2.0)
+        if self.dtype.kind == 'T':
+            return self
+
         string_info = h5t.check_string_dtype(self.dtype)
         if string_info is None:
             raise TypeError(
@@ -1094,17 +1102,20 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = '<Closed HDF5 dataset>'
+            return "<Closed HDF5 dataset>"
+
+        if self.name is None:
+            namestr = "(anonymous)"
         else:
-            if self.name is None:
-                namestr = '("anonymous")'
-            else:
-                name = pp.basename(pp.normpath(self.name))
-                namestr = '"%s"' % (name if name != '' else '/')
-            r = '<HDF5 dataset %s: shape %s, type "%s">' % (
-                namestr, self.shape, self.dtype.str
-            )
-        return r
+            name = pp.basename(pp.normpath(self.name))
+            namestr = '"{name}"' if name else "/"
+
+        if self.dtype.kind == "T":
+            typestr = str(self.dtype)  # StringDType()
+        else:
+            typestr = f'"{self.dtype.str}"'
+
+        return f"<HDF5 dataset {namestr}: shape {self.shape}, type {typestr}>"
 
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
