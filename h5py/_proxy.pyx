@@ -18,6 +18,7 @@ include "config.pxi"
 import numpy as np
 cimport numpy as cnp
 cnp.import_array()
+from libc.stdio cimport fprintf, stderr  # DNM
 
 cdef enum copy_dir:
     H5PY_SCATTER = 0,
@@ -113,13 +114,19 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
         else:
             dstype = H5Dget_type(dset)
 
+        print(f"{dstype=}, {mtype=}")  # DNM
+        print(f"{needs_proxy(dstype)=}")  # DNM
+        print(f"{needs_proxy(mtype)=}")  # DNM
         if not (needs_proxy(dstype) or needs_proxy(mtype)):
             if read:
+                print("raw H5Dread")  # DNM
                 H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
             else:
+                print("raw H5Dwrite")  # DNM
                 H5Dwrite(dset, mtype, mspace, fspace, dxpl, progbuf)
         else:
 
+            print("needs proxy")  # DNM
             if mspace == H5S_ALL and fspace != H5S_ALL:
                 mspace = fspace
             elif mspace != H5S_ALL and fspace == H5S_ALL:
@@ -130,6 +137,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
             npoints = H5Sget_select_npoints(mspace)
             cspace = H5Screate_simple(1, &npoints, NULL)
 
+            print(f"create_buffer({H5Tget_size(dstype)=}, {H5Tget_size(mtype)=}, {npoints=})")  # DNM
             conv_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(mtype), npoints)
 
             # Only create a (contiguous) backing buffer if absolutely
@@ -138,23 +146,33 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 need_bkg = needs_bkg_buffer(dstype, mtype)
             else:
                 need_bkg = needs_bkg_buffer(mtype, dstype)
+            print(f"{need_bkg=}")  # DNM
             if need_bkg:
                 back_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(mtype), npoints)
                 if read:
+                    print(f"need_bkg -> h5py_copy({mtype=}, {mspace=})")  # DNM
                     h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
+            print(f"{read=}")  # DNM
             if H5Tis_variable_str(mtype):
                 # numpy.dtypes.StringDType
                 # ABI needs numpy >=2.0; Cython API needs numpy >=2.3
                 assert H5Tis_variable_str(dstype)
                 IF NUMPY_BUILD_VERSION >= '2.3':
                     if read:
+                        print("read variable strings!")  # DNM
                         H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
                         vstrings_copy(mspace, conv_buf, progbuf, descr, H5PY_SCATTER)
                         H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
                     else:
+                        print("write variable strings!")  # DNM                        
                         vstrings_copy(mspace, conv_buf, progbuf, descr, H5PY_GATHER)
+                        print(f"conv_buf contents ({npoints=}):")  # DNM
+                        for i in range(npoints):  # DNM
+                            print(f"conv_buf[{i}]: {b if (b := (<char**>conv_buf)[i]) else 'NULL'}")  # DNM
+                        print("H5DWrite")  # DNM
                         H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                        print("H5DWrite done")  # DNM
                 ELSE:
                     raise AssertionError("All strings should have object dtype")
 
@@ -216,6 +234,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
             H5free_memory(member_name)
             member_name = NULL
     
+    print(f"{mtype_fields=}, {newtype_size=}")  # DNM
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
     # Second pass: pick out the matching fields and pack them in the new type
@@ -250,6 +269,8 @@ cdef void* create_buffer(size_t ipt_size, size_t opt_size, size_t nl) except NUL
     if buf == NULL:
         raise MemoryError("Failed to allocate conversion buffer")
 
+    for i in range(final_size):  # DNM
+        (<char*>buf)[i] = 0  # DNM
     return buf
 
 # =============================================================================
@@ -323,6 +344,8 @@ IF NUMPY_BUILD_VERSION >= '2.3':
     ) except -1:
         cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
         cdef const char* buf = info[0].buf[info[0].i]
+        fprintf(stderr, "vstrings_scatter_cb elem=%u point=%u info.i=%u ", <hsize_t>elem, point[0], info[0].i)  # DNM
+        fprintf(stderr, "buf=%s\n; size=%d\n", buf, strlen(buf))  # DNM
         res = cnp.NpyString_pack(
             info[0].allocator,
             <cnp.npy_packed_static_string*>elem,
@@ -338,12 +361,14 @@ IF NUMPY_BUILD_VERSION >= '2.3':
         const hsize_t *point, void *operator_data
     ) except -1:
         cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
+        fprintf(stderr, "vstrings_gather_cb elem=%u point=%u info.i=%u ", <hsize_t>elem, point[0], info[0].i)  # DNM
         cdef cnp.npy_static_string unpacked
         res = cnp.NpyString_load(
             info[0].allocator,
             <cnp.npy_packed_static_string*>elem,
             &unpacked,
         )
+        fprintf(stderr, "buf=%s size=%d %s\n", unpacked.buf, unpacked.size)  # DNM
         info[0].buf[info[0].i] = unpacked.buf
         info[0].i += 1
         return res
@@ -355,6 +380,7 @@ IF NUMPY_BUILD_VERSION >= '2.3':
         cdef vstrings_scatter_t info
         info.i = 0
         info.buf = <const char**>contig
+        print("acquire_allocator")  # DNM
         info.allocator = cnp.NpyString_acquire_allocator(
             <cnp.PyArray_StringDTypeObject *>descr
         )
@@ -368,6 +394,7 @@ IF NUMPY_BUILD_VERSION >= '2.3':
         # Note: cnp.npy_packed_static_string is internal; can't call sizeof()
         tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
 
+        print("H5DIterate")  # DNM
         try:
             if op == H5PY_SCATTER:
                 H5Diterate(noncontig, tid, space, vstrings_scatter_cb, &info)
@@ -377,6 +404,7 @@ IF NUMPY_BUILD_VERSION >= '2.3':
                 raise ValueError("Illegal direction")
 
         finally:
+            print("release_allocator")  # DNM
             cnp.NpyString_release_allocator(info.allocator)
             H5Tclose(tid)
 
@@ -410,17 +438,20 @@ cdef htri_t needs_proxy(hid_t tid) except -1:
     cdef htri_t result
 
     cls = H5Tget_class(tid)
+    print(f"needs_proxy: {cls=}")  # DNM
 
     if cls == H5T_VLEN or cls == H5T_REFERENCE:
         return 1
 
     elif cls == H5T_STRING:
+        print(f"needs_proxy: cls == H5T_STRING; {H5Tis_variable_str(tid)=}")  # DNM
         return H5Tis_variable_str(tid)
 
     elif cls == H5T_ARRAY:
 
         supertype = H5Tget_super(tid)
         try:
+            print(f"needs_proxy: cls == H5T_ARRAY; needs_proxy({supertype=})={needs_proxy(supertype)}")  # DNM
             return needs_proxy(supertype)
         finally:
             H5Tclose(supertype)
