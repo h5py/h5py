@@ -210,8 +210,9 @@ class AbstractView(ABC):
         return len(self._dset)
 
     @property
+    @abstractmethod
     def dtype(self):
-        return self._dset.dtype
+        ...  # pragma: nocover
 
     @property
     def ndim(self):
@@ -236,14 +237,10 @@ class AbstractView(ABC):
                 "but memory allocation cannot be avoided on read"
             )
 
-        data = self[()]
-        if not self.ndim:
-            return numpy.asarray(data, dtype=dtype or self.dtype)
-        if dtype is not None:
-            return data.astype(dtype, copy=False)
-        return data
+        # If self.ndim == 0, convert np.generic back to np.ndarray
+        return numpy.asarray(self[()], dtype=dtype or self.dtype)
 
-class AstypeView(AbstractView):
+class AsTypeView(AbstractView):
     """Wrapper to convert data on reading from a dataset.
     """
     def __init__(self, dset, dtype):
@@ -267,6 +264,10 @@ class AsStrView(AbstractView):
         super().__init__(dset)
         self.encoding = encoding
         self.errors = errors
+
+    @property
+    def dtype(self):
+        return numpy.dtype(object)
 
     def __getitem__(self, idx):
         bytes_arr = self._dset[idx]
@@ -427,7 +428,7 @@ class Dataset(HLObject):
 
         >>> double_precision = dataset.astype('f8')[0:100:2]
         """
-        return AstypeView(self, dtype)
+        return AsTypeView(self, dtype)
 
     def asstr(self, encoding=None, errors='strict'):
         """Get a wrapper to read string data as Python strings:
