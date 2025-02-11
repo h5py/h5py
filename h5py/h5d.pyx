@@ -281,7 +281,7 @@ cdef class DatasetID(ObjectID):
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
         descr = PyArray_DESCR(arr_obj)
-    
+
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, descr, 0)
 
 

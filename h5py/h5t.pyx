@@ -50,7 +50,7 @@ def _parse_version(version):
 # NpyStrings (variable-width Unicode strings) are available
 # in NumPy since 2.0, but the Cython headers were added in 2.3
 USE_NPY_STRINGS = (
-    _parse_version(NUMPY_BUILD_VERSION) >= (2, 3) 
+    _parse_version(NUMPY_BUILD_VERSION) >= (2, 3)
     and _parse_version(np.__version__) >= (2, 0)
 )
 

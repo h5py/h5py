@@ -218,7 +218,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
         finally:
             H5free_memory(member_name)
             member_name = NULL
-    
+
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
     # Second pass: pick out the matching fields and pack them in the new type
@@ -402,7 +402,7 @@ IF NUMPY_BUILD_VERSION >= '2.3':
             raise RuntimeError("Failed to acquire string allocator")
         # Read note on vstrings_scatter
         tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
-    
+
         try:
             # Multiple steps needed:
             # 1. Read npy_packed_static_string[] from numpy and unpack
