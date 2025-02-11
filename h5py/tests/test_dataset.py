@@ -1349,7 +1349,7 @@ class TestStrings(BaseDataset):
 
         strwrap1 = ds.asstr('ascii')
         with self.assertRaises(UnicodeDecodeError):
-            out = strwrap1[0]
+            strwrap1[0]
 
         # Different errors parameter
         self.assertEqual(ds.asstr('ascii', 'ignore')[0], 'filte')
@@ -1872,7 +1872,7 @@ class TestVlen(BaseDataset):
         dt = h5py.string_dtype(encoding='ascii')
         fill_value = b'bar'
         ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             np.array(ds.asstr(), dtype=int)
 
 
@@ -2103,32 +2103,84 @@ class TestVirtualPrefix(BaseDataset):
         self.assertEqual(dset.shape, (10, 3))
 
 
+def ds_str(file, shape=(10, )):
+    dt = h5py.string_dtype(encoding='ascii')
+    fill_value = b'fill'
+    return file.create_dataset('x', shape, dtype=dt, fillvalue=fill_value)
+
+
+def ds_fields(file, shape=(10, )):
+    dt = np.dtype([
+        ('foo', h5py.string_dtype(encoding='ascii')),
+        ('bar', np.float64),
+    ])
+    fill_value = np.asarray(('fill', 0.0), dtype=dt)
+    file['x'] = np.broadcast_to(fill_value, shape)
+    return file['x']
+
+
+view_getters = pytest.mark.parametrize(
+    "view_getter,make_ds",
+    [
+        (lambda ds: ds, ds_str),
+        (lambda ds: ds.astype(dtype=object), ds_str),
+        (lambda ds: ds.asstr(), ds_str),
+        (lambda ds: ds.fields("foo"), ds_fields),
+    ],
+    ids=["ds", "astype", "asstr", "fields"],
+)
+
 
 COPY_IF_NEEDED = False if NUMPY_RELEASE_VERSION < (2, 0) else None
 
-VIEW_GETTERS = {
-    "ds": lambda ds: ds,
-    "astype": lambda ds: ds.astype(dtype=object),
-    "asstr": lambda ds: ds.asstr(),
-}
-
 @pytest.mark.parametrize("copy", [True, COPY_IF_NEEDED])
-@pytest.mark.parametrize("view_getter", VIEW_GETTERS.values(), ids=VIEW_GETTERS.keys())
-def test_array_copy(view_getter, copy, writable_file):
-    dt = h5py.string_dtype(encoding='ascii')
-    fill_value = b'bar'
-    ds = writable_file.create_dataset('x', (10,), dtype=dt, fillvalue=fill_value)
-    np.array(view_getter(ds), copy=copy)
+@view_getters
+def test_array_copy(view_getter, make_ds, copy, writable_file):
+    ds = make_ds(writable_file)
+    view = view_getter(ds)
+    np.array(view, copy=copy)
+
 
 @pytest.mark.skipif(
     NUMPY_RELEASE_VERSION < (2, 0),
     reason="forbidding copies requires numpy 2",
 )
-@pytest.mark.parametrize("view_getter", VIEW_GETTERS.values(), ids=VIEW_GETTERS.keys())
-def test_array_copy_false(view_getter, writable_file):
-    dt = h5py.string_dtype(encoding='ascii')
-    fill_value = b'bar'
-    ds = writable_file.create_dataset('x', (10,), dtype=dt, fillvalue=fill_value)
+@view_getters
+def test_array_copy_false(view_getter, make_ds, writable_file):
+    ds = make_ds(writable_file)
     view = view_getter(ds)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="memory allocation cannot be avoided"):
         np.array(view, copy=False)
+
+
+@view_getters
+def test_array_dtype(view_getter, make_ds, writable_file):
+    ds = make_ds(writable_file)
+    view = view_getter(ds)
+    assert np.array(view, dtype='|S10').dtype == np.dtype('|S10')
+
+
+@view_getters
+def test_array_scalar(view_getter, make_ds, writable_file):
+    ds = make_ds(writable_file, shape=())
+    view = view_getter(ds)
+    assert isinstance(view[()], (bytes, str))
+    assert np.array(view).shape == ()
+
+
+@view_getters
+def test_array_nd(view_getter, make_ds, writable_file):
+    ds = make_ds(writable_file, shape=(5, 6))
+    view = view_getter(ds)
+    assert np.array(view).shape == (5, 6)
+
+
+@view_getters
+def test_view_properties(view_getter, make_ds, writable_file):
+    ds = make_ds(writable_file, shape=(5, 6))
+    view = view_getter(ds)
+    assert view.dtype == np.dtype(object)
+    assert view.ndim == 2
+    assert view.shape == (5, 6)
+    assert view.size == 30
+    assert len(view) == 5
