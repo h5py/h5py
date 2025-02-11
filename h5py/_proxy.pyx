@@ -135,6 +135,8 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 fspace = mspace = dspace = H5Dget_space(dset)
 
             npoints = H5Sget_select_npoints(mspace)
+            if npoints == 0:
+                return 0
             cspace = H5Screate_simple(1, &npoints, NULL)
 
             print(f"create_buffer({H5Tget_size(dstype)=}, {H5Tget_size(mtype)=}, {npoints=})")  # DNM
@@ -162,17 +164,18 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                     if read:
                         print("read variable strings!")  # DNM
                         H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
-                        vstrings_copy(mspace, conv_buf, progbuf, descr, H5PY_SCATTER)
+                        vstrings_scatter(mspace, conv_buf, progbuf, descr)
                         H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
                     else:
                         print("write variable strings!")  # DNM                        
-                        vstrings_copy(mspace, conv_buf, progbuf, descr, H5PY_GATHER)
+                        vstrings_gather(mspace, conv_buf, progbuf, descr, npoints)
                         print(f"conv_buf contents ({npoints=}):")  # DNM
                         for i in range(npoints):  # DNM
                             print(f"conv_buf[{i}]: {b if (b := (<char**>conv_buf)[i]) else 'NULL'}")  # DNM
                         print("H5DWrite")  # DNM
                         H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
                         print("H5DWrite done")  # DNM
+                        free((<char**>conv_buf)[0])
                 ELSE:
                     raise AssertionError("All strings should have object dtype")
 
@@ -322,7 +325,7 @@ cdef void h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
     elif op == H5PY_GATHER:
         H5Diterate(noncontig, tid, space, h5py_gather_cb, &info)
     else:
-        raise ValueError("Illegal direction")
+        raise AssertionError("unreachable")
 
 
 # =========================================================================
@@ -334,8 +337,13 @@ cdef void h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
 IF NUMPY_BUILD_VERSION >= '2.3':
     ctypedef struct vstrings_scatter_t:
         size_t i
-        const char** buf
         cnp.npy_string_allocator* allocator
+        const char** contig
+
+    ctypedef struct vstrings_gather_t:
+        size_t i
+        cnp.npy_string_allocator* allocator
+        cnp.npy_static_string* unpacked
 
 
     cdef herr_t vstrings_scatter_cb(
@@ -343,9 +351,10 @@ IF NUMPY_BUILD_VERSION >= '2.3':
         const hsize_t *point, void *operator_data
     ) except -1:
         cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
-        cdef const char* buf = info[0].buf[info[0].i]
+        cdef const char* buf = info[0].contig[info[0].i]
         fprintf(stderr, "vstrings_scatter_cb elem=%u point=%u info.i=%u ", <hsize_t>elem, point[0], info[0].i)  # DNM
         fprintf(stderr, "buf=%s\n; size=%d\n", buf, strlen(buf))  # DNM
+        # Deep copy char* from h5py into the numpy array
         res = cnp.NpyString_pack(
             info[0].allocator,
             <cnp.npy_packed_static_string*>elem,
@@ -356,30 +365,12 @@ IF NUMPY_BUILD_VERSION >= '2.3':
         return res
 
 
-    cdef herr_t vstrings_gather_cb(
-        void* elem, hid_t type_id, unsigned ndim,
-        const hsize_t *point, void *operator_data
-    ) except -1:
-        cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
-        fprintf(stderr, "vstrings_gather_cb elem=%u point=%u info.i=%u ", <hsize_t>elem, point[0], info[0].i)  # DNM
-        cdef cnp.npy_static_string unpacked
-        res = cnp.NpyString_load(
-            info[0].allocator,
-            <cnp.npy_packed_static_string*>elem,
-            &unpacked,
-        )
-        fprintf(stderr, "buf=%s size=%d %s\n", unpacked.buf, unpacked.size)  # DNM
-        info[0].buf[info[0].i] = unpacked.buf
-        info[0].i += 1
-        return res
-
-
-    cdef void vstrings_copy(hid_t space, void* contig, void* noncontig,
-                            PyArray_Descr* descr, copy_dir op):
+    cdef void vstrings_scatter(hid_t space, void* contig, void* noncontig,
+                               PyArray_Descr* descr):
 
         cdef vstrings_scatter_t info
         info.i = 0
-        info.buf = <const char**>contig
+        info.contig = <const char**>contig
         print("acquire_allocator")  # DNM
         info.allocator = cnp.NpyString_acquire_allocator(
             <cnp.PyArray_StringDTypeObject *>descr
@@ -395,15 +386,86 @@ IF NUMPY_BUILD_VERSION >= '2.3':
         tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
 
         print("H5DIterate")  # DNM
-        try:
-            if op == H5PY_SCATTER:
-                H5Diterate(noncontig, tid, space, vstrings_scatter_cb, &info)
-            elif op == H5PY_GATHER:
-                H5Diterate(noncontig, tid, space, vstrings_gather_cb, &info)
-            else:
-                raise ValueError("Illegal direction")
+        # Read char*[] (zero-terminated) from h5py
+        # and deep-copy to npy_packed_static_string[] for numpy
+        H5Diterate(noncontig, tid, space, vstrings_scatter_cb, &info)
+        print("release_allocator")  # DNM
+        cnp.NpyString_release_allocator(info.allocator)
+        H5Tclose(tid)
 
+
+    cdef herr_t vstrings_gather_cb(
+        void* elem, hid_t type_id, unsigned ndim,
+        const hsize_t *point, void *operator_data
+    ) except -1:
+        cdef vstrings_gather_t* info = <vstrings_gather_t*>operator_data
+        cdef cnp.npy_static_string* unpacked = info[0].unpacked + info[0].i
+        fprintf(stderr, "vstrings_gather_cb elem=%u point=%u info.i=%u ", <hsize_t>elem, point[0], info[0].i)  # DNM
+        # Obtain a reference to the string (NOT zero-terminated) and its size
+        res = cnp.NpyString_load(
+            info[0].allocator,
+            <cnp.npy_packed_static_string*>elem,
+            unpacked,
+        )
+        fprintf(stderr, "buf=%s size=%d %s\n", unpacked.buf, unpacked.size)  # DNM
+        info[0].i += 1
+        return res
+
+
+    cdef void vstrings_gather(hid_t space, void* contig, void* noncontig,
+                              PyArray_Descr* descr, size_t npoints):
+
+        cdef vstrings_gather_t info
+        cdef size_t total_size
+        cdef size_t cur_size
+        cdef char* zero_terminated = NULL
+        cdef char* zero_terminated_cur = NULL
+        info.unpacked = NULL
+        info.i = 0
+
+        print("acquire_allocator")  # DNM
+        info.allocator = cnp.NpyString_acquire_allocator(
+            <cnp.PyArray_StringDTypeObject *>descr
+        )
+        if info.allocator is NULL:
+            raise RuntimeError("Failed to acquire string allocator")
+        # Read note on vstrings_scatter
+        tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
+    
+        try:
+            print("H5DIterate")  # DNM
+            # Multiple steps needed:
+            # 1. Read npy_packed_static_string[] from numpy and unpack
+            #    to npy_static_string[]; which is
+            #    {const char* buf, size_t size}[] - NOT zero-terminated
+            info.unpacked = <cnp.npy_static_string*>create_buffer(
+                npoints, npoints, sizeof(cnp.npy_static_string)
+            )
+            H5Diterate(noncontig, tid, space, vstrings_gather_cb, &info)
+
+            # 2. Calculate total size of strings with zero termination
+            total_size = npoints  # zero termination characters
+            for i in range(npoints):
+                total_size += info.unpacked[i].size
+
+            # 3. Copy to temporary buffer which is a concatenation of
+            #    zero-terminated char* and point to it from the
+            #    output char*[] for h5py
+            zero_terminated = <char*>create_buffer(total_size, total_size, 1)
+            zero_terminated_cur = zero_terminated
+            for i in range(npoints):
+                cur_size = info.unpacked[i].size
+                memcpy(zero_terminated_cur, info.unpacked[i].buf, cur_size)
+                zero_terminated_cur[cur_size] = 0
+                (<char**>contig)[i] = zero_terminated_cur
+                zero_terminated_cur += cur_size + 1
+
+            # 4. (after H5Dwrite) free the temporary buffer
+        except Exception:
+            free(zero_terminated)
+            raise
         finally:
+            free(info.unpacked)
             print("release_allocator")  # DNM
             cnp.NpyString_release_allocator(info.allocator)
             H5Tclose(tid)
