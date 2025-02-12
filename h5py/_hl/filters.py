@@ -308,7 +308,7 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
 
 def get_filter_name(code):
     """
-    Return the name of the compression filter for a given filter code.
+    Return the name of the compression filter for a given filter identifier.
 
     Undocumented and subject to change without warning.
     """
