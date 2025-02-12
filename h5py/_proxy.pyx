@@ -402,42 +402,38 @@ IF NUMPY_BUILD_VERSION >= '2.3':
             raise RuntimeError("Failed to acquire string allocator")
         # Read note on vstrings_scatter
         tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
+    
+        # Multiple steps needed:
+        # 1. Read npy_packed_static_string[] from numpy and unpack
+        #    to npy_static_string[]; which is
+        #    {const char* buf, size_t size}[] - NOT zero-terminated
+        info.unpacked = <cnp.npy_static_string*>create_buffer(
+            npoints, npoints, sizeof(cnp.npy_static_string)
+        )
+        H5Diterate(noncontig, tid, space, vstrings_gather_cb, &info)
+        assert info.i == npoints
 
-        try:
-            # Multiple steps needed:
-            # 1. Read npy_packed_static_string[] from numpy and unpack
-            #    to npy_static_string[]; which is
-            #    {const char* buf, size_t size}[] - NOT zero-terminated
-            info.unpacked = <cnp.npy_static_string*>create_buffer(
-                npoints, npoints, sizeof(cnp.npy_static_string)
-            )
-            H5Diterate(noncontig, tid, space, vstrings_gather_cb, &info)
+        # 2. Calculate total size of strings with zero termination
+        total_size = npoints  # zero termination characters
+        for i in range(npoints):
+            total_size += info.unpacked[i].size
 
-            # 2. Calculate total size of strings with zero termination
-            total_size = npoints  # zero termination characters
-            for i in range(npoints):
-                total_size += info.unpacked[i].size
+        # 3. Copy to temporary buffer which is a concatenation of
+        #    zero-terminated char* and point to it from the
+        #    output char*[] for h5py
+        zero_terminated = <char*>create_buffer(total_size, total_size, 1)
+        zero_terminated_cur = zero_terminated
+        for i in range(npoints):
+            cur_size = info.unpacked[i].size
+            memcpy(zero_terminated_cur, info.unpacked[i].buf, cur_size)
+            zero_terminated_cur[cur_size] = 0
+            (<char**>contig)[i] = zero_terminated_cur
+            zero_terminated_cur += cur_size + 1
 
-            # 3. Copy to temporary buffer which is a concatenation of
-            #    zero-terminated char* and point to it from the
-            #    output char*[] for h5py
-            zero_terminated = <char*>create_buffer(total_size, total_size, 1)
-            zero_terminated_cur = zero_terminated
-            for i in range(npoints):
-                cur_size = info.unpacked[i].size
-                memcpy(zero_terminated_cur, info.unpacked[i].buf, cur_size)
-                zero_terminated_cur[cur_size] = 0
-                (<char**>contig)[i] = zero_terminated_cur
-                zero_terminated_cur += cur_size + 1
-
-            # 4. (after H5Dwrite) free the temporary buffer
-        except Exception:
-            free(zero_terminated)
-            raise
-        finally:
-            free(info.unpacked)
-            cnp.NpyString_release_allocator(info.allocator)
-            H5Tclose(tid)
+        free(info.unpacked)
+        cnp.NpyString_release_allocator(info.allocator)
+        H5Tclose(tid)
+        # 4. (after H5Dwrite) free the temporary buffer
 
 # =============================================================================
 # VLEN support routines
