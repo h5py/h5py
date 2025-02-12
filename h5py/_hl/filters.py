@@ -306,16 +306,23 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
 
     return plist
 
+def get_filter_name(code):
+    """
+    Return the name of the compression filter for a given filter code.
+
+    Undocumented and subject to change without warning.
+    """
+    filters = {h5z.FILTER_DEFLATE: 'gzip', h5z.FILTER_SZIP: 'szip',
+               h5z.FILTER_SHUFFLE: 'shuffle', h5z.FILTER_FLETCHER32: 'fletcher32',
+               h5z.FILTER_LZF: 'lzf', h5z.FILTER_SCALEOFFSET: 'scaleoffset'}
+    return filters.get(code, str(code))
+
 def get_filters(plist):
     """ Extract a dictionary of active filters from a DCPL, along with
     their settings.
 
     Undocumented and subject to change without warning.
     """
-
-    filters = {h5z.FILTER_DEFLATE: 'gzip', h5z.FILTER_SZIP: 'szip',
-               h5z.FILTER_SHUFFLE: 'shuffle', h5z.FILTER_FLETCHER32: 'fletcher32',
-               h5z.FILTER_LZF: 'lzf', h5z.FILTER_SCALEOFFSET: 'scaleoffset'}
 
     pipeline = {}
 
@@ -343,7 +350,7 @@ def get_filters(plist):
             if len(vals) == 0:
                 vals = None
 
-        pipeline[filters.get(code, str(code))] = vals
+        pipeline[get_filter_name(code)] = vals
 
     return pipeline
 

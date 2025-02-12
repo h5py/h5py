@@ -108,6 +108,15 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         maxshape, scaleoffset, external, allow_unknown_filter,
         fill_time=fill_time)
 
+    # Check that compression roundtrips correctly if it was specified
+    if compression is not None:
+        if isinstance(compression, filters.FilterRefBase):
+            compression = compression.filter_id
+        if isinstance(compression, int):
+            compression = filters.get_filter_name(compression)
+        if compression not in filters.get_filters(dcpl):
+            raise ValueError(f'compression {compression!r} not in filters {filters.get_filters(dcpl)!r}')
+
     if fillvalue is not None:
         # prepare string-type dtypes for fillvalue
         string_info = h5t.check_string_dtype(dtype)
