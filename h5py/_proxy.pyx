@@ -402,7 +402,7 @@ IF NUMPY_BUILD_VERSION >= '2.3':
             raise RuntimeError("Failed to acquire string allocator")
         # Read note on vstrings_scatter
         tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
-    
+
         # Multiple steps needed:
         # 1. Read npy_packed_static_string[] from numpy and unpack
         #    to npy_static_string[]; which is
