@@ -109,6 +109,15 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         maxshape, scaleoffset, external, allow_unknown_filter,
         fill_time=fill_time)
 
+    # Check that compression roundtrips correctly if it was specified
+    if compression is not None:
+        if isinstance(compression, filters.FilterRefBase):
+            compression = compression.filter_id
+        if isinstance(compression, int):
+            compression = filters.get_filter_name(compression)
+        if compression not in filters.get_filters(dcpl):
+            raise ValueError(f'compression {compression!r} not in filters {filters.get_filters(dcpl)!r}')
+
     if fillvalue is not None:
         # prepare string-type dtypes for fillvalue
         string_info = h5t.check_string_dtype(dtype)
@@ -656,6 +665,20 @@ class Dataset(HLObject):
         """Check if extent type is empty"""
         return self._extent_type == h5s.NULL
 
+    @cached_property
+    def _dcpl(self):
+        """
+        The dataset creation property list used when this dataset was created.
+        """
+        return self.id.get_create_plist()
+
+    @cached_property
+    def _filters(self):
+        """
+        The active filters of the dataset.
+        """
+        return filters.get_filters(self._dcpl)
+
     @with_phil
     def __init__(self, bind, *, readonly=False):
         """ Create a new Dataset object by binding to a low-level DatasetID.
@@ -664,9 +687,7 @@ class Dataset(HLObject):
             raise ValueError("%s is not a DatasetID" % bind)
         super().__init__(bind)
 
-        self._dcpl = self.id.get_create_plist()
         self._dxpl = h5p.create(h5p.DATASET_XFER)
-        self._filters = filters.get_filters(self._dcpl)
         self._readonly = readonly
         self._cache_props = {}
 
