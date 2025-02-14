@@ -532,7 +532,7 @@ Reference
 
         :param file_image: The initial file contents as bytes (or anything that
             supports the Python buffer interface). HDF5 takes a copy of this data.
-        :param block_size: Chunk size for new memory alloactions (default 1 MiB).
+        :param block_size: Chunk size for new memory alloactions (default 64 KiB).
 
         Other keyword arguments are like :class:`File`, although name, mode,
         driver and locking can't be passed.
