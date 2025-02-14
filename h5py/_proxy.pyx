@@ -15,6 +15,10 @@
 
 include "config.pxi"
 
+import numpy as np
+cimport numpy as cnp
+cnp.import_array()
+
 cdef enum copy_dir:
     H5PY_SCATTER = 0,
     H5PY_GATHER
@@ -83,7 +87,8 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
 
 
 cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
-                    hid_t dxpl, void* progbuf, int read) except -1:
+                    hid_t dxpl, void* progbuf, PyArray_Descr* descr,
+                    int read) except -1:
 
     cdef htri_t need_bkg
     cdef hid_t dstype = -1      # Dataset datatype
@@ -123,6 +128,8 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 fspace = mspace = dspace = H5Dget_space(dset)
 
             npoints = H5Sget_select_npoints(mspace)
+            if npoints == 0:
+                return 0
             cspace = H5Screate_simple(1, &npoints, NULL)
 
             conv_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(mtype), npoints)
@@ -138,7 +145,23 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 if read:
                     h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
-            if read:
+            if H5Tis_variable_str(mtype):
+                # numpy.dtypes.StringDType
+                # ABI needs numpy >=2.0; Cython API needs numpy >=2.3
+                assert H5Tis_variable_str(dstype)
+                IF NUMPY_BUILD_VERSION >= '2.3':
+                    if read:
+                        H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                        vstrings_scatter(mspace, conv_buf, progbuf, descr)
+                        H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
+                    else:
+                        vstrings_gather(mspace, conv_buf, progbuf, descr, npoints)
+                        H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                        free((<char**>conv_buf)[0])
+                ELSE:
+                    raise AssertionError("All strings should have object dtype")
+
+            elif read:
                 H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_SCATTER)
@@ -264,8 +287,8 @@ cdef herr_t h5py_gather_cb(void* elem, hid_t type_id, unsigned ndim,
 
 # Copy between a contiguous and non-contiguous buffer, with the layout
 # of the latter specified by a dataspace selection.
-cdef herr_t h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
-                 copy_dir op) except -1:
+cdef void h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
+                    copy_dir op):
 
     cdef h5py_scatter_t info
     cdef hsize_t elsize
@@ -281,9 +304,136 @@ cdef herr_t h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
     elif op == H5PY_GATHER:
         H5Diterate(noncontig, tid, space, h5py_gather_cb, &info)
     else:
-        raise RuntimeError("Illegal direction")
+        raise AssertionError("unreachable")
 
-    return 0
+
+# =========================================================================
+# Scatter/gather routines for vlen strings to/from Numpy StringDType arrays
+#
+# NpyStrings were added to NumPy 2.0, but the Cython headers
+# were not available until NumPy 2.3
+
+IF NUMPY_BUILD_VERSION >= '2.3':
+    ctypedef struct vstrings_scatter_t:
+        size_t i
+        cnp.npy_string_allocator* allocator
+        const char** contig
+
+    ctypedef struct vstrings_gather_t:
+        size_t i
+        cnp.npy_string_allocator* allocator
+        cnp.npy_static_string* unpacked
+
+
+    cdef herr_t vstrings_scatter_cb(
+        void* elem, hid_t type_id, unsigned ndim,
+        const hsize_t *point, void *operator_data
+    ) except -1:
+        cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
+        cdef const char* buf = info[0].contig[info[0].i]
+        # Deep copy char* from h5py into the numpy array
+        res = cnp.NpyString_pack(
+            info[0].allocator,
+            <cnp.npy_packed_static_string*>elem,
+            buf,
+            strlen(buf),
+        )
+        info[0].i += 1
+        return res
+
+
+    cdef void vstrings_scatter(hid_t space, void* contig, void* noncontig,
+                               PyArray_Descr* descr):
+
+        cdef vstrings_scatter_t info
+        info.i = 0
+        info.contig = <const char**>contig
+        info.allocator = cnp.NpyString_acquire_allocator(
+            <cnp.PyArray_StringDTypeObject *>descr
+        )
+        if info.allocator is NULL:
+            raise RuntimeError("Failed to acquire string allocator")
+
+        # Disregard mtype from the caller.
+        # The memory type is actually npy_packed_static_string
+        # (an opaque struct *typically* 16 bytes per point),
+        # and not HDF5 variable length strings (char*; 8 bytes per point).
+        # Note: cnp.npy_packed_static_string is internal; can't call sizeof()
+        tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
+
+        # Read char*[] (zero-terminated) from h5py
+        # and deep-copy to npy_packed_static_string[] for numpy
+        H5Diterate(noncontig, tid, space, vstrings_scatter_cb, &info)
+        cnp.NpyString_release_allocator(info.allocator)
+        H5Tclose(tid)
+
+
+    cdef herr_t vstrings_gather_cb(
+        void* elem, hid_t type_id, unsigned ndim,
+        const hsize_t *point, void *operator_data
+    ) except -1:
+        cdef vstrings_gather_t* info = <vstrings_gather_t*>operator_data
+        cdef cnp.npy_static_string* unpacked = info[0].unpacked + info[0].i
+        # Obtain a reference to the string (NOT zero-terminated) and its size
+        res = cnp.NpyString_load(
+            info[0].allocator,
+            <cnp.npy_packed_static_string*>elem,
+            unpacked,
+        )
+        info[0].i += 1
+        return res
+
+
+    cdef void vstrings_gather(hid_t space, void* contig, void* noncontig,
+                              PyArray_Descr* descr, size_t npoints):
+
+        cdef vstrings_gather_t info
+        cdef size_t total_size
+        cdef size_t cur_size
+        cdef char* zero_terminated = NULL
+        cdef char* zero_terminated_cur = NULL
+        info.unpacked = NULL
+        info.i = 0
+
+        info.allocator = cnp.NpyString_acquire_allocator(
+            <cnp.PyArray_StringDTypeObject *>descr
+        )
+        if info.allocator is NULL:
+            raise RuntimeError("Failed to acquire string allocator")
+        # Read note on vstrings_scatter
+        tid = H5Tcreate(H5T_OPAQUE, np.dtype("T").itemsize)
+
+        # Multiple steps needed:
+        # 1. Read npy_packed_static_string[] from numpy and unpack
+        #    to npy_static_string[]; which is
+        #    {const char* buf, size_t size}[] - NOT zero-terminated
+        info.unpacked = <cnp.npy_static_string*>create_buffer(
+            npoints, npoints, sizeof(cnp.npy_static_string)
+        )
+        H5Diterate(noncontig, tid, space, vstrings_gather_cb, &info)
+        assert info.i == npoints
+
+        # 2. Calculate total size of strings with zero termination
+        total_size = npoints  # zero termination characters
+        for i in range(npoints):
+            total_size += info.unpacked[i].size
+
+        # 3. Copy to temporary buffer which is a concatenation of
+        #    zero-terminated char* and point to it from the
+        #    output char*[] for h5py
+        zero_terminated = <char*>create_buffer(total_size, total_size, 1)
+        zero_terminated_cur = zero_terminated
+        for i in range(npoints):
+            cur_size = info.unpacked[i].size
+            memcpy(zero_terminated_cur, info.unpacked[i].buf, cur_size)
+            zero_terminated_cur[cur_size] = 0
+            (<char**>contig)[i] = zero_terminated_cur
+            zero_terminated_cur += cur_size + 1
+
+        free(info.unpacked)
+        cnp.NpyString_release_allocator(info.allocator)
+        H5Tclose(tid)
+        # 4. (after H5Dwrite) free the temporary buffer
 
 # =============================================================================
 # VLEN support routines
