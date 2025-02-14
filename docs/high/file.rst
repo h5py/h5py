@@ -149,6 +149,8 @@ This uses HDF5's "core" :ref:`file driver <file_driver>`, which is likely to
 cause fewer odd problems than asking HDF5 to call back into a Python ``BytesIO``
 object (:ref:`described below <file_fileobj>`).
 
+.. versionadded:: 3.13
+
 .. _file_fileobj:
 
 Python file-like objects
