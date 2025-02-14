@@ -594,7 +594,7 @@ class File(Group):
         fcpl_kwargs = {}
         for k in inspect.signature(make_fcpl).parameters:
             if k in kwargs:
-                fcpl_kwargs = kwargs.pop(k)
+                fcpl_kwargs[k] = kwargs.pop(k)
         fcpl = make_fcpl(**fcpl_kwargs)
 
         fapl = make_fapl(driver="core", backing_store=False, **kwargs)
