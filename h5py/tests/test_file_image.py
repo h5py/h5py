@@ -40,7 +40,7 @@ class TestFileImage(TestCase):
 def test_in_memory():
     arr = np.arange(10)
     # Passing one fcpl & one fapl parameter to exercise the code splitting them:
-    with h5py.File.in_memory(track_order=True, libver='v108') as f1:
+    with h5py.File.in_memory(track_order=True, rdcc_nbytes=2_000_000) as f1:
         f1['a'] = arr
         f1.flush()
         img = f1.id.get_file_image()
