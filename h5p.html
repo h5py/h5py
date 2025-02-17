@@ -447,7 +447,7 @@ transfer property list.</p>
 <span class="sig-name descname"><span class="pre">set_fapl_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">increment=64k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">backing_store=True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_core" title="Link to this definition">¶</a></dt>
 <dd><p>Use the <a class="reference internal" href="h5fd.html#h5py.h5fd.CORE" title="h5py.h5fd.CORE"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5fd.CORE</span></code></a> (memory-resident) file driver.</p>
 <dl class="simple">
-<dt>increment</dt><dd><p>Chunk size for new memory requests (default 1 meg)</p>
+<dt>block_size</dt><dd><p>Chunk size for new memory requests (default 64 KiB)</p>
 </dd>
 <dt>backing_store</dt><dd><p>If True (default), memory contents are associated with an
 on-disk file, which is updated when the file is closed.
@@ -1458,7 +1458,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Feb 14, 2025.
+      Last updated on Feb 17, 2025.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
