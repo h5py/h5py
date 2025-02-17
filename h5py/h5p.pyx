@@ -1017,8 +1017,8 @@ cdef class PropFAID(PropInstanceID):
 
         Use the h5fd.CORE (memory-resident) file driver.
 
-        increment
-            Chunk size for new memory requests (default 1 meg)
+        block_size
+            Chunk size for new memory requests (default 64 KiB)
 
         backing_store
             If True (default), memory contents are associated with an
