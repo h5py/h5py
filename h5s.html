@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Module H5S &#8212; Low-level API for h5py (v3.12.1)</title>
+    <title>Module H5S &#8212; Low-level API for h5py (v3.13.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
-    <script src="_static/documentation_options.js?v=bf028e07"></script>
+    <script src="_static/documentation_options.js?v=6aaf4047"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="h5r.html" title="Module H5R"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py (v3.12.1)</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py (v3.13.0)</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Module H5S</a></li> 
       </ul>
     </div>  
@@ -257,6 +257,13 @@ documentation for the meaning of the “block” and “op” keywords.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5s.SpaceID.select_shape_same">
+<span class="sig-name descname"><span class="pre">select_shape_same</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5s.SpaceID.select_shape_same" title="Link to this definition">¶</a></dt>
+<dd><p>Check if two selections are the same shape. HDF5 may read data
+faster if the source &amp; destination selections are the same shape.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5s.SpaceID.select_valid">
 <span class="sig-name descname"><span class="pre">select_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5s.SpaceID.select_valid" title="Link to this definition">¶</a></dt>
 <dd><p>Determine if the current selection falls within
@@ -440,6 +447,7 @@ an unlimited dimension.</p>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_elements"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_elements()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_hyperslab"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_hyperslab()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_none"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_none()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.select_shape_same"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_shape_same()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_valid"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_valid()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.set_extent_none"><code class="docutils literal notranslate"><span class="pre">SpaceID.set_extent_none()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.set_extent_simple"><code class="docutils literal notranslate"><span class="pre">SpaceID.set_extent_simple()</span></code></a></li>
@@ -530,13 +538,13 @@ an unlimited dimension.</p>
         <li class="right" >
           <a href="h5r.html" title="Module H5R"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py (v3.12.1)</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py (v3.13.0)</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Module H5S</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Feb 17, 2025.
+      Last updated on Feb 18, 2025.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
