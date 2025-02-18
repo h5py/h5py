@@ -1,0 +1,37 @@
+What's new in h5py 3.13
+=======================
+
+New features
+------------
+
+* New :meth:`.File.in_memory` constructor to conveniently build an HDF5 file
+  structure in memory (:pr:`2517`).
+* :class:`.Dataset` views returned by :meth:`~.Dataset.astype`,
+  :meth:`~.Dataset.asstr` and :meth:`~.Dataset.fields` have gained the
+  ``.dtype``, ``.ndim``, ``.shape``, and ``.size`` attributes (:pr:`2550`).
+* The bundled HDF5 library in the pre-built packages was updated to 1.14.6
+  (:pr:`2554`).
+* Opening an existing dataset in a file is faster since it now only loads the
+  "dataset creation property list" when required (:pr:`2552`).
+
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Sselect_shape_same`` exposed as :meth:`h5py.h5s.SpaceID.select_shape_same`
+  (:pr:`2529`).
+
+Bug fixes
+---------
+
+* Fix various bugs when applying ``np.array`` or ``np.asarray`` to a
+  :class:`.Dataset` view returned by :meth:`~.Dataset.astype`,
+  :meth:`~.Dataset.asstr`, or :meth:`~.Dataset.fields`.
+
+Building h5py
+-------------
+
+* Fixed building h5py with Numpy 2.3 (:pr:`2556`).
+* Bump the specified mpi4py version to fix building with MPI support on
+  Python 3.13 (:pr:`2524`).
+* Fix for running ``api_gen.py`` directly (:pr:`2534`).
