@@ -18,7 +18,7 @@ New features
 Exposing HDF5 functions
 -----------------------
 
-* ``H5Sselect_shape_same`` exposed as :meth:`.SpaceID.select_shape_same`
+* ``H5Sselect_shape_same`` exposed as :meth:`h5py.h5s.SpaceID.select_shape_same`
   (:pr:`2529`).
 
 Bug fixes
