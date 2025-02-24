@@ -171,6 +171,7 @@ class VirtualLayout:
         self._filename = filename
         self._src_filenames = set()
         self.dcpl = h5p.create(h5p.DATASET_CREATE)
+        self.dcpl.set_layout(h5d.VIRTUAL)
 
     def __setitem__(self, key, source):
         sel = select(self.shape, key, dataset=None)
@@ -212,6 +213,7 @@ class VirtualLayout:
             # but we didn't know this when making the mapping. Copy the mappings
             # to a new property list, replacing the dest filename with '.'
             new_dcpl = h5p.create(h5p.DATASET_CREATE)
+            new_dcpl.set_layout(h5d.VIRTUAL)
             for i in range(self.dcpl.get_virtual_count()):
                 src_filename = self.dcpl.get_virtual_filename(i)
                 new_dcpl.set_virtual(

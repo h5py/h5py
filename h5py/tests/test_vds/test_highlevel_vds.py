@@ -461,5 +461,16 @@ class VDSUnlimitedTestCase(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+
+def test_no_mappings(writable_file):
+    with writable_file.build_virtual_dataset("foo", (10, 20), np.int32):
+        pass
+
+    dset = writable_file['foo']
+    assert dset.is_virtual
+    assert dset.virtual_sources() == []
+    np.testing.assert_array_equal(dset[()], np.zeros((10, 20), np.int32))
+
+
 if __name__ == "__main__":
     ut.main()
