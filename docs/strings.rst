@@ -14,7 +14,9 @@ Reading strings
 
 String data in HDF5 datasets is read as bytes by default: ``bytes`` objects
 for variable-length strings, or numpy bytes arrays (``'S'`` dtypes) for
-fixed-length strings. Use :meth:`.Dataset.asstr` to retrieve ``str`` objects.
+fixed-length strings. On NumPy >=2.0, use :meth:`Dataset.astype('T')<.Dataset.astype>`
+to read into an array of native NumPy strings. If you are using NumPy 1.x, you should
+instead call :meth:`.Dataset.asstr` to retrieve an array of ``str`` objects.
 
 Variable-length strings in attributes are read as ``str`` objects. These are
 decoded as UTF-8 with surrogate escaping for unrecognised bytes. Fixed-length
@@ -25,7 +27,9 @@ Storing strings
 
 When creating a new dataset or attribute, Python ``str`` or ``bytes`` objects
 will be treated as variable-length strings, marked as UTF-8 and ASCII respectively.
-Numpy bytes arrays (``'S'`` dtypes) make fixed-length strings.
+NumPy bytes arrays (``'S'`` dtypes) make fixed-length strings.
+NumPy NpyStrings arrays (``'T'`` dtypes) make native variable-length strings.
+
 You can use :func:`.string_dtype` to explicitly specify any HDF5 string datatype,
 as shown in the examples below::
 
@@ -49,6 +53,7 @@ When writing data to an existing dataset or attribute, data passed as bytes is
 written without checking the encoding. Data passed as Python ``str`` objects
 is encoded as either ASCII or UTF-8, based on the HDF5 datatype.
 In either case, null bytes (``'\x00'``) in the data will cause an error.
+Data passed as NpyStrings is always encoded as UTF-8.
 
 .. warning::
 
@@ -58,13 +63,35 @@ In either case, null bytes (``'\x00'``) in the data will cause an error.
    Fixed-length strings in HDF5 hold a set number of bytes.
    It may take multiple bytes to store one character.
 
+.. _npystrings:
+
+NumPy variable-width strings
+----------------------------
+
+Starting with NumPy 2.0 and h5py 3.14, you can also use ``dtype('T')`` to specify
+native NumPy variable-width strings. However, note that on a round-trip you will
+read object arrays of ``bytes`` again. This is to ensure that NumPy 1.x and 2.x
+behave in the same way unless the user explicitly requests native strings::
+
+    # NpyStrings (implicit)
+    npdata = np.asarray(string_data, dtype='T')
+    ds = f.create_dataset('npystrings1', data=npdata)
+
+    # NpyStrings (explicit)
+    ds = f.create_dataset('npystrings2', shape=4, dtype='T')
+    ds[:] = string_data
+
+    # On a round-trip, you're back to bytes by default.
+    # Calling .astype('T') creates a writeable view with NpyStrings dtype.
+    ds = f['npystrings1'].astype('T')
+
 What about NumPy's ``U`` type?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-NumPy also has a Unicode type, a UTF-32 fixed-width format (4-byte characters).
-HDF5 has no support for wide characters.  Rather than trying to hack around
-this and "pretend" to support it, h5py will raise an error if you try to store
-data of this type.
+NumPy also has a Unicode fixed-width type, a UTF-32 fixed-width format
+(4-byte characters). HDF5 has no support for wide characters.
+Rather than trying to hack around this and "pretend" to support it,
+h5py will raise an error if you try to store data of this type.
 
 .. _str_binary:
 

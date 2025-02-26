@@ -1,6 +1,7 @@
 h5py/h5*.c
 h5py/utils.c
 h5py/_conv.c
+h5py/_npystrings.c
 h5py/_proxy.c
 h5py/_objects.c
 h5py/_errors.c

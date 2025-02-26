@@ -11,9 +11,9 @@ types.  As of version 2.3, h5py fully supports HDF5 enums and VL types.
 How special types are represented
 ---------------------------------
 
-Since there is no direct NumPy dtype for variable-length strings, enums or
-references, h5py extends the dtype system slightly to let HDF5 know how to
-store these types.  Each type is represented by a native NumPy dtype, with a
+Since there is no direct NumPy dtype for enums or references (and, in NumPy 1.x, for
+variable-length strings), h5py extends the dtype system slightly to let HDF5 know how
+to store these types.  Each type is represented by a native NumPy dtype, with a
 small amount of metadata attached.  NumPy routines ignore the metadata, but
 h5py can use it to determine how to store the data.
 
@@ -21,14 +21,18 @@ The metadata h5py attaches to dtypes is not part of the public API,
 so it may change between versions.
 Use the functions described below to create and check for these types.
 
-Variable-length strings
------------------------
+Variable-length strings in NumPy 1.x
+------------------------------------
 
 .. seealso:: :ref:`strings`
 
+.. note::
+   Starting from h5py 3.14 + NumPy 2.0, you can use native NumPy variable-width
+   strings, a.k.a. NpyStrings. See :ref:`npystrings`.
+
 In HDF5, data in VL format is stored as arbitrary-length vectors of a base
 type.  In particular, strings are stored C-style in null-terminated buffers.
-NumPy has no native mechanism to support this.  Unfortunately, this is the
+NumPy 1.x has no native mechanism to support this.  Unfortunately, this is the
 de facto standard for representing strings in the HDF5 C API, and in many
 HDF5 applications.
 

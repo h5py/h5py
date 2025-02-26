@@ -173,6 +173,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         sid = h5s.create_simple(shape, maxshape)
 
     dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl, dapl=dapl)
+    # Multiple NumPy dtypes can map to the same hdf5 type; e.g.
+    # object strings or NpyStrings map to vlen strings.
+    dset_id._dtype = dtype
 
     if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)
@@ -254,7 +257,7 @@ class AsTypeView(AbstractView):
     """
     def __init__(self, dset, dtype):
         super().__init__(dset)
-        self._dtype = numpy.dtype(dtype)
+        self._dtype = dtype
 
     @property
     def dtype(self):
@@ -436,7 +439,36 @@ class Dataset(HLObject):
         different destination type, e.g.:
 
         >>> double_precision = dataset.astype('f8')[0:100:2]
+
+        Returns
+        -------
+        For dtype='T' (NumPy's native variable-length strings),
+        a writable dataset with the specified dtype.
+
+        For all other dtypes, a read-only view of the dataset
+        with the specified dtype.
         """
+        dtype = numpy.dtype(dtype)
+        if dtype == self.dtype:
+            return self
+
+        if dtype.kind == "T":
+            string_info = h5t.check_string_dtype(self.dtype)
+            if string_info is None:
+                raise TypeError(
+                    f"dset.astype({dtype}) can only be used on datasets with "
+                    "an HDF5 string datatype"
+                )
+            out = self.parent[self.name]
+            assert out.id is not self.id
+            out.id._dtype = dtype
+            return out
+        elif dtype == object and self.dtype.kind == "T":
+            out = self.parent[self.name]
+            assert out.id is not self.id
+            out.id._dtype = None
+            return out
+
         return AsTypeView(self, dtype)
 
     def asstr(self, encoding=None, errors='strict'):
@@ -447,7 +479,16 @@ class Dataset(HLObject):
         The parameters have the same meaning as in ``bytes.decode()``.
         If ``encoding`` is unspecified, it will use the encoding in the HDF5
         datatype (either ascii or utf-8).
+
+        .. note::
+           On NumPy 2.0 and later, it is recommended to use native NumPy
+           variable-width strings instead:
+
+           >>> str_array = dataset.astype('T')[:]
         """
+        if self.dtype.kind == "T":
+            return self.astype(object).asstr(encoding, errors)
+
         string_info = h5t.check_string_dtype(self.dtype)
         if string_info is None:
             raise TypeError(
@@ -1115,17 +1156,20 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = '<Closed HDF5 dataset>'
+            return "<Closed HDF5 dataset>"
+
+        if self.name is None:
+            namestr = "(anonymous)"
         else:
-            if self.name is None:
-                namestr = '("anonymous")'
-            else:
-                name = pp.basename(pp.normpath(self.name))
-                namestr = '"%s"' % (name if name != '' else '/')
-            r = '<HDF5 dataset %s: shape %s, type "%s">' % (
-                namestr, self.shape, self.dtype.str
-            )
-        return r
+            name = pp.basename(pp.normpath(self.name))
+            namestr = '"{name}"' if name else "/"
+
+        if self.dtype.kind == "T":
+            typestr = str(self.dtype)  # StringDType()
+        else:
+            typestr = f'"{self.dtype.str}"'
+
+        return f"<HDF5 dataset {namestr}: shape {self.shape}, type {typestr}>"
 
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
