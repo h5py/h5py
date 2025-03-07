@@ -1162,7 +1162,7 @@ class Dataset(HLObject):
             namestr = "(anonymous)"
         else:
             name = pp.basename(pp.normpath(self.name))
-            namestr = '"{name}"' if name else "/"
+            namestr = f'"{name}"' if name else "/"
 
         if self.dtype.kind == "T":
             typestr = str(self.dtype)  # StringDType()
