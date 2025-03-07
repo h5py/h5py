@@ -120,7 +120,7 @@ def array_for_new_object(data, specified_dtype=None):
     # In most cases, this does nothing. But if data was already an array,
     # and as_dtype is a tagged h5py dtype (e.g. for an object array of strings),
     # asarray() doesn't replace its dtype object. This gives it the tagged dtype:
-    if as_dtype is not None:
+    if as_dtype is not None and data.dtype.kind != "T":
         data = data.view(dtype=as_dtype)
 
     return data

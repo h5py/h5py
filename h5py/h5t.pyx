@@ -44,6 +44,8 @@ _IS_PPC64LE = _UNAME_MACHINE == "ppc64le"
 
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 
+NUMPY_GE2 = int(np.__version__.split('.')[0]) >= 2
+
 # === Custom C API ============================================================
 
 cpdef TypeID typewrap(hid_t id_):
@@ -1480,7 +1482,7 @@ cdef TypeEnumID _c_enum(cnp.dtype dt, dict vals):
         if isinstance(name, bytes):
             bname = name
         else:
-            bname = unicode(name).encode('utf8')
+            bname = str(name).encode('utf8')
         out.enum_insert(bname, vals[name])
     return out
 
@@ -1618,7 +1620,7 @@ cdef TypeCompoundID _c_compound(cnp.dtype dt, int logical, int aligned):
     # (i.e. the position of the member in the struct)
     for name in sorted(dt.names, key=(lambda n: dt.fields[n][1])):
         field = dt.fields[name]
-        h5_name = name.encode('utf8') if isinstance(name, unicode) else name
+        h5_name = name.encode('utf8') if isinstance(name, str) else name
 
         # Get HDF5 data types and set the offset for each member
         member_dt = field[0]
@@ -1734,6 +1736,10 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         elif kind == c'b':
             return _c_bool(dt)
 
+        # numpy.dtypes.StringDType
+        elif kind == c'T':
+            return _c_vlen_unicode()
+
         # Object types (including those with vlen hints)
         elif kind == c'O':
 
@@ -1741,7 +1747,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
                 vlen = check_vlen_dtype(dt)
                 if vlen is bytes:
                     return _c_vlen_str()
-                elif vlen is unicode:
+                elif vlen is str:
                     return _c_vlen_unicode()
                 elif vlen is not None:
                     return vlen_create(py_create(vlen, logical))
@@ -1775,7 +1781,11 @@ def string_dtype(encoding='utf-8', length=None):
     not unicode code points.
 
     For variable length strings, the data should be passed as Python str objects
-    (unicode in Python 2) if the encoding is 'utf-8', and bytes if it is 'ascii'.
+    if the encoding is 'utf-8', and bytes if it is 'ascii'.
+    Starting from NumPy 2.0, it is preferred to pass utf-8 data as variable-width
+    numpy strings (``dtype=numpy.dtypes.StringDType`` or ``dtype=numpy.dtype("T")``
+    instead of ``dtype=h5py.string_dtype()``).
+
     For fixed length strings, the data should be numpy fixed length *bytes*
     arrays, regardless of the encoding. Fixed length unicode data is not
     supported.
@@ -1794,7 +1804,8 @@ def string_dtype(encoding='utf-8', length=None):
         # Fixed length string
         return np.dtype("|S" + str(length), metadata={'h5py_encoding': encoding})
     elif length is None:
-        vlen = unicode if (encoding == 'utf-8') else bytes
+        # Variable-width Python object string
+        vlen = str if (encoding == 'utf-8') else bytes
         return np.dtype('O', metadata={'vlen': vlen})
     else:
         raise TypeError("length must be integer or None (got %r)" % length)
@@ -1885,6 +1896,10 @@ def check_vlen_dtype(dt):
 
     Returns None if the dtype does not represent an HDF5 vlen.
     """
+    # StringDType (numpy >=2.0)
+    if dt.kind == 'T':
+        return str
+
     try:
         return dt.metadata.get('vlen', None)
     except AttributeError:
@@ -1902,7 +1917,7 @@ def check_string_dtype(dt):
     Returns None if the dtype does not represent an HDF5 string.
     """
     vlen_kind = check_vlen_dtype(dt)
-    if vlen_kind is unicode:
+    if vlen_kind is str:
         return string_info('utf-8', None)
     elif vlen_kind is bytes:
         return string_info('ascii', None)
@@ -1970,6 +1985,10 @@ def check_dtype(**kwds):
 
     if name not in ('vlen', 'enum', 'ref'):
         raise TypeError('Unknown special type "%s"' % name)
+
+    # StringDType (numpy >=2.0)
+    if name == "vlen" and dt.kind == "T":
+        return str
 
     try:
         return dt.metadata[name]
