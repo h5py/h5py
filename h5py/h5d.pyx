@@ -18,7 +18,7 @@ include "config.pxi"
 from collections import namedtuple
 cimport cython
 from ._objects cimport pdefault
-from numpy cimport ndarray, import_array, PyArray_DATA
+from numpy cimport ndarray, import_array, PyArray_DATA, PyArray_Descr, PyArray_DESCR
 from .utils cimport  check_numpy_read, check_numpy_write, \
                      convert_tuple, convert_dims, emalloc, efree
 from .h5t cimport TypeID, typewrap, py_create
@@ -225,6 +225,7 @@ cdef class DatasetID(ObjectID):
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
+        cdef PyArray_Descr* descr
         cdef int oldflags
 
         if mtype is None:
@@ -237,8 +238,9 @@ cdef class DatasetID(ObjectID):
         fspace_id = fspace.id
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
+        descr = PyArray_DESCR(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
+        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, descr, 1)
 
 
     @with_phil
@@ -265,6 +267,7 @@ cdef class DatasetID(ObjectID):
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
+        cdef PyArray_Descr* descr
         cdef int oldflags
 
         if mtype is None:
@@ -277,8 +280,9 @@ cdef class DatasetID(ObjectID):
         fspace_id = fspace.id
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
+        descr = PyArray_DESCR(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
+        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, descr, 0)
 
 
     @with_phil

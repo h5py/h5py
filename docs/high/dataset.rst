@@ -508,9 +508,22 @@ Reference
         type.  Conversion is handled by HDF5 directly, on the fly::
 
             >>> dset = f.create_dataset("bigint", (1000,), dtype='int64')
-            >>> out = dset.astype('int16')[:]
+            >>> out = dset.astype('int16')[:500]
             >>> out.dtype
             dtype('int16')
+
+        This is typically faster than reading the data and then
+        converting it with NumPy:
+
+            >>> out = dset[:500].astype('int16')  # slower
+
+        Calling ``.astype('T')`` (NumPy's native variable-width strings)
+        on a dataset returns a writable dataset with the specified dtype;
+        read more at :ref:`npystrings`.
+        For all other dtypes, this method returns a read-only view.
+
+        .. versionchanged:: 3.14
+           ``astype('T')`` returns a writeable dataset.
 
         .. versionchanged:: 3.9
            :meth:`astype` can no longer be used as a context manager.
@@ -525,6 +538,12 @@ Reference
        encoding and errors work like ``bytes.decode()``, but the default
        encoding is defined by the datatype - ASCII or UTF-8.
        This is not guaranteed to be correct.
+
+       .. note::
+          If you don't require backwards compatibility with NumPy 1.x or
+          h5py <3.14, you should consider reading into NumPy native strings
+          insteads, which can be much faster, with ``Dataset.astype('T')``.
+          Read more at :ref:`npystrings`.
 
        .. versionadded:: 3.0
 
