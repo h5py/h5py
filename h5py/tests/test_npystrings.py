@@ -81,6 +81,8 @@ def test_astype_is_reversible(writable_file):
 
 
 def test_fixed_to_variable_width(writable_file):
+    # Note: this test triggers calls to H5Tconvert which are otherwise skipped.
+
     data = ["foo", "longer than 8 bytes"]
     x = writable_file.create_dataset(
         "x", data=data, dtype=h5py.string_dtype(length=20)
@@ -101,6 +103,8 @@ def test_fixed_to_variable_width(writable_file):
 
 
 def test_fixed_to_variable_width_too_short(writable_file):
+    # Note: this test triggers calls to H5Tconvert which are otherwise skipped.
+
     data = ["foo", "bar"]
     x = writable_file.create_dataset(
         "x", data=data, dtype=h5py.string_dtype(length=3)

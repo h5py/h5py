@@ -152,15 +152,23 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 assert NUMPY_GE2
                 if read:
                     H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
-                    H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
+                    if not H5Tis_variable_str(dstype):
+                        # Convert fixed-width bytes to char** in place.
+                        # When dstype is already char**, H5Tconvert is a very expensive no-op.
+                        H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
+                    # Convert contiguous char** to discontiguous NpyStrings.
                     vstrings_scatter(mspace, <size_t>conv_buf, <size_t>progbuf,
                                      <size_t>descr)
                     H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
                 else:
+                    # Convert discontiguous NpyStrings to contiguous char**.
                     zero_terminated_buf = <char*><size_t>vstrings_gather(
                         mspace, <size_t>conv_buf, <size_t>progbuf, <size_t>descr,
                         npoints)
-                    H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
+                    if not H5Tis_variable_str(dstype):
+                        # Convert char** to fixed-width bytes in place.
+                        # When dstype is already char**, H5Tconvert is a very expensive no-op.
+                        H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
                     H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
                     free(zero_terminated_buf)
 
