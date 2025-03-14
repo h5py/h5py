@@ -49,12 +49,19 @@ class TestRepr(BaseDataset):
         Feature: repr(Dataset) behaves sensibly
     """
 
-    def test_repr_open(self):
+    def test_repr_basic(self):
+        ds = self.f.create_dataset('foo', (4,), dtype='int32')
+        assert repr(ds) == '<HDF5 dataset "foo": shape (4,), type "<i4">'
+
+    def test_repr_closed(self):
         """ repr() works on live and dead datasets """
         ds = self.f.create_dataset('foo', (4,))
-        self.assertIsInstance(repr(ds), str)
         self.f.close()
-        self.assertIsInstance(repr(ds), str)
+        assert repr(ds) == '<Closed HDF5 dataset>'
+
+    def test_repr_anonymous(self):
+        ds = self.f.create_dataset(None, (4,), dtype='int32')
+        assert repr(ds) == '<HDF5 dataset (anonymous): shape (4,), type "<i4">'
 
 
 class TestCreateShape(BaseDataset):
