@@ -13,4 +13,4 @@ from .defs cimport *
 from ._objects cimport ObjectID
 
 cdef class DatasetID(ObjectID):
-    cdef object _dtype
+    cdef public object _dtype
