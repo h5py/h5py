@@ -463,10 +463,9 @@ Reference
     listed below, :class:`File` objects inherit the full interface of
     :class:`Group`.
 
-    :param name:    Name of file (`bytes` or `str`), or an instance of
-                    :class:`h5f.FileID` to bind to an existing
-                    file identifier, or a file-like object
-                    (see :ref:`file_fileobj`).
+    :param name:    Name of file (`os.PathLike[str]`, `bytes` or `str`), or an
+                    instance of :class:`h5f.FileID` to bind to an existing file
+                    identifier, or a file-like object (see :ref:`file_fileobj`).
     :param mode:    Mode in which to open file; one of
                     ("w", "r", "r+", "a", "w-").  See :ref:`file_open`.
     :param driver:  File driver to use; see :ref:`file_driver`.
