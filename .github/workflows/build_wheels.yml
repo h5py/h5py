@@ -98,6 +98,7 @@ jobs:
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
           CIBW_PRERELEASE_PYTHONS: ${{ env.CIBW_PRERELEASE_PYTHONS }}
           CIBW_BEFORE_TEST: ${{ env.CIBW_BEFORE_TEST }}
+          CIBW_ENABLE: cpython-freethreading
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
