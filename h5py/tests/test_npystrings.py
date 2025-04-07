@@ -160,3 +160,29 @@ def test_repr(writable_file):
     assert repr(x) == '<HDF5 dataset "x": shape (1,), type "|O">'
     x = x.astype("T")
     assert repr(x) == '<HDF5 dataset "x": shape (1,), type StringDType()>'
+
+
+def test_fillvalue(writable_file):
+    # Create as NpyString dtype
+    x = writable_file.create_dataset("x", shape=(2,), dtype="T", fillvalue="foo")
+    assert isinstance(x.fillvalue, str)
+    assert x.fillvalue == "foo"
+    assert x[0] == "foo"
+    # Revert to object dtype
+    x = x.astype(object)
+    assert isinstance(x.fillvalue, bytes)
+    assert x.fillvalue == b"foo"
+    assert x[0] == b"foo"
+
+    # Create as object dtype
+    y = writable_file.create_dataset(
+        "y", shape=(2,), dtype=h5py.string_dtype(), fillvalue=b"foo"
+    )
+    assert isinstance(y.fillvalue, bytes)
+    assert y.fillvalue == b"foo"
+    assert y[0] == b"foo"
+    # Convert object dtype to NpyString
+    y = y.astype("T")
+    assert isinstance(y.fillvalue, str)
+    assert y.fillvalue == "foo"
+    assert y[0] == "foo"

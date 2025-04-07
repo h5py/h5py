@@ -124,10 +124,12 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         if string_info is not None:
             # fake vlen dtype for fixed len string fillvalue
             # to not trigger unwanted encoding
-            dtype = h5t.string_dtype(string_info.encoding)
-            fillvalue = numpy.array(fillvalue, dtype=dtype)
+            fv_dtype = h5t.string_dtype(string_info.encoding)
+        elif dtype.kind == "T":
+            fv_dtype = dtype
         else:
-            fillvalue = numpy.array(fillvalue)
+            fv_dtype = None
+        fillvalue = numpy.array(fillvalue, dtype=fv_dtype)
         dcpl.set_fill_value(fillvalue)
 
     if track_times is None:
@@ -691,6 +693,12 @@ class Dataset(HLObject):
     @with_phil
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
+        if self.dtype.kind == "T":
+            # For the sake of simplicity, pass through object strings
+            arr = numpy.zeros((1,), dtype=self.astype(object).dtype)
+            self._dcpl.get_fill_value(arr)
+            return arr[0].decode("utf-8")
+
         arr = numpy.zeros((1,), dtype=self.dtype)
         self._dcpl.get_fill_value(arr)
         return arr[0]
