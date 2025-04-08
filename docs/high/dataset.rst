@@ -512,7 +512,7 @@ Reference
             >>> out.dtype
             dtype('int16')
 
-        This is typically faster than reading the data and then
+        This can be faster than reading the data and then
         converting it with NumPy:
 
             >>> out = dset[:500].astype('int16')  # slower
