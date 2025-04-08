@@ -68,21 +68,24 @@ Data passed as NpyStrings is always encoded as UTF-8.
 NumPy variable-width strings
 ----------------------------
 
-Starting with NumPy 2.0 and h5py 3.14, you can also use ``dtype('T')`` to specify
-native NumPy variable-width strings. However, note that on a round-trip you will
-read object arrays of ``bytes`` again. This is to ensure that NumPy 1.x and 2.x
-behave in the same way unless the user explicitly requests native strings::
+Starting with NumPy 2.0 and h5py 3.14, you can also use ``np.dtypes.StringDType()``,
+or ``dtype('T')`` for short, to specify native NumPy variable-width string dtypes,
+a.k.a. NpyStrings.
+However, note that when you open a dataset that you created as a StringDType, its dtype
+will be object type with ``bytes`` elements again. This is because the two data types
+are identical in the HDF5 file, and to ensure that NumPy 1.x and 2.x behave in the same
+way unless the user explicitly requests native strings::
 
-    # NpyStrings (implicit)
+    # StringDType (from input data)
     npdata = np.asarray(string_data, dtype='T')
     ds = f.create_dataset('npystrings1', data=npdata)
 
-    # NpyStrings (explicit)
-    ds = f.create_dataset('npystrings2', shape=4, dtype='T')
+    # StringDType (explicit dtype parameter)
+    ds = f.create_dataset('npystrings2', shape=(4, ), dtype='T')
     ds[:] = string_data
 
-    # On a round-trip, you're back to bytes by default.
-    # Calling .astype('T') creates a writeable view with NpyStrings dtype.
+    # When you reopen the dataset, you're back to bytes by default.
+    # Calling .astype('T') creates a Dataset object with StringDType dtype.
     ds = f['npystrings1'].astype('T')
 
 What about NumPy's ``U`` type?

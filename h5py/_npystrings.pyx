@@ -135,10 +135,11 @@ cdef void _vstrings_scatter(hid_t space, void *contig, void *noncontig,
     if info.allocator is NULL:
         raise RuntimeError("Failed to acquire string allocator")
 
+    # H5Diterate needs a tid of the correct size.
     # Disregard mtype from _proxy::dset_rw.
     # The memory type is actually npy_packed_static_string
-    # (an opaque struct *typically* 16 bytes per point),
-    # and not HDF5 variable length strings (char*; 8 bytes per point).
+    # (an opaque struct of arbitrary size)
+    # and not HDF5 variable length strings (char*).
     tid = H5Tcreate(H5T_OPAQUE, SIZEOF_NPY_PACKED_STATIC_STRING)
 
     # Read char*[] (zero-terminated) from h5py

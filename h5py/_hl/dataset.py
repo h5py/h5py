@@ -1173,6 +1173,7 @@ class Dataset(HLObject):
             namestr = f'"{name}"' if name else "/"
 
         if self.dtype.kind == "T":
+            # FIXME https://github.com/numpy/numpy/issues/28670
             typestr = str(self.dtype)  # StringDType()
         else:
             typestr = f'"{self.dtype.str}"'
