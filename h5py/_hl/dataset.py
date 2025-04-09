@@ -698,7 +698,7 @@ class Dataset(HLObject):
             # We could use the native HDF5 strings to StringDType conversion that
             # is implemented for Dataset.__getitem__, but it would require
             # either replicating all the NpyStrings code (or making it somehow generic
-            # and probably much less legible) around 
+            # and probably much less legible) around
             # dcpl.get_fill_value -> H5Pget_fill_value.
             # Note that attrs have the same issue - they pass through object type arrays
             # for the sake of simplicity as the performance benefits from NpyStrings
