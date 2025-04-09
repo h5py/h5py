@@ -694,7 +694,15 @@ class Dataset(HLObject):
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
         if self.dtype.kind == "T":
-            # For the sake of simplicity, pass through object strings
+            # For the sake of simplicity, pass through object strings.
+            # We could use the native HDF5 strings to StringDType conversion that
+            # is implemented for Dataset.__getitem__, but it would require
+            # either replicating all the NpyStrings code (or making it somehow generic
+            # and probably much less legible) around 
+            # dcpl.get_fill_value -> H5Pget_fill_value.
+            # Note that attrs have the same issue - they pass through object type arrays
+            # for the sake of simplicity as the performance benefits from NpyStrings
+            # machinery would be inconsequential.
             arr = numpy.zeros((1,), dtype=self.astype(object).dtype)
             self._dcpl.get_fill_value(arr)
             return arr[0].decode("utf-8")
