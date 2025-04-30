@@ -89,8 +89,7 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
 
 
 cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
-                    hid_t dxpl, void* progbuf, PyArray_Descr* descr,
-                    int read) except -1:
+                    hid_t dxpl, void* progbuf, int read) except -1:
 
     cdef htri_t need_bkg
     cdef hid_t dstype = -1      # Dataset datatype
@@ -100,7 +99,6 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
 
     cdef void* back_buf = NULL
     cdef void* conv_buf = NULL
-    cdef char* zero_terminated_buf
     cdef hsize_t npoints
 
     try:
@@ -148,31 +146,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 if read:
                     h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
-            if H5Tis_variable_str(mtype):  # numpy.dtypes.StringDType
-                assert NUMPY_GE2
-                if read:
-                    H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
-                    if not H5Tis_variable_str(dstype):
-                        # Convert fixed-width bytes to char** in place.
-                        # When dstype is already char**, H5Tconvert is a very expensive no-op.
-                        H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
-                    # Convert contiguous char** to discontiguous NpyStrings.
-                    vstrings_scatter(mspace, <size_t>conv_buf, <size_t>progbuf,
-                                     <size_t>descr)
-                    H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
-                else:
-                    # Convert discontiguous NpyStrings to contiguous char**.
-                    zero_terminated_buf = <char*><size_t>vstrings_gather(
-                        mspace, <size_t>conv_buf, <size_t>progbuf, <size_t>descr,
-                        npoints)
-                    if not H5Tis_variable_str(dstype):
-                        # Convert char** to fixed-width bytes in place.
-                        # When dstype is already char**, H5Tconvert is a very expensive no-op.
-                        H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
-                    H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
-                    free(zero_terminated_buf)
-
-            elif read:
+            if read:
                 H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_SCATTER)
@@ -184,6 +158,75 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
 
     finally:
         free(back_buf)
+        free(conv_buf)
+        if dstype > 0:
+            H5Tclose(dstype)
+        if dspace > 0:
+            H5Sclose(dspace)
+        if cspace > 0:
+            H5Sclose(cspace)
+
+    return 0
+
+
+cdef herr_t dset_rw_vlen_strings(hid_t dset, hid_t mspace, hid_t fspace,
+        hid_t dxpl, void* progbuf, PyArray_Descr* descr, int read) except -1:
+
+    cdef hid_t dstype = -1      # Dataset datatype
+    cdef hid_t h5_vlen_string = -1
+    cdef hid_t dspace = -1      # Dataset dataspace
+    cdef hid_t cspace = -1      # Temporary contiguous dataspaces
+
+    cdef void* conv_buf = NULL
+    cdef char* zero_terminated_buf = NULL
+    cdef hsize_t npoints
+
+    assert NUMPY_GE2
+
+    h5_vlen_string = H5Tcopy(H5T_C_S1)
+    H5Tset_size(h5_vlen_string, H5T_VARIABLE)
+    H5Tset_cset(h5_vlen_string, H5T_CSET_UTF8)
+
+    try:
+        # Issue 372: when a compound type is involved, using the dataset type
+        # may result in uninitialized data being sent to H5Tconvert for fields
+        # not present in the memory type.  Limit the type used for the dataset
+        # to only those fields present in the memory type.  We can't use the
+        # memory type directly because of course that triggers HDFFV-1063.
+        dstype = H5Dget_type(dset)
+
+        if mspace == H5S_ALL and fspace != H5S_ALL:
+            mspace = fspace
+        elif mspace != H5S_ALL and fspace == H5S_ALL:
+            fspace = mspace
+        elif mspace == H5S_ALL and fspace == H5S_ALL:
+            fspace = mspace = dspace = H5Dget_space(dset)
+
+        npoints = H5Sget_select_npoints(mspace)
+        if npoints == 0:
+            return 0
+        cspace = H5Screate_simple(1, &npoints, NULL)
+
+        conv_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(h5_vlen_string), npoints)
+
+        if read:
+            H5Dread(dset, h5_vlen_string, cspace, fspace, dxpl, conv_buf)
+            # if not H5Tis_variable_str(dstype):
+            #     # Convert fixed-width bytes to char** in place.
+            #     # When dstype is already char**, H5Tconvert is a very expensive no-op.
+            #     H5Tconvert(dstype, h5_vlen_string, npoints, conv_buf, NULL, dxpl)
+            # Convert contiguous char** to discontiguous NpyStrings.
+            vstrings_scatter(mspace, <size_t> conv_buf, <size_t> progbuf,
+                             <size_t> descr)
+            H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
+        else:
+            # Convert discontiguous NpyStrings to contiguous char**.
+            zero_terminated_buf = <char *> <size_t> vstrings_gather(
+                mspace, <size_t> conv_buf, <size_t> progbuf, <size_t> descr,
+                npoints)
+            H5Dwrite(dset, h5_vlen_string, cspace, fspace, dxpl, conv_buf)
+    finally:
+        free(zero_terminated_buf)
         free(conv_buf)
         if dstype > 0:
             H5Tclose(dstype)
