@@ -14,18 +14,18 @@
 include "config.pxi"
 
 # Compile-time imports
-
-from collections import namedtuple
 cimport cython
+from libc.string cimport strcmp
 from ._objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA, PyArray_Descr, PyArray_DESCR
 from .utils cimport  check_numpy_read, check_numpy_write, \
                      convert_tuple, convert_dims, emalloc, efree
-from .h5t cimport TypeID, typewrap, py_create
+from .h5t cimport TypeID, typewrap, py_create, H5PY_NUMPY_STRING_TAG
 from .h5s cimport SpaceID
 from .h5p cimport PropID, propwrap
-from ._proxy cimport dset_rw
+from ._proxy cimport dset_rw, dset_rw_vlen_strings
 
+from collections import namedtuple
 from ._objects import phil, with_phil
 from cpython cimport PyBUF_ANY_CONTIGUOUS, \
                      PyBuffer_Release, \
@@ -150,7 +150,23 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
     """
     return DatasetID(H5Dopen(loc.id, name, pdefault(dapl)))
 
-# --- Proxy functions for safe(r) threading -----------------------------------
+
+cdef bint _is_numpy_vlen_string(hid_t obj):
+    # Check for HDF5 datatype representing numpy variable-length strings
+    # This complexity is needed to ensure:
+    #   1) That ctag is freed
+    #   2) We don't segfault (for some reason a try-finally statement is needed,
+    #   even if we do (what I think are) the right steps in copying and freeing.
+    cdef char* ctag = NULL
+    try:
+        if H5Tget_class(obj) == H5T_OPAQUE:
+            ctag = H5Tget_tag(obj)
+            if ctag != NULL:
+                if strcmp(ctag, H5PY_NUMPY_STRING_TAG) == 0:
+                    return True
+        return False
+    finally:
+        H5free_memory(ctag)
 
 
 cdef class DatasetID(ObjectID):
@@ -240,7 +256,10 @@ cdef class DatasetID(ObjectID):
         data = PyArray_DATA(arr_obj)
         descr = PyArray_DESCR(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, descr, 1)
+        if _is_numpy_vlen_string(mtype_id):
+            dset_rw_vlen_strings(self_id, mspace_id, fspace_id, plist_id, data, descr, 1)
+        else:
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
 
 
     @with_phil
@@ -282,7 +301,10 @@ cdef class DatasetID(ObjectID):
         data = PyArray_DATA(arr_obj)
         descr = PyArray_DESCR(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, descr, 0)
+        if _is_numpy_vlen_string(mtype_id):
+            dset_rw_vlen_strings(self_id, mspace_id, fspace_id, plist_id, data, descr, 0)
+        else:
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
 
 
     @with_phil

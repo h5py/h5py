@@ -124,12 +124,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         if string_info is not None:
             # fake vlen dtype for fixed len string fillvalue
             # to not trigger unwanted encoding
-            fv_dtype = h5t.string_dtype(string_info.encoding)
-        elif dtype.kind == "T":
-            fv_dtype = dtype
+            dtype = h5t.string_dtype(string_info.encoding)
+            fillvalue = numpy.array(fillvalue, dtype=dtype)
         else:
-            fv_dtype = None
-        fillvalue = numpy.array(fillvalue, dtype=fv_dtype)
+            fillvalue = numpy.array(fillvalue)
         dcpl.set_fill_value(fillvalue)
 
     if track_times is None:
@@ -175,9 +173,6 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         sid = h5s.create_simple(shape, maxshape)
 
     dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl, dapl=dapl)
-    # Multiple NumPy dtypes can map to the same hdf5 type; e.g.
-    # object strings or NpyStrings map to vlen strings.
-    dset_id._dtype = dtype
 
     if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)
@@ -298,6 +293,14 @@ class AsStrView(AbstractView):
             b.decode(self.encoding, self.errors) for b in bytes_arr.flat
         ], dtype=object).reshape(bytes_arr.shape)
 
+
+class AsNumpyVlenStringView(AbstractView):
+    @property
+    def dtype(self):
+        return numpy.dtype("T")
+
+    def __getitem__(self, idx):
+        return self._dset.__getitem__(idx, new_dtype=self.dtype)
 
 class FieldsView(AbstractView):
     """Wrapper to extract named fields from a dataset with a struct dtype"""
@@ -461,15 +464,7 @@ class Dataset(HLObject):
                     f"dset.astype({dtype}) can only be used on datasets with "
                     "an HDF5 string datatype"
                 )
-            out = self.parent[self.name]
-            assert out.id is not self.id
-            out.id._dtype = dtype
-            return out
-        elif dtype == object and self.dtype.kind == "T":
-            out = self.parent[self.name]
-            assert out.id is not self.id
-            out.id._dtype = None
-            return out
+            return AsNumpyVlenStringView(self)
 
         return AsTypeView(self, dtype)
 
@@ -488,9 +483,6 @@ class Dataset(HLObject):
 
            >>> str_array = dataset.astype('T')[:]
         """
-        if self.dtype.kind == "T":
-            return self.astype(object).asstr(encoding, errors)
-
         string_info = h5t.check_string_dtype(self.dtype)
         if string_info is None:
             raise TypeError(
@@ -693,20 +685,6 @@ class Dataset(HLObject):
     @with_phil
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
-        if self.dtype.kind == "T":
-            # For the sake of simplicity, pass through object strings.
-            # We could use the native HDF5 strings to StringDType conversion that
-            # is implemented for Dataset.__getitem__, but it would require
-            # either replicating all the NpyStrings code (or making it somehow generic
-            # and probably much less legible) around
-            # dcpl.get_fill_value -> H5Pget_fill_value.
-            # Note that attrs have the same issue - they pass through object type arrays
-            # for the sake of simplicity as the performance benefits from NpyStrings
-            # machinery would be inconsequential.
-            arr = numpy.zeros((1,), dtype=self.astype(object).dtype)
-            self._dcpl.get_fill_value(arr)
-            return arr[0].decode("utf-8")
-
         arr = numpy.zeros((1,), dtype=self.dtype)
         self._dcpl.get_fill_value(arr)
         return arr[0]
@@ -1180,13 +1158,7 @@ class Dataset(HLObject):
             name = pp.basename(pp.normpath(self.name))
             namestr = f'"{name}"' if name else "/"
 
-        if self.dtype.kind == "T":
-            # FIXME https://github.com/numpy/numpy/issues/28670
-            typestr = str(self.dtype)  # StringDType()
-        else:
-            typestr = f'"{self.dtype.str}"'
-
-        return f"<HDF5 dataset {namestr}: shape {self.shape}, type {typestr}>"
+        return f'<HDF5 dataset {namestr}: shape {self.shape}, type "{self.dtype.str}">'
 
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil

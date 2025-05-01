@@ -43,6 +43,7 @@ _IS_PPC64 = _UNAME_MACHINE == "ppc64"
 _IS_PPC64LE = _UNAME_MACHINE == "ppc64le"
 
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
+cdef char* H5PY_NUMPY_STRING_TAG = "NUMPY:STRING"
 
 NUMPY_GE2 = int(np.__version__.split('.')[0]) >= 2
 
@@ -267,6 +268,14 @@ H5Tset_tag(H5PY_OBJ, H5PY_PYTHON_OPAQUE_TAG)
 H5Tlock(H5PY_OBJ)
 
 PYTHON_OBJECT = lockid(H5PY_OBJ)
+
+# HDF5 datatype to represent Numpy (>=2) variable-length strings
+# Should never be directly stored in files.
+cdef hid_t H5PY_NPYSTR = H5Tcreate(H5T_OPAQUE, 2 * sizeof(size_t))
+H5Tset_tag(H5PY_NPYSTR, H5PY_NUMPY_STRING_TAG)
+H5Tlock(H5PY_NPYSTR)
+
+NUMPY_VLEN_STRING = lockid(H5PY_NPYSTR)
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
@@ -1738,7 +1747,10 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
 
         # numpy.dtypes.StringDType
         elif kind == c'T':
-            return _c_vlen_unicode()
+            if logical:
+                return _c_vlen_unicode()
+
+            return NUMPY_VLEN_STRING
 
         # Object types (including those with vlen hints)
         elif kind == c'O':
