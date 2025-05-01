@@ -51,8 +51,6 @@ def test_fromdata(writable_file):
 
 
 def test_fixed_to_variable_width(writable_file):
-    # Note: this test triggers calls to H5Tconvert which are otherwise skipped.
-
     data = ["foo", "longer than 8 bytes"]
     x = writable_file.create_dataset(
         "x", data=data, dtype=h5py.string_dtype(length=20)
@@ -145,6 +143,4 @@ def test_fillvalue(writable_file):
     assert y[0] == b"foo"
     # Convert object dtype to NpyString
     y = y.astype("T")
-    # assert isinstance(y.fillvalue, str)
-    # assert y.fillvalue == "foo"
     assert y[0] == "foo"

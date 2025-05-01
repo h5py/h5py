@@ -153,7 +153,7 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
 
 cdef bint _is_numpy_vlen_string(hid_t obj):
     # Check for HDF5 datatype representing numpy variable-length strings
-    # This complexity is needed to sure:
+    # This complexity is needed to ensure:
     #   1) That ctag is freed
     #   2) We don't segfault (for some reason a try-finally statement is needed,
     #   even if we do (what I think are) the right steps in copying and freeing.

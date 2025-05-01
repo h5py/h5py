@@ -188,11 +188,6 @@ cdef herr_t dset_rw_vlen_strings(hid_t dset, hid_t mspace, hid_t fspace,
     H5Tset_cset(h5_vlen_string, H5T_CSET_UTF8)
 
     try:
-        # Issue 372: when a compound type is involved, using the dataset type
-        # may result in uninitialized data being sent to H5Tconvert for fields
-        # not present in the memory type.  Limit the type used for the dataset
-        # to only those fields present in the memory type.  We can't use the
-        # memory type directly because of course that triggers HDFFV-1063.
         dstype = H5Dget_type(dset)
 
         if mspace == H5S_ALL and fspace != H5S_ALL:
@@ -211,10 +206,6 @@ cdef herr_t dset_rw_vlen_strings(hid_t dset, hid_t mspace, hid_t fspace,
 
         if read:
             H5Dread(dset, h5_vlen_string, cspace, fspace, dxpl, conv_buf)
-            # if not H5Tis_variable_str(dstype):
-            #     # Convert fixed-width bytes to char** in place.
-            #     # When dstype is already char**, H5Tconvert is a very expensive no-op.
-            #     H5Tconvert(dstype, h5_vlen_string, npoints, conv_buf, NULL, dxpl)
             # Convert contiguous char** to discontiguous NpyStrings.
             vstrings_scatter(mspace, <size_t> conv_buf, <size_t> progbuf,
                              <size_t> descr)
