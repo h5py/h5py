@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# REMEMBER TO KEEP THE VERSIONS IN THIS FILE THE SAME AS IN THE pyproject.toml
+
 set -eo pipefail
 
 if [[ "$1" == "" ]] || [[ "$2" == "" ]]; then

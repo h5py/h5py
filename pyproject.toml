@@ -1,4 +1,6 @@
 [build-system]
+
+# REMEMBER TO KEEP THE VERSIONS IN THIS FILE THE SAME AS IN ci/triage_build.sh
 requires = [
     "Cython >=0.29.31,<4",
     "numpy >=2.0.0, <3",
