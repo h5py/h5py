@@ -290,6 +290,10 @@ class SimpleSelection(Selection):
         rank = len(count)
         tshape = self.expand_shape(source_shape)
 
+        # Avoid ZeroDivisionError below (after the shape checks in expand_source)
+        if any(d == 0 for d in count):
+            return
+
         chunks = tuple(x//y for x, y in zip(count, tshape))
         nchunks = product(chunks)
 
