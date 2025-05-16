@@ -144,3 +144,14 @@ def test_fillvalue(writable_file):
     # Convert object dtype to NpyString
     y = y.astype("T")
     assert y[0] == "foo"
+
+
+def test_empty_string(writable_file):
+    data = np.array(["", "a", "b"], dtype="T")
+    x = writable_file.create_dataset("x", data=data)
+    np.testing.assert_array_equal(x[:], [b"", b"a", b"b"])
+    np.testing.assert_array_equal(x.astype("T")[:], data)
+    data[:2] = ["c", ""]
+    x[:2] = data[:2]
+    np.testing.assert_array_equal(x[:], [b"c", b"", b"b"])
+    np.testing.assert_array_equal(x.astype("T")[:], data)

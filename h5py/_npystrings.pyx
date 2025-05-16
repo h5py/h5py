@@ -159,7 +159,10 @@ cdef herr_t npystrings_unpack_cb(
     # Obtain a reference to the string (NOT zero-terminated) and its size
     res = NpyString_load(info[0].allocator, <npy_packed_static_string*>elem, unpacked)
     info[0].i += 1
-    return res
+    # res == -1 if unpacking the string fails, 1 if packed_string is the null string,
+    # and 0 otherwise.
+    return -1 if res == -1 else 0
+
 
 def npystrings_unpack(hid_t space, size_t contig, size_t noncontig, size_t descr,
                     size_t npoints):
