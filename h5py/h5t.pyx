@@ -1795,7 +1795,7 @@ def string_dtype(encoding='utf-8', length=None):
     For variable length strings, the data should be passed as Python str objects
     if the encoding is 'utf-8', and bytes if it is 'ascii'.
     Starting from NumPy 2.0, it is preferred to pass utf-8 data as variable-width
-    numpy strings (``dtype=numpy.dtypes.StringDType`` or ``dtype=numpy.dtype("T")``
+    NumPy strings (``dtype=numpy.dtypes.StringDType()`` or ``dtype='T'``
     instead of ``dtype=h5py.string_dtype()``).
 
     For fixed length strings, the data should be numpy fixed length *bytes*
@@ -1908,7 +1908,7 @@ def check_vlen_dtype(dt):
 
     Returns None if the dtype does not represent an HDF5 vlen.
     """
-    # StringDType (numpy >=2.0)
+    # StringDType (NumPy >=2.0)
     if dt.kind == 'T':
         return str
 

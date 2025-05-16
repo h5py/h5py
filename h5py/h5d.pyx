@@ -254,9 +254,9 @@ cdef class DatasetID(ObjectID):
         fspace_id = fspace.id
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
-        descr = PyArray_DESCR(arr_obj)
 
         if _is_numpy_vlen_string(mtype_id):
+            descr = PyArray_DESCR(arr_obj)
             dset_rw_vlen_strings(self_id, mspace_id, fspace_id, plist_id, data, descr, 1)
         else:
             dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
@@ -299,9 +299,9 @@ cdef class DatasetID(ObjectID):
         fspace_id = fspace.id
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
-        descr = PyArray_DESCR(arr_obj)
 
         if _is_numpy_vlen_string(mtype_id):
+            descr = PyArray_DESCR(arr_obj)
             dset_rw_vlen_strings(self_id, mspace_id, fspace_id, plist_id, data, descr, 0)
         else:
             dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
