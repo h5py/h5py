@@ -64,7 +64,7 @@ ELSE:
     )
 
 # Can't call sizeof(npy_packed_static_string) because the struct is
-# internal to numpy
+# internal to NumPy
 cdef size_t SIZEOF_NPY_PACKED_STATIC_STRING = np.dtype("T").itemsize
 
 ctypedef struct npystrings_pack_t:
@@ -84,7 +84,7 @@ cdef herr_t npystrings_pack_cb(
 ) except -1:
     cdef npystrings_pack_t* info = <npystrings_pack_t*>operator_data
     cdef const char* buf = info[0].contig[info[0].i]
-    # Deep copy char* from h5py into the numpy array
+    # Deep copy char* from h5py into the NumPy array
     res = NpyString_pack(
         info[0].allocator,
         <npy_packed_static_string*>elem,
@@ -121,7 +121,7 @@ def npystrings_pack(hid_t space, size_t contig, size_t noncontig, size_t descr):
 
     This function defines a pure-python API interface to _proxy.pyx.
     This is necessary to allow this module to be conditionally imported,
-    allowing numpy 1.x to continue working everywhere else.
+    allowing NumPy 1.x to continue working everywhere else.
     """
     _npystrings_pack(space, <void *>contig, <void *>noncontig, <PyArray_Descr *>descr)
 
@@ -144,7 +144,7 @@ cdef void _npystrings_pack(hid_t space, void *contig, void *noncontig,
     tid = H5Tcreate(H5T_OPAQUE, SIZEOF_NPY_PACKED_STATIC_STRING)
 
     # Read char*[] (zero-terminated) from h5py
-    # and deep-copy to npy_packed_static_string[] for numpy
+    # and deep-copy to npy_packed_static_string[] for NumPy
     H5Diterate(noncontig, tid, space, npystrings_pack_cb, &info)
     NpyString_release_allocator(info.allocator)
     H5Tclose(tid)
@@ -165,7 +165,7 @@ cdef herr_t npystrings_unpack_cb(
 
 
 def npystrings_unpack(hid_t space, size_t contig, size_t noncontig, size_t descr,
-                    size_t npoints):
+                      size_t npoints):
     """Convert a NpyString array (NumPy's native variable-width strings dtype)
     to a zero-terminated char**, which is the in-memory representation for a
     HDF5 variable-width string dataset.
@@ -198,14 +198,14 @@ def npystrings_unpack(hid_t space, size_t contig, size_t noncontig, size_t descr
     -----
     This function defines a pure-python API interface to _proxy.pyx.
     This is necessary to allow this module to be conditionally imported,
-    allowing numpy 1.x to continue working everywhere else.
+    allowing NumPy 1.x to continue working everywhere else.
     """
     return <size_t>_npystrings_unpack(space, <void *>contig, <void *>noncontig,
                                       <PyArray_Descr *>descr, npoints)
 
 
 cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
-                             PyArray_Descr *descr, size_t npoints):
+                               PyArray_Descr *descr, size_t npoints):
     """Cython API interface of npystrings_unpack"""
     cdef npystrings_unpack_t info
     cdef size_t total_size
@@ -222,7 +222,7 @@ cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
     tid = H5Tcreate(H5T_OPAQUE, SIZEOF_NPY_PACKED_STATIC_STRING)
     try:
         # Multiple steps needed:
-        # 1. Read npy_packed_static_string[] from numpy and unpack
+        # 1. Read npy_packed_static_string[] from NumPy and unpack
         #    to npy_static_string[]; which is
         #    {const char* buf, size_t size}[] - NOT zero-terminated
         info.unpacked = <npy_static_string*>malloc(

@@ -515,11 +515,11 @@ Reference
         This can be faster than reading the data and then
         converting it with NumPy:
 
-            >>> out = dset[:500].astype('int16')  # slower
+            >>> out = dset[:500].astype('int16')  # Typically slower
 
         In case of variable-width strings, calling ``.astype('T')``
         (NumPy's native variable-width strings) is zero cost and
-        faster than reading the data directly into an object-type array;
+        faster than reading the data into an object-type array;
         read more at :ref:`npystrings`.
 
         .. versionchanged:: 3.14
@@ -542,7 +542,8 @@ Reference
        .. note::
           If you don't require backwards compatibility with NumPy 1.x or
           h5py <3.14, you should consider reading into NumPy native strings
-          insteads, which can be much faster, with ``Dataset.astype('T')``.
+          instead, which can be much faster, with
+          :meth:`.astype('T')<astype>`.
           Read more at :ref:`npystrings`.
 
        .. versionadded:: 3.0

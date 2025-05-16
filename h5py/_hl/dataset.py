@@ -436,14 +436,6 @@ class Dataset(HLObject):
         different destination type, e.g.:
 
         >>> double_precision = dataset.astype('f8')[0:100:2]
-
-        Returns
-        -------
-        For dtype='T' (NumPy's native variable-length strings),
-        a writable dataset with the specified dtype.
-
-        For all other dtypes, a read-only view of the dataset
-        with the specified dtype.
         """
         dtype = numpy.dtype(dtype)
         if dtype == self.dtype:

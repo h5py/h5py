@@ -14,10 +14,10 @@ Reading strings
 
 String data in HDF5 datasets is read as bytes by default: ``bytes`` objects
 for variable-length strings, or NumPy bytes arrays (``'S'`` dtypes) for
-fixed-length strings. On NumPy >=2.0, use :meth:`Dataset.astype('T')<.Dataset.astype>`
+fixed-length strings. On NumPy >=2.0, use :meth:`astype('T')<.astype>`
 to read into an array of native variable-width NumPy strings.
 If you need backwards compatibility with NumPy 1.x or h5py <3.14, you should instead
-call :meth:`.Dataset.asstr` to retrieve an array of ``str`` objects.
+call :meth:`.asstr` to retrieve an array of ``str`` objects.
 
 Variable-length strings in attributes are read as ``str`` objects. These are
 decoded as UTF-8 with surrogate escaping for unrecognised bytes. Fixed-length
@@ -75,25 +75,25 @@ or ``np.dtype('T')`` for short, to specify native NumPy variable-width string dt
 a.k.a. NpyStrings.
 
 However, note that when you open a dataset that you created as a StringDType, its dtype
-will be object type with ``bytes`` elements. Likewise, :meth:`.Dataset.create_dataset`
+will be object dtype with ``bytes`` elements. Likewise, :meth:`.create_dataset`
 with parameter ``dtype='T'``, or with ``data=`` set to a NumPy array with StringDType,
-will create a dataset with object type.
+will create a dataset with object dtype.
 This is because the two data types are identical on the HDF5 file; this design is to
 ensure that NumPy 1.x and 2.x behave in the same way unless the user explicitly requests
 native strings.
 
 In order to efficiently write NpyStrings to a dataset, simply assign a NumPy array with
-StringDType to it, either through ``__setitem__`` or :meth:`.Dataset.create_dataset`.
-To read NpyStrings out of any string-type dataset, use :meth:`.Dataset.astype('T')`.
-In both cases, there will be no intermediate conversion to object-type array, even if
-the dataset's dtype is object type::
+StringDType to it, either through ``__setitem__`` or :meth:`.create_dataset`.
+To read NpyStrings out of any string-type dataset, use
+:meth:`astype('T')<.astype>`. In both cases, there will be no
+intermediate conversion to object-type array, even if the dataset's dtype is object::
 
     # These three syntaxes are equivalent:
     >>> ds = f.create_dataset('x', shape=(2, ), dtype=h5py.string_dtype())
     >>> ds = f.create_dataset('x', shape=(2, ), dtype=np.dtypes.StringDType())
     >>> ds = f.create_dataset('x', shape=(2, ), dtype='T')
 
-    # They all return a dataset with object type:
+    # They all return a dataset with object dtype:
     >>> ds
     <HDF5 dataset "x": shape (2,), type "|O">
 

@@ -2,9 +2,10 @@ New features
 ------------
 
 * On NumPy 2.x, it is now possible to read and write native NumPy variable-width
-  strings, a.k.a. NpyStrings (``'T'`` dtype), which are much faster than object
-  strings. For the sake of interoperability with NumPy 1.x, users need to
-  explicitly opt in. See :ref:`npystrings`.
+  strings, a.k.a. NpyStrings (``dtype=np.dtypes.StringDType()`` or ``dtype='T'``
+  for short), which are much faster than object strings. For the sake of
+  interoperability with NumPy 1.x, users need to explicitly opt in.
+  See :ref:`npystrings`.
 
 Deprecations
 ------------
