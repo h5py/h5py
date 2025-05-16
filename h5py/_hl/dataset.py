@@ -1118,12 +1118,12 @@ class Dataset(HLObject):
             return "<Closed HDF5 dataset>"
 
         if self.name is None:
-            namestr = "(anonymous)"
+            name = "(anonymous)"
         else:
-            name = pp.basename(pp.normpath(self.name))
-            namestr = f'"{name if name else "/"}"'
+            name = pp.basename(pp.normpath(self.name)) or "/"
+            name = f'"{name}"'
 
-        return f'<HDF5 dataset {namestr}: shape {self.shape}, type "{self.dtype.str}">'
+        return f'<HDF5 dataset {name}: shape {self.shape}, type "{self.dtype.str}">'
 
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
