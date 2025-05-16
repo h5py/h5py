@@ -1115,17 +1115,15 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = '<Closed HDF5 dataset>'
+            return "<Closed HDF5 dataset>"
+
+        if self.name is None:
+            namestr = "(anonymous)"
         else:
-            if self.name is None:
-                namestr = '("anonymous")'
-            else:
-                name = pp.basename(pp.normpath(self.name))
-                namestr = '"%s"' % (name if name != '' else '/')
-            r = '<HDF5 dataset %s: shape %s, type "%s">' % (
-                namestr, self.shape, self.dtype.str
-            )
-        return r
+            name = pp.basename(pp.normpath(self.name))
+            namestr = f'"{name}"' if name else "/"
+
+        return f'<HDF5 dataset {namestr}: shape {self.shape}, type "{self.dtype.str}">'
 
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
