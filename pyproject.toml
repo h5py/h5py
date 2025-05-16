@@ -1,9 +1,11 @@
 [build-system]
+
+# REMEMBER TO KEEP THE VERSIONS IN THIS FILE THE SAME AS IN ci/triage_build.sh
 requires = [
     "Cython >=0.29.31,<4",
     "numpy >=2.0.0, <3",
     "pkgconfig",
-    "setuptools >=61",
+    "setuptools >=77",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -17,13 +19,13 @@ maintainers = [
     {name = "Thomas Kluyver", email = "thomas@kluyver.me.uk"},
     {name = "Thomas A Caswell", email = "tcaswell@bnl.gov"},
 ]
-license = {text = "BSD-3-Clause"}
+license = "BSD-3-Clause"
+license-files = ["LICENSE", "lzf/LICENSE.txt", "licenses/*"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: Unix",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
