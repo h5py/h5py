@@ -19,7 +19,7 @@ from .h5t import NUMPY_GE2
 if NUMPY_GE2:
     # Numpy native variable-width strings
     # This fails to import on NumPy < 2.0
-    from ._npystrings import vstrings_scatter, vstrings_gather
+    from ._npystrings import npystrings_pack, npystrings_unpack
 
 cdef enum copy_dir:
     H5PY_SCATTER = 0,
@@ -207,12 +207,12 @@ cdef herr_t dset_rw_vlen_strings(hid_t dset, hid_t mspace, hid_t fspace,
         if read:
             H5Dread(dset, h5_vlen_string, cspace, fspace, dxpl, conv_buf)
             # Convert contiguous char** to discontiguous NpyStrings.
-            vstrings_scatter(mspace, <size_t> conv_buf, <size_t> progbuf,
+            npystrings_pack(mspace, <size_t> conv_buf, <size_t> progbuf,
                              <size_t> descr)
             H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
         else:
             # Convert discontiguous NpyStrings to contiguous char**.
-            zero_terminated_buf = <char *> <size_t> vstrings_gather(
+            zero_terminated_buf = <char *> <size_t> npystrings_unpack(
                 mspace, <size_t> conv_buf, <size_t> progbuf, <size_t> descr,
                 npoints)
             H5Dwrite(dset, h5_vlen_string, cspace, fspace, dxpl, conv_buf)

@@ -67,22 +67,22 @@ ELSE:
 # internal to numpy
 cdef size_t SIZEOF_NPY_PACKED_STATIC_STRING = np.dtype("T").itemsize
 
-ctypedef struct vstrings_scatter_t:
+ctypedef struct npystrings_pack_t:
     size_t i
     npy_string_allocator *allocator
     const char **contig
 
-ctypedef struct vstrings_gather_t:
+ctypedef struct npystrings_unpack_t:
     size_t i
     npy_string_allocator *allocator
     npy_static_string *unpacked
 
 
-cdef herr_t vstrings_scatter_cb(
+cdef herr_t npystrings_pack_cb(
     void* elem, hid_t type_id, unsigned ndim,
     const hsize_t *point, void *operator_data
 ) except -1:
-    cdef vstrings_scatter_t* info = <vstrings_scatter_t*>operator_data
+    cdef npystrings_pack_t* info = <npystrings_pack_t*>operator_data
     cdef const char* buf = info[0].contig[info[0].i]
     # Deep copy char* from h5py into the numpy array
     res = NpyString_pack(
@@ -95,15 +95,15 @@ cdef herr_t vstrings_scatter_cb(
     return res
 
 
-def vstrings_scatter(hid_t space, size_t contig, size_t noncontig, size_t descr):
+def npystrings_pack(hid_t space, size_t contig, size_t noncontig, size_t descr):
     """Pure-python API interface to _proxy.pyx. This is necessary to
     allow this module to be conditionally imported, allowing numpy 1.x to
     continue working everywhere else.
     """
-    _vstrings_scatter(space, <void *>contig, <void *>noncontig, <PyArray_Descr *>descr)
+    _npystrings_pack(space, <void *>contig, <void *>noncontig, <PyArray_Descr *>descr)
 
 
-cdef void _vstrings_scatter(hid_t space, void *contig, void *noncontig,
+cdef void _npystrings_pack(hid_t space, void *contig, void *noncontig,
                             PyArray_Descr *descr):
     """Convert a zero-terminated char**, which is the in-memory representation
     for a HDF5 variable-width string dataset, into a NpyString array
@@ -128,7 +128,7 @@ cdef void _vstrings_scatter(hid_t space, void *contig, void *noncontig,
     This function deep-copies the input zero-terminated strings.
     Memory management for the outputs is handled by NumPy.
     """
-    cdef vstrings_scatter_t info
+    cdef npystrings_pack_t info
     info.i = 0
     info.contig = <const char**>contig
     info.allocator = NpyString_acquire_allocator(<PyArray_StringDTypeObject *>descr)
@@ -144,33 +144,33 @@ cdef void _vstrings_scatter(hid_t space, void *contig, void *noncontig,
 
     # Read char*[] (zero-terminated) from h5py
     # and deep-copy to npy_packed_static_string[] for numpy
-    H5Diterate(noncontig, tid, space, vstrings_scatter_cb, &info)
+    H5Diterate(noncontig, tid, space, npystrings_pack_cb, &info)
     NpyString_release_allocator(info.allocator)
     H5Tclose(tid)
 
 
-cdef herr_t vstrings_gather_cb(
+cdef herr_t npystrings_unpack_cb(
     void *elem, hid_t type_id, unsigned ndim,
     const hsize_t *point, void *operator_data
 ) except -1:
-    cdef vstrings_gather_t *info = <vstrings_gather_t *>operator_data
+    cdef npystrings_unpack_t *info = <npystrings_unpack_t *>operator_data
     cdef npy_static_string *unpacked = info[0].unpacked + info[0].i
     # Obtain a reference to the string (NOT zero-terminated) and its size
     res = NpyString_load(info[0].allocator, <npy_packed_static_string*>elem, unpacked)
     info[0].i += 1
     return res
 
-def vstrings_gather(hid_t space, size_t contig, size_t noncontig, size_t descr,
+def npystrings_unpack(hid_t space, size_t contig, size_t noncontig, size_t descr,
                     size_t npoints):
     """Pure-python API interface to _proxy.pyx. This is necessary to
     allow this module to be conditionally imported, allowing numpy 1.x to
     continue working everywhere else.
     """
-    return <size_t>_vstrings_gather(space, <void *>contig, <void *>noncontig,
+    return <size_t>_npystrings_unpack(space, <void *>contig, <void *>noncontig,
                                     <PyArray_Descr *>descr, npoints)
 
 
-cdef char * _vstrings_gather(hid_t space, void *contig, void *noncontig,
+cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
                              PyArray_Descr *descr, size_t npoints):
     """Convert a NpyString array (NumPy's native variable-width strings dtype)
     to a zero-terminated char**, which is the in-memory representation for a
@@ -200,7 +200,7 @@ cdef char * _vstrings_gather(hid_t space, void *contig, void *noncontig,
         function returns, but H5Tconvert may change the contents
         of contig[0] in place later on.
     """
-    cdef vstrings_gather_t info
+    cdef npystrings_unpack_t info
     cdef size_t total_size
     cdef size_t cur_size
     cdef char *zero_terminated = NULL
@@ -224,7 +224,7 @@ cdef char * _vstrings_gather(hid_t space, void *contig, void *noncontig,
         if info.unpacked is NULL:
             raise MemoryError("Failed to allocate memory")
 
-        H5Diterate(noncontig, tid, space, vstrings_gather_cb, &info)
+        H5Diterate(noncontig, tid, space, npystrings_unpack_cb, &info)
         assert info.i == npoints
 
         # 2. Calculate total size of strings with zero termination
