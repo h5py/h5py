@@ -294,14 +294,6 @@ class AsStrView(AbstractView):
         ], dtype=object).reshape(bytes_arr.shape)
 
 
-class AsNumpyVlenStringView(AbstractView):
-    @property
-    def dtype(self):
-        return numpy.dtype("T")
-
-    def __getitem__(self, idx):
-        return self._dset.__getitem__(idx, new_dtype=self.dtype)
-
 class FieldsView(AbstractView):
     """Wrapper to extract named fields from a dataset with a struct dtype"""
 
@@ -464,7 +456,6 @@ class Dataset(HLObject):
                     f"dset.astype({dtype}) can only be used on datasets with "
                     "an HDF5 string datatype"
                 )
-            return AsNumpyVlenStringView(self)
 
         return AsTypeView(self, dtype)
 
