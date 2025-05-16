@@ -96,15 +96,6 @@ cdef herr_t npystrings_pack_cb(
 
 
 def npystrings_pack(hid_t space, size_t contig, size_t noncontig, size_t descr):
-    """Pure-python API interface to _proxy.pyx. This is necessary to
-    allow this module to be conditionally imported, allowing numpy 1.x to
-    continue working everywhere else.
-    """
-    _npystrings_pack(space, <void *>contig, <void *>noncontig, <PyArray_Descr *>descr)
-
-
-cdef void _npystrings_pack(hid_t space, void *contig, void *noncontig,
-                            PyArray_Descr *descr):
     """Convert a zero-terminated char**, which is the in-memory representation
     for a HDF5 variable-width string dataset, into a NpyString array
     (NumPy's native variable-width strings dtype).
@@ -127,7 +118,17 @@ cdef void _npystrings_pack(hid_t space, void *contig, void *noncontig,
     -----
     This function deep-copies the input zero-terminated strings.
     Memory management for the outputs is handled by NumPy.
+
+    This function defines a pure-python API interface to _proxy.pyx.
+    This is necessary to allow this module to be conditionally imported,
+    allowing numpy 1.x to continue working everywhere else.
     """
+    _npystrings_pack(space, <void *>contig, <void *>noncontig, <PyArray_Descr *>descr)
+
+
+cdef void _npystrings_pack(hid_t space, void *contig, void *noncontig,
+                           PyArray_Descr *descr):
+    """Cython API interface of npystrings_pack"""
     cdef npystrings_pack_t info
     info.i = 0
     info.contig = <const char**>contig
@@ -162,16 +163,6 @@ cdef herr_t npystrings_unpack_cb(
 
 def npystrings_unpack(hid_t space, size_t contig, size_t noncontig, size_t descr,
                     size_t npoints):
-    """Pure-python API interface to _proxy.pyx. This is necessary to
-    allow this module to be conditionally imported, allowing numpy 1.x to
-    continue working everywhere else.
-    """
-    return <size_t>_npystrings_unpack(space, <void *>contig, <void *>noncontig,
-                                    <PyArray_Descr *>descr, npoints)
-
-
-cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
-                             PyArray_Descr *descr, size_t npoints):
     """Convert a NpyString array (NumPy's native variable-width strings dtype)
     to a zero-terminated char**, which is the in-memory representation for a
     HDF5 variable-width string dataset.
@@ -199,7 +190,20 @@ cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
         Note that this always the same as contig[0] when this
         function returns, but H5Tconvert may change the contents
         of contig[0] in place later on.
+
+    Notes
+    -----
+    This function defines a pure-python API interface to _proxy.pyx.
+    This is necessary to allow this module to be conditionally imported,
+    allowing numpy 1.x to continue working everywhere else.
     """
+    return <size_t>_npystrings_unpack(space, <void *>contig, <void *>noncontig,
+                                      <PyArray_Descr *>descr, npoints)
+
+
+cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
+                             PyArray_Descr *descr, size_t npoints):
+    """Cython API interface of npystrings_unpack"""
     cdef npystrings_unpack_t info
     cdef size_t total_size
     cdef size_t cur_size

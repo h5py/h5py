@@ -207,8 +207,7 @@ cdef herr_t dset_rw_vlen_strings(hid_t dset, hid_t mspace, hid_t fspace,
         if read:
             H5Dread(dset, h5_vlen_string, cspace, fspace, dxpl, conv_buf)
             # Convert contiguous char** to discontiguous NpyStrings.
-            npystrings_pack(mspace, <size_t> conv_buf, <size_t> progbuf,
-                             <size_t> descr)
+            npystrings_pack(mspace, <size_t> conv_buf, <size_t> progbuf, <size_t> descr)
             H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
         else:
             # Convert discontiguous NpyStrings to contiguous char**.
