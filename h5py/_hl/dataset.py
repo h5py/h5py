@@ -1120,7 +1120,7 @@ class Dataset(HLObject):
         if self.name is None:
             name = "(anonymous)"
         else:
-            name = pp.basename(pp.normpath(self.name)) or "/"
+            name = pp.basename(pp.normpath(self.name))
             name = f'"{name}"'
 
         return f'<HDF5 dataset {name}: shape {self.shape}, type "{self.dtype.str}">'
