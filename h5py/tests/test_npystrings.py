@@ -155,3 +155,9 @@ def test_empty_string(writable_file):
     x[:2] = data[:2]
     np.testing.assert_array_equal(x[:], [b"c", b"", b"b"])
     np.testing.assert_array_equal(x.astype("T")[:], data)
+
+
+def test_astype_nonstring(writable_file):
+    x = writable_file.create_dataset("x", shape=(2, ), dtype="i8")
+    with pytest.raises(TypeError, match="HDF5 string datatype"):
+        x.astype("T")
