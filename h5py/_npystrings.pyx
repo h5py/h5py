@@ -13,13 +13,13 @@ import numpy as np
 assert NUMPY_BUILD_VERSION >= '2.0'  # See pyproject.toml
 
 # =========================================================================
-# Scatter/gather routines for vlen strings to/from Numpy StringDType arrays
+# Scatter/gather routines for vlen strings to/from NumPy StringDType arrays
 # See also: _proxy.pyx::h5py_copy, h5py_scatter_cb, h5py_gather_cb
 
 IF NUMPY_BUILD_VERSION < '2.3':
     # Backport NpyStrings from 2.3 to 2.0
     # The C API was available since 2.0, but the Cython API was added in 2.3.
-    # This is a copy-paste from numpy/__init__.pxd of numpy 2.3
+    # This is a copy-paste from numpy/__init__.pxd of NumPy 2.3
     cdef extern from "numpy/ndarraytypes.h":
         ctypedef struct npy_string_allocator:
             pass
