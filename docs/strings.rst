@@ -85,7 +85,7 @@ native strings.
 In order to efficiently write NpyStrings to a dataset, simply assign a NumPy array with
 StringDType to it, either through ``__setitem__`` or :meth:`.Dataset.create_dataset`.
 To read NpyStrings out of any string-type dataset, use :meth:`.Dataset.astype('T')`.
-In both cases, there will be no intermediate conversion to object-type array, even if 
+In both cases, there will be no intermediate conversion to object-type array, even if
 the dataset's dtype is object type::
 
     # These three syntaxes are equivalent:
