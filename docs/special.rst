@@ -28,7 +28,7 @@ Variable-length strings in NumPy 1.x
 
 .. note::
    Starting from h5py 3.14 + NumPy 2.0, you can use native NumPy variable-width
-   strings, a.k.a. NpyStrings. See :ref:`npystrings`.
+   strings, a.k.a. NpyStrings or StringDType. See :ref:`npystrings`.
 
 In HDF5, data in VL format is stored as arbitrary-length vectors of a base
 type.  In particular, strings are stored C-style in null-terminated buffers.

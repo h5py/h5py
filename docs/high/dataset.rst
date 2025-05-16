@@ -504,7 +504,7 @@ Reference
 
     .. method:: astype(dtype)
 
-        Return a wrapper allowing you to read data as a particular
+        Return a read-only view allowing you to read data as a particular
         type.  Conversion is handled by HDF5 directly, on the fly::
 
             >>> dset = f.create_dataset("bigint", (1000,), dtype='int64')
@@ -517,13 +517,13 @@ Reference
 
             >>> out = dset[:500].astype('int16')  # slower
 
-        Calling ``.astype('T')`` (NumPy's native variable-width strings)
-        on a dataset returns a writable dataset with the specified dtype;
+        In case of variable-width strings, calling ``.astype('T')``
+        (NumPy's native variable-width strings) is zero cost and
+        faster than reading the data directly into an object-type array;
         read more at :ref:`npystrings`.
-        For all other dtypes, this method returns a read-only view.
 
         .. versionchanged:: 3.14
-           ``astype('T')`` returns a writeable dataset.
+           Added support for NumPy variable-width strings (``dtype='T'``).
 
         .. versionchanged:: 3.9
            :meth:`astype` can no longer be used as a context manager.

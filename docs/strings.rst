@@ -13,14 +13,15 @@ Reading strings
 ---------------
 
 String data in HDF5 datasets is read as bytes by default: ``bytes`` objects
-for variable-length strings, or numpy bytes arrays (``'S'`` dtypes) for
+for variable-length strings, or NumPy bytes arrays (``'S'`` dtypes) for
 fixed-length strings. On NumPy >=2.0, use :meth:`Dataset.astype('T')<.Dataset.astype>`
-to read into an array of native NumPy strings. If you are using NumPy 1.x, you should
-instead call :meth:`.Dataset.asstr` to retrieve an array of ``str`` objects.
+to read into an array of native variable-width NumPy strings.
+If you need backwards compatibility with NumPy 1.x or h5py <3.14, you should instead
+call :meth:`.Dataset.asstr` to retrieve an array of ``str`` objects.
 
 Variable-length strings in attributes are read as ``str`` objects. These are
 decoded as UTF-8 with surrogate escaping for unrecognised bytes. Fixed-length
-strings are read as numpy bytes arrays, the same as for datasets.
+strings are read as NumPy bytes arrays, the same as for datasets.
 
 Storing strings
 ---------------
@@ -28,7 +29,8 @@ Storing strings
 When creating a new dataset or attribute, Python ``str`` or ``bytes`` objects
 will be treated as variable-length strings, marked as UTF-8 and ASCII respectively.
 NumPy bytes arrays (``'S'`` dtypes) make fixed-length strings.
-NumPy NpyStrings arrays (``'T'`` dtypes) make native variable-length strings.
+NumPy NpyStrings arrays (``StringDType`` or ``'T'`` dtypes) make native variable-length
+strings.
 
 You can use :func:`.string_dtype` to explicitly specify any HDF5 string datatype,
 as shown in the examples below::
@@ -58,7 +60,7 @@ Data passed as NpyStrings is always encoded as UTF-8.
 .. warning::
 
    Fixed-length string datasets will silently truncate longer strings which
-   are written to them. Numpy byte string arrays do the same thing.
+   are written to them. NumPy byte string arrays do the same thing.
 
    Fixed-length strings in HDF5 hold a set number of bytes.
    It may take multiple bytes to store one character.
@@ -69,24 +71,51 @@ NumPy variable-width strings
 ----------------------------
 
 Starting with NumPy 2.0 and h5py 3.14, you can also use ``np.dtypes.StringDType()``,
-or ``dtype('T')`` for short, to specify native NumPy variable-width string dtypes,
+or ``np.dtype('T')`` for short, to specify native NumPy variable-width string dtypes,
 a.k.a. NpyStrings.
+
 However, note that when you open a dataset that you created as a StringDType, its dtype
-will be object type with ``bytes`` elements again. This is because the two data types
-are identical in the HDF5 file, and to ensure that NumPy 1.x and 2.x behave in the same
-way unless the user explicitly requests native strings::
+will be object type with ``bytes`` elements. Likewise, :meth:`.Dataset.create_dataset`
+with parameter ``dtype='T'``, or with ``data=`` set to a NumPy array with StringDType,
+will create a dataset with object type.
+This is because the two data types are identical on the HDF5 file; this design is to
+ensure that NumPy 1.x and 2.x behave in the same way unless the user explicitly requests
+native strings.
 
-    # StringDType (from input data)
-    npdata = np.asarray(string_data, dtype='T')
-    ds = f.create_dataset('npystrings1', data=npdata)
+In order to efficiently write NpyStrings to a dataset, simply assign a NumPy array with
+StringDType to it, either through ``__setitem__`` or :meth:`.Dataset.create_dataset`.
+To read NpyStrings out of any string-type dataset, use :meth:`.Dataset.astype('T')`.
+In both cases, there will be no intermediate conversion to object-type array, even if 
+the dataset's dtype is object type::
 
-    # StringDType (explicit dtype parameter)
-    ds = f.create_dataset('npystrings2', shape=(4, ), dtype='T')
-    ds[:] = string_data
+    # These three syntaxes are equivalent:
+    >>> ds = f.create_dataset('x', shape=(2, ), dtype=h5py.string_dtype())
+    >>> ds = f.create_dataset('x', shape=(2, ), dtype=np.dtypes.StringDType())
+    >>> ds = f.create_dataset('x', shape=(2, ), dtype='T')
 
-    # When you reopen the dataset, you're back to bytes by default.
-    # Calling .astype('T') creates a Dataset object with StringDType dtype.
-    ds = f['npystrings1'].astype('T')
+    # They all return a dataset with object type:
+    >>> ds
+    <HDF5 dataset "x": shape (2,), type "|O">
+
+    # When you open an already existing dataset, you also get object dtype:
+    >>> f['x']
+    <HDF5 dataset "x": shape (2,), type "|O">
+
+    # You can write a NumPy array with StringDType to it:
+    >>> ds[:] = np.asarray(['hello', 'world'], dtype='T')
+
+    # Reading back, you will get an object-type array of bytes by default:
+    >>> ds[:]
+    array([b'hello', b'world'], dtype=object)
+
+    # To read it as a native NumPy variable-width string array, use .astype('T'):
+    >>> ds.astype('T')[:]
+    array(['hello', 'world'], dtype=StringDType())
+
+    # The above is much faster than converting after reading:
+    >>> ds[:].astype('T')  # Slower; don't do this!
+    array(['hello', 'world'], dtype=StringDType())
+
 
 What about NumPy's ``U`` type?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
