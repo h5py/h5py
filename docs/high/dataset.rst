@@ -518,9 +518,8 @@ Reference
             >>> out = dset[:500].astype('int16')  # Typically slower
 
         In case of variable-width strings, calling ``.astype('T')``
-        (NumPy's native variable-width strings) is zero cost and
-        faster than reading the data into an object-type array;
-        read more at :ref:`npystrings`.
+        (NumPy's native variable-width strings) is more efficient than reading
+        the data into an object-type array; read more at :ref:`npystrings`.
 
         .. versionchanged:: 3.14
            Added support for NumPy variable-width strings (``dtype='T'``).

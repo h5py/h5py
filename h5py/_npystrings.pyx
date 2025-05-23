@@ -7,6 +7,7 @@ and can't be cimport'ed.
 include "config.pxi"
 
 from .defs cimport *
+from .utils cimport emalloc
 from numpy cimport PyArray_Descr
 import numpy as np
 
@@ -225,12 +226,9 @@ cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
         # 1. Read npy_packed_static_string[] from NumPy and unpack
         #    to npy_static_string[]; which is
         #    {const char* buf, size_t size}[] - NOT zero-terminated
-        info.unpacked = <npy_static_string*>malloc(
+        info.unpacked = <npy_static_string*>emalloc(
             npoints * sizeof(npy_static_string)
         )
-        if info.unpacked is NULL:
-            raise MemoryError("Failed to allocate memory")
-
         H5Diterate(noncontig, tid, space, npystrings_unpack_cb, &info)
         assert info.i == npoints
 
@@ -242,9 +240,7 @@ cdef char * _npystrings_unpack(hid_t space, void *contig, void *noncontig,
         # 3. Copy to temporary buffer which is a concatenation of
         #    zero-terminated char* and point to it from the
         #    output char*[] for h5py
-        zero_terminated_buf = <char *>malloc(total_size)
-        if zero_terminated_buf is NULL:
-            raise MemoryError("Failed to allocate memory")
+        zero_terminated_buf = <char *>emalloc(total_size)
         zero_terminated_cur = zero_terminated_buf
         for i in range(npoints):
             cur_size = info.unpacked[i].size
