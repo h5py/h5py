@@ -59,22 +59,24 @@ def with_phil(func):
 
 def _phil_before_fork():
     """
-    Acquire the lock before forking so the current thread is the only one
-    holding the lock.
+    Acquire the `phil` lock before forking so no thread other
+    than the current (forking) thread is holding the lock.
     """
     _phil.acquire()
 
 def _phil_after_fork():
     """
-    Release the lock after forking in the child.
+    Release the lock after forking in both the parent and the child.
     """
     _phil.release()
 
-# Register fork handlers to safely handle forked child processes.
+# Register fork handlers to safely handle `phil` Lock in forked child processes
+# in the presence of other threads which might potentially hold the lock.
 import os
-os.register_at_fork(before=_phil_before_fork,
-                    after_in_child=_phil_after_fork,
-                    after_in_parent=_phil_after_fork)
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(before=_phil_before_fork,
+                        after_in_child=_phil_after_fork,
+                        after_in_parent=_phil_after_fork)
 
 # --- End locking code --------------------------------------------------------
 

@@ -7,17 +7,16 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 import os
-import random
 import tempfile
 import threading
-from concurrent.futures import ThreadPoolExecutor
+from unittest import SkipTest
 
 import numpy as np
 
 import h5py
 from h5py import _objects as o
-from .common import TestCase
 
+from .common import TestCase
 
 class TestObjects(TestCase):
 
@@ -46,6 +45,11 @@ class TestObjects(TestCase):
     def test_phil_fork_with_threads(self):
         # Test that handling of the phil Lock after fork is correct
         # even when multiple threads are present.
+
+        # On Windows forking (and the register_at_fork handler)
+        # are not available, skip this test.
+        if not hasattr(os, "register_at_fork"):
+            raise SkipTest("os.register_at_fork not available")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             fns = []
