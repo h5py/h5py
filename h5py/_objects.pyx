@@ -57,6 +57,25 @@ def with_phil(func):
     functools.update_wrapper(wrapper, func)
     return wrapper
 
+def _phil_before_fork():
+    """
+    Acquire the lock before forking so the current thread is the only one
+    holding the lock.
+    """
+    _phil.acquire()
+
+def _phil_after_fork():
+    """
+    Release the lock after forking in the child.
+    """
+    _phil.release()
+
+# Register fork handlers to safely handle forked child processes.
+import os
+os.register_at_fork(before=_phil_before_fork,
+                    after_in_child=_phil_after_fork,
+                    after_in_parent=_phil_after_fork)
+
 # --- End locking code --------------------------------------------------------
 
 
