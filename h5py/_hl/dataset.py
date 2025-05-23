@@ -254,7 +254,7 @@ class AsTypeView(AbstractView):
     """
     def __init__(self, dset, dtype):
         super().__init__(dset)
-        self._dtype = numpy.dtype(dtype)
+        self._dtype = dtype
 
     @property
     def dtype(self):
@@ -437,6 +437,18 @@ class Dataset(HLObject):
 
         >>> double_precision = dataset.astype('f8')[0:100:2]
         """
+        dtype = numpy.dtype(dtype)
+        if dtype == self.dtype:
+            return self
+
+        if dtype.kind == "T":
+            string_info = h5t.check_string_dtype(self.dtype)
+            if string_info is None:
+                raise TypeError(
+                    f"dset.astype({dtype}) can only be used on datasets with "
+                    "an HDF5 string datatype"
+                )
+
         return AsTypeView(self, dtype)
 
     def asstr(self, encoding=None, errors='strict'):
@@ -447,6 +459,12 @@ class Dataset(HLObject):
         The parameters have the same meaning as in ``bytes.decode()``.
         If ``encoding`` is unspecified, it will use the encoding in the HDF5
         datatype (either ascii or utf-8).
+
+        .. note::
+           On NumPy 2.0 and later, it is recommended to use native NumPy
+           variable-width strings instead:
+
+           >>> str_array = dataset.astype('T')[:]
         """
         string_info = h5t.check_string_dtype(self.dtype)
         if string_info is None:
