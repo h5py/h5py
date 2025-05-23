@@ -271,6 +271,18 @@ class TestReadDirectly:
         with pytest.raises(TypeError):
             dset.read_direct(arr)
 
+    def test_zero_length(self, writable_file):
+        shape = (0, 20)
+        dset = writable_file.create_dataset("dset", shape, dtype=np.int64)
+        arr = np.zeros(shape, dtype=np.int64)
+        dset.read_direct(arr)
+
+        # We should still get an error if the shape is wrong
+        arr2 = np.zeros((0, 25), dtype=np.int64)
+        with pytest.raises(TypeError):
+            dset.read_direct(arr2)
+
+
 class TestWriteDirectly:
 
     """
