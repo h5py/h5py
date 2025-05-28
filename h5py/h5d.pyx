@@ -528,7 +528,7 @@ cdef class DatasetID(ObjectID):
             offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(offsets, offset, rank)
             PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
-            H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
+            H5Dwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
         finally:
             efree(offset)
             PyBuffer_Release(&view)
