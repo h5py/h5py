@@ -12,11 +12,12 @@ import threading
 from unittest import SkipTest
 
 import numpy as np
+import time
 
 import h5py
 from h5py import _objects as o
-
 from .common import TestCase
+
 
 class TestObjects(TestCase):
 
@@ -54,7 +55,7 @@ class TestObjects(TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             fns = []
             for i in range(10):
-                fn = f'{tmpdir}/test{i}.h5'
+                fn = os.path.join(tmpdir, f'test{i}.h5')
                 with h5py.File(fn, 'w') as f:
                     f.create_dataset('values', data=np.random.rand(1000, 1000))
                 fns.append(fn)
@@ -91,3 +92,35 @@ class TestObjects(TestCase):
             # Wait for all threads to finish
             for thread in threads:
                 thread.join()
+
+    def test_phil_fork_with_threads_2(self):
+        # Test that handling of the phil Lock after fork is correct.
+        # We simulate a deadlock in the forked process by explicitly
+        # waiting for the phil Lock to be acquired in a different thread
+        # before forking.
+        thread_acquired_phil_event = threading.Event()
+
+        def f():
+            o.phil.acquire()
+            try:
+                thread_acquired_phil_event.set()
+                time.sleep(1)
+            finally:
+                o.phil.release()
+
+        thread = threading.Thread(target=f)
+        thread.start()
+        try:
+            # on the main thread wait for the thread to have acquired the phil lock
+            thread_acquired_phil_event.wait()
+
+            # now fork main thread while the other thread holds the lock
+            pid = os.fork()
+            if pid == 0:
+                with o.phil:
+                    pass
+                os._exit(0)
+            else:
+                os.waitpid(pid, 0)
+        finally:
+            thread.join()
