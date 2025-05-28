@@ -49,8 +49,8 @@ class TestObjects(TestCase):
 
         # On Windows forking (and the register_at_fork handler)
         # are not available, skip this test.
-        if not hasattr(os, "register_at_fork"):
-            raise SkipTest("os.register_at_fork not available")
+        if not hasattr(os, "fork"):
+            raise SkipTest("os.fork not available")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             fns = []
@@ -98,6 +98,12 @@ class TestObjects(TestCase):
         # We simulate a deadlock in the forked process by explicitly
         # waiting for the phil Lock to be acquired in a different thread
         # before forking.
+
+        # On Windows forking (and the register_at_fork handler)
+        # are not available, skip this test.
+        if not hasattr(os, "fork"):
+            raise SkipTest("os.fork not available")
+
         thread_acquired_phil_event = threading.Event()
 
         def f():
