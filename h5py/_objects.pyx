@@ -14,6 +14,8 @@
 include "_locks.pxi"
 from .defs cimport *
 
+import os
+
 DEF USE_LOCKING = True
 DEF DEBUG_ID = False
 
@@ -72,7 +74,6 @@ def _phil_after_fork():
 
 # Register fork handlers to safely handle `phil` Lock in forked child processes
 # in the presence of other threads which might potentially hold the lock.
-import os
 if hasattr(os, "register_at_fork"):
     os.register_at_fork(before=_phil_before_fork,
                         after_in_child=_phil_after_fork,

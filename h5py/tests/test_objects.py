@@ -43,9 +43,9 @@ class TestObjects(TestCase):
         with self.assertRaises(TypeError):
             hash(oid)
 
-    def test_phil_fork_with_threads(self):
-        # Test that handling of the phil Lock after fork is correct
-        # even when multiple threads are present.
+    def test_fork_with_threads(self):
+        # Test that we do not deadlock after forking when the process
+        # is using multiple threads to simultaneously perform h5py operations
 
         # On Windows forking (and the register_at_fork handler)
         # are not available, skip this test.
@@ -93,7 +93,7 @@ class TestObjects(TestCase):
             for thread in threads:
                 thread.join()
 
-    def test_phil_fork_with_threads_2(self):
+    def test_phil_fork_with_threads(self):
         # Test that handling of the phil Lock after fork is correct.
         # We simulate a deadlock in the forked process by explicitly
         # waiting for the phil Lock to be acquired in a different thread
@@ -117,16 +117,21 @@ class TestObjects(TestCase):
         thread = threading.Thread(target=f)
         thread.start()
         try:
-            # on the main thread wait for the thread to have acquired the phil lock
+            # wait for the thread running "f" to have acquired the phil lock
             thread_acquired_phil_event.wait()
 
-            # now fork main thread while the other thread holds the lock
+            # now fork the current (main) thread while the other thread holds the lock
             pid = os.fork()
             if pid == 0:
+                # child process
+                # If we handle the phil lock correctly, this should not deadlock,
+                # and we should be able to acquire the lock here.
                 with o.phil:
                     pass
                 os._exit(0)
             else:
+                # parent process
+                # wait for the child process to finish
                 os.waitpid(pid, 0)
         finally:
             thread.join()
