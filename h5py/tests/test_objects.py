@@ -7,6 +7,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 import os
+import signal
 import tempfile
 import threading
 from unittest import SkipTest
@@ -86,8 +87,31 @@ class TestObjects(TestCase):
                     worker2pid[worker_id] = pid
 
             # Wait for all child processes to finish
-            for worker_id, pid in worker2pid.items():
-                os.waitpid(pid, 0)
+            start = time.time()
+            timeout = 60.0
+            while time.time() < start + timeout:
+                for worker_id in list(worker2pid):
+                    pid = worker2pid[worker_id]
+                    waited_pid, status = os.waitpid(pid, os.WNOHANG)
+                    if waited_pid == pid:
+                        assert os.WIFEXITED(status)
+                        assert os.WEXITSTATUS(status) == 0
+                        del worker2pid[worker_id]
+                # If all child processes exited we can stop looping, otherwise sleep and try again
+                if not worker2pid:
+                    break
+                time.sleep(0.1)
+
+            # Make sure all child processes finished successfully
+            if len(worker2pid) > 0:
+                # Some child processes did not finish because they could not acquire the phil lock,
+                # make sure we clean up after us.
+                for worker_id, pid in worker2pid.items():
+                    # Kill the zombie child processes
+                    os.kill(pid, signal.SIGKILL)
+                    os.waitpid(pid, 0)
+
+                assert False, "Some child processes did not finish and had to be killed"
 
             # Wait for all threads to finish
             for thread in threads:
@@ -126,12 +150,16 @@ class TestObjects(TestCase):
                 # child process
                 # If we handle the phil lock correctly, this should not deadlock,
                 # and we should be able to acquire the lock here.
-                with o.phil:
-                    pass
-                os._exit(0)
+                if o.phil.acquire(blocking=False):
+                    o.phil.release()
+                    os._exit(0)
+                else:
+                    os._exit(1)
             else:
                 # parent process
                 # wait for the child process to finish
-                os.waitpid(pid, 0)
+                _, status = os.waitpid(pid, 0)
+                assert os.WIFEXITED(status)
+                assert os.WEXITSTATUS(status) == 0
         finally:
             thread.join()
