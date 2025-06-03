@@ -22,6 +22,7 @@ import os
 import os.path
 import sys
 from tempfile import mkdtemp
+from uuid import uuid4
 
 from collections.abc import MutableMapping
 
@@ -101,7 +102,7 @@ class TestCreate(BaseGroup):
 
     def test_appropriate_low_level_id(self):
         " Binding a group to a non-group identifier fails with ValueError "
-        dset = self.f.create_dataset('foo', [1])
+        dset = self.f.create_dataset(str(uuid4()), [1])
         with self.assertRaises(ValueError):
             Group(dset.id)
 
@@ -166,9 +167,9 @@ class TestRequire(BaseGroup):
 
     def test_require_exception(self):
         """ Opening conflicting object results in TypeError """
-        self.f.create_dataset('foo', (1,), 'f')
+        self.f.create_dataset((uid:=str(uuid4())), (1,), 'f')
         with self.assertRaises(TypeError):
-            self.f.require_group('foo')
+            self.f.require_group(uid)
 
     def test_intermediate_create_dataset(self):
         """ Intermediate is created if it doesn't exist """

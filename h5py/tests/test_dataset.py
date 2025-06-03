@@ -23,6 +23,7 @@ import numpy as np
 import platform
 import pytest
 import warnings
+from uuid import uuid4
 
 from .common import ut, TestCase
 from .data_files import get_data_file_path
@@ -50,12 +51,12 @@ class TestRepr(BaseDataset):
     """
 
     def test_repr_basic(self):
-        ds = self.f.create_dataset('foo', (4,), dtype='int32')
-        assert repr(ds) == '<HDF5 dataset "foo": shape (4,), type "<i4">'
+        ds = self.f.create_dataset(uid:=str(uuid4()), (4,), dtype='int32')
+        assert repr(ds) == f'<HDF5 dataset "{uid}": shape (4,), type "<i4">'
 
     def test_repr_closed(self):
         """ repr() works on live and dead datasets """
-        ds = self.f.create_dataset('foo', (4,))
+        ds = self.f.create_dataset(str(uuid4()), (4,))
         self.f.close()
         assert repr(ds) == '<Closed HDF5 dataset>'
 
@@ -72,50 +73,50 @@ class TestCreateShape(BaseDataset):
 
     def test_create_scalar(self):
         """ Create a scalar dataset """
-        dset = self.f.create_dataset('foo', ())
+        dset = self.f.create_dataset(str(uuid4()), ())
         self.assertEqual(dset.shape, ())
 
     def test_create_simple(self):
         """ Create a size-1 dataset """
-        dset = self.f.create_dataset('foo', (1,))
+        dset = self.f.create_dataset(str(uuid4()), (1,))
         self.assertEqual(dset.shape, (1,))
 
     def test_create_integer(self):
         """ Create a size-1 dataset with integer shape"""
-        dset = self.f.create_dataset('foo', 1)
+        dset = self.f.create_dataset(str(uuid4()), 1)
         self.assertEqual(dset.shape, (1,))
 
     def test_create_extended(self):
         """ Create an extended dataset """
-        dset = self.f.create_dataset('foo', (63,))
+        dset = self.f.create_dataset(str(uuid4()), (63,))
         self.assertEqual(dset.shape, (63,))
         self.assertEqual(dset.size, 63)
-        dset = self.f.create_dataset('bar', (6, 10))
+        dset = self.f.create_dataset(str(uuid4()), (6, 10))
         self.assertEqual(dset.shape, (6, 10))
         self.assertEqual(dset.size, (60))
 
     def test_create_integer_extended(self):
         """ Create an extended dataset """
-        dset = self.f.create_dataset('foo', 63)
+        dset = self.f.create_dataset(str(uuid4()), 63)
         self.assertEqual(dset.shape, (63,))
         self.assertEqual(dset.size, 63)
-        dset = self.f.create_dataset('bar', (6, 10))
+        dset = self.f.create_dataset(str(uuid4()), (6, 10))
         self.assertEqual(dset.shape, (6, 10))
         self.assertEqual(dset.size, (60))
 
     def test_default_dtype(self):
         """ Confirm that the default dtype is float """
-        dset = self.f.create_dataset('foo', (63,))
+        dset = self.f.create_dataset(str(uuid4()), (63,))
         self.assertEqual(dset.dtype, np.dtype('=f4'))
 
     def test_missing_shape(self):
         """ Missing shape raises TypeError """
         with self.assertRaises(TypeError):
-            self.f.create_dataset('foo')
+            self.f.create_dataset(str(uuid4()))
 
     def test_long_double(self):
         """ Confirm that the default dtype is float """
-        dset = self.f.create_dataset('foo', (63,), dtype=np.longdouble)
+        dset = self.f.create_dataset(str(uuid4()), (63,), dtype=np.longdouble)
         if platform.machine() in ['ppc64le']:
             pytest.xfail("Storage of long double deactivated on %s" % platform.machine())
         self.assertEqual(dset.dtype, np.longdouble)
@@ -123,7 +124,7 @@ class TestCreateShape(BaseDataset):
     @ut.skipIf(not hasattr(np, "complex256"), "No support for complex256")
     def test_complex256(self):
         """ Confirm that the default dtype is float """
-        dset = self.f.create_dataset('foo', (63,),
+        dset = self.f.create_dataset(str(uuid4()), (63,),
                                      dtype=np.dtype('complex256'))
         self.assertEqual(dset.dtype, np.dtype('complex256'))
 
@@ -143,25 +144,25 @@ class TestCreateData(BaseDataset):
     def test_create_scalar(self):
         """ Create a scalar dataset from existing array """
         data = np.ones((), 'f')
-        dset = self.f.create_dataset('foo', data=data)
+        dset = self.f.create_dataset(str(uuid4()), data=data)
         self.assertEqual(dset.shape, data.shape)
 
     def test_create_extended(self):
         """ Create an extended dataset from existing data """
         data = np.ones((63,), 'f')
-        dset = self.f.create_dataset('foo', data=data)
+        dset = self.f.create_dataset(str(uuid4()), data=data)
         self.assertEqual(dset.shape, data.shape)
 
     def test_dataset_intermediate_group(self):
         """ Create dataset with missing intermediate groups """
-        ds = self.f.create_dataset("/foo/bar/baz", shape=(10, 10), dtype='<i4')
+        ds = self.f.create_dataset(uid:=f"/{uuid4()}/bar/baz", shape=(10, 10), dtype='<i4')
         self.assertIsInstance(ds, h5py.Dataset)
-        self.assertTrue("/foo/bar/baz" in self.f)
+        self.assertTrue(uid in self.f)
 
     def test_reshape(self):
         """ Create from existing data, and make it fit a new shape """
         data = np.arange(30, dtype='f')
-        dset = self.f.create_dataset('foo', shape=(10, 3), data=data)
+        dset = self.f.create_dataset(str(uuid4()), shape=(10, 3), data=data)
         self.assertEqual(dset.shape, (10, 3))
         self.assertArrayEqual(dset[...], data.reshape((10, 3)))
 
@@ -184,11 +185,11 @@ class TestCreateData(BaseDataset):
         """ Creating dataset with byte string yields vlen ASCII dataset """
         def check_vlen_ascii(dset):
             self.check_h5_string(dset, h5t.CSET_ASCII, length=None)
-        check_vlen_ascii(self.f.create_dataset('a', data=b'abc'))
-        check_vlen_ascii(self.f.create_dataset('b', data=[b'abc', b'def']))
-        check_vlen_ascii(self.f.create_dataset('c', data=[[b'abc'], [b'def']]))
+        check_vlen_ascii(self.f.create_dataset(str(uuid4()), data=b'abc'))
+        check_vlen_ascii(self.f.create_dataset(str(uuid4()), data=[b'abc', b'def']))
+        check_vlen_ascii(self.f.create_dataset(str(uuid4()), data=[[b'abc'], [b'def']]))
         check_vlen_ascii(self.f.create_dataset(
-            'd', data=np.array([b'abc', b'def'], dtype=object)
+            str(uuid4()), data=np.array([b'abc', b'def'], dtype=object)
         ))
 
     def test_create_np_s(self):
@@ -198,11 +199,11 @@ class TestCreateData(BaseDataset):
     def test_create_strings(self):
         def check_vlen_utf8(dset):
             self.check_h5_string(dset, h5t.CSET_UTF8, length=None)
-        check_vlen_utf8(self.f.create_dataset('a', data='abc'))
-        check_vlen_utf8(self.f.create_dataset('b', data=['abc', 'def']))
-        check_vlen_utf8(self.f.create_dataset('c', data=[['abc'], ['def']]))
+        check_vlen_utf8(self.f.create_dataset(str(uuid4()), data='abc'))
+        check_vlen_utf8(self.f.create_dataset(str(uuid4()), data=['abc', 'def']))
+        check_vlen_utf8(self.f.create_dataset(str(uuid4()), data=[['abc'], ['def']]))
         check_vlen_utf8(self.f.create_dataset(
-            'd', data=np.array(['abc', 'def'], dtype=object)
+            str(uuid4()), data=np.array(['abc', 'def'], dtype=object)
         ))
 
     def test_create_np_u(self):
@@ -210,12 +211,12 @@ class TestCreateData(BaseDataset):
             self.f.create_dataset('a', data=np.array([b'abc', b'def'], dtype='U3'))
 
     def test_empty_create_via_None_shape(self):
-        self.f.create_dataset('foo', dtype='f')
-        self.assertTrue(is_empty_dataspace(self.f['foo'].id))
+        self.f.create_dataset(uid:=str(uuid4()), dtype='f')
+        self.assertTrue(is_empty_dataspace(self.f[uid].id))
 
     def test_empty_create_via_Empty_class(self):
-        self.f.create_dataset('foo', data=h5py.Empty(dtype='f'))
-        self.assertTrue(is_empty_dataspace(self.f['foo'].id))
+        self.f.create_dataset(uid:=str(uuid4()), data=h5py.Empty(dtype='f'))
+        self.assertTrue(is_empty_dataspace(self.f[uid].id))
 
     def test_create_incompatible_data(self):
         # Shape tuple is incompatible with data
@@ -239,7 +240,7 @@ class TestReadDirectly:
         ])
     def test_read_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
         source_values = np.arange(product(source_shape), dtype="int64").reshape(source_shape)
-        dset = writable_file.create_dataset("dset", source_shape, data=source_values)
+        dset = writable_file.create_dataset(str(uuid4()), source_shape, data=source_values)
         arr = np.full(dest_shape, -1, dtype="int64")
         expected = arr.copy()
         expected[dest_sel] = source_values[source_sel]
@@ -248,32 +249,32 @@ class TestReadDirectly:
         np.testing.assert_array_equal(arr, expected)
 
     def test_no_sel(self, writable_file):
-        dset = writable_file.create_dataset("dset", (10,), data=np.arange(10, dtype="int64"))
+        dset = writable_file.create_dataset(str(uuid4()), (10,), data=np.arange(10, dtype="int64"))
         arr = np.ones((10,), dtype="int64")
         dset.read_direct(arr)
         np.testing.assert_array_equal(arr, np.arange(10, dtype="int64"))
 
     def test_empty(self, writable_file):
-        empty_dset = writable_file.create_dataset("edset", dtype='int64')
+        empty_dset = writable_file.create_dataset(str(uuid4()), dtype='int64')
         arr = np.ones((100,), 'int64')
         with pytest.raises(TypeError):
             empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
     def test_wrong_shape(self, writable_file):
-        dset = writable_file.create_dataset("dset", (100,), dtype='int64')
+        dset = writable_file.create_dataset(str(uuid4()), (100,), dtype='int64')
         arr = np.ones((200,))
         with pytest.raises(TypeError):
             dset.read_direct(arr)
 
     def test_not_c_contiguous(self, writable_file):
-        dset = writable_file.create_dataset("dset", (10, 10), dtype='int64')
+        dset = writable_file.create_dataset(str(uuid4()), (10, 10), dtype='int64')
         arr = np.ones((10, 10), order='F')
         with pytest.raises(TypeError):
             dset.read_direct(arr)
 
     def test_zero_length(self, writable_file):
         shape = (0, 20)
-        dset = writable_file.create_dataset("dset", shape, dtype=np.int64)
+        dset = writable_file.create_dataset(str(uuid4()), shape, dtype=np.int64)
         arr = np.zeros(shape, dtype=np.int64)
         dset.read_direct(arr)
 
@@ -298,7 +299,7 @@ class TestWriteDirectly:
             ((5, 7, 9), (6,), np.s_[2, :6, 3], np.s_[:]),
         ])
     def test_write_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
-        dset = writable_file.create_dataset('dset', dest_shape, dtype='int32', fillvalue=-1)
+        dset = writable_file.create_dataset(str(uuid4()), dest_shape, dtype='int32', fillvalue=-1)
         arr = np.arange(product(source_shape)).reshape(source_shape)
         expected = np.full(dest_shape, -1, dtype='int32')
         expected[dest_sel] = arr[source_sel]
@@ -306,18 +307,18 @@ class TestWriteDirectly:
         np.testing.assert_array_equal(dset[:], expected)
 
     def test_empty(self, writable_file):
-        empty_dset = writable_file.create_dataset("edset", dtype='int64')
+        empty_dset = writable_file.create_dataset(str(uuid4()), dtype='int64')
         with pytest.raises(TypeError):
             empty_dset.write_direct(np.ones((100,)), np.s_[0:10], np.s_[50:60])
 
     def test_wrong_shape(self, writable_file):
-        dset = writable_file.create_dataset("dset", (100,), dtype='int64')
+        dset = writable_file.create_dataset(str(uuid4()), (100,), dtype='int64')
         arr = np.ones((200,))
         with pytest.raises(TypeError):
             dset.write_direct(arr)
 
     def test_not_c_contiguous(self, writable_file):
-        dset = writable_file.create_dataset("dset", (10, 10), dtype='int64')
+        dset = writable_file.create_dataset(str(uuid4()), (10, 10), dtype='int64')
         arr = np.ones((10, 10), order='F')
         with pytest.raises(TypeError):
             dset.write_direct(arr)
@@ -357,35 +358,35 @@ class TestCreateRequire(BaseDataset):
 
     def test_shape_conflict(self):
         """ require_dataset with shape conflict yields TypeError """
-        self.f.create_dataset('foo', (10, 3), 'f')
+        self.f.create_dataset(uid:=str(uuid4()), (10, 3), 'f')
         with self.assertRaises(TypeError):
-            self.f.require_dataset('foo', (10, 4), 'f')
+            self.f.require_dataset(uid, (10, 4), 'f')
 
     def test_type_conflict(self):
         """ require_dataset with object type conflict yields TypeError """
-        self.f.create_group('foo')
+        self.f.create_group(uid:=str(uuid4()))
         with self.assertRaises(TypeError):
-            self.f.require_dataset('foo', (10, 3), 'f')
+            self.f.require_dataset(uid, (10, 3), 'f')
 
     def test_dtype_conflict(self):
         """ require_dataset with dtype conflict (strict mode) yields TypeError
         """
-        dset = self.f.create_dataset('foo', (10, 3), 'f')
+        dset = self.f.create_dataset(uid:=str(uuid4()), (10, 3), 'f')
         with self.assertRaises(TypeError):
-            self.f.require_dataset('foo', (10, 3), 'S10')
+            self.f.require_dataset(uid, (10, 3), 'S10')
 
     def test_dtype_exact(self):
         """ require_dataset with exactly dtype match """
 
-        dset = self.f.create_dataset('foo', (10, 3), 'f')
-        dset2 = self.f.require_dataset('foo', (10, 3), 'f', exact=True)
+        dset = self.f.create_dataset(uid:=str(uuid4()), (10, 3), 'f')
+        dset2 = self.f.require_dataset(uid, (10, 3), 'f', exact=True)
         self.assertEqual(dset, dset2)
 
     def test_dtype_close(self):
         """ require_dataset with convertible type succeeds (non-strict mode)
         """
-        dset = self.f.create_dataset('foo', (10, 3), 'i4')
-        dset2 = self.f.require_dataset('foo', (10, 3), 'i2', exact=False)
+        dset = self.f.create_dataset(uid:=str(uuid4()), (10, 3), 'i4')
+        dset2 = self.f.require_dataset(uid, (10, 3), 'i2', exact=False)
         self.assertEqual(dset, dset2)
         self.assertEqual(dset2.dtype, np.dtype('i4'))
 
@@ -398,43 +399,43 @@ class TestCreateChunked(BaseDataset):
 
     def test_create_chunks(self):
         """ Create via chunks tuple """
-        dset = self.f.create_dataset('foo', shape=(100,), chunks=(10,))
+        dset = self.f.create_dataset(str(uuid4()), shape=(100,), chunks=(10,))
         self.assertEqual(dset.chunks, (10,))
 
     def test_create_chunks_integer(self):
         """ Create via chunks integer """
-        dset = self.f.create_dataset('foo', shape=(100,), chunks=10)
+        dset = self.f.create_dataset(str(uuid4()), shape=(100,), chunks=10)
         self.assertEqual(dset.chunks, (10,))
 
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
         with self.assertRaises(ValueError):
-            self.f.create_dataset('foo', shape=(100,), chunks=(200,))
+            self.f.create_dataset(str(uuid4()), shape=(100,), chunks=(200,))
 
     def test_chunks_false(self):
         """ Chunked format required for given storage options """
         with self.assertRaises(ValueError):
-            self.f.create_dataset('foo', shape=(10,), maxshape=100, chunks=False)
+            self.f.create_dataset(str(uuid4()), shape=(10,), maxshape=100, chunks=False)
 
     def test_chunks_scalar(self):
         """ Attempting to create chunked scalar dataset raises TypeError """
         with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', shape=(), chunks=(50,))
+            self.f.create_dataset(str(uuid4()), shape=(), chunks=(50,))
 
     def test_auto_chunks(self):
         """ Auto-chunking of datasets """
-        dset = self.f.create_dataset('foo', shape=(20, 100), chunks=True)
+        dset = self.f.create_dataset(str(uuid4()), shape=(20, 100), chunks=True)
         self.assertIsInstance(dset.chunks, tuple)
         self.assertEqual(len(dset.chunks), 2)
 
     def test_auto_chunks_abuse(self):
         """ Auto-chunking with pathologically large element sizes """
-        dset = self.f.create_dataset('foo', shape=(3,), dtype='S100000000', chunks=True)
+        dset = self.f.create_dataset(str(uuid4()), shape=(3,), dtype='S100000000', chunks=True)
         self.assertEqual(dset.chunks, (1,))
 
     def test_scalar_assignment(self):
         """ Test scalar assignment of chunked dataset """
-        dset = self.f.create_dataset('foo', shape=(3, 50, 50),
+        dset = self.f.create_dataset(str(uuid4()), shape=(3, 50, 50),
                                      dtype=np.int32, chunks=(1, 50, 50))
         # test assignment of selection smaller than chunk size
         dset[1, :, 40] = 10
@@ -451,10 +452,10 @@ class TestCreateChunked(BaseDataset):
     def test_auto_chunks_no_shape(self):
         """ Auto-chunking of empty datasets not allowed"""
         with pytest.raises(TypeError, match='Empty') as err:
-            self.f.create_dataset('foo', dtype='S100', chunks=True)
+            self.f.create_dataset(str(uuid4()), dtype='S100', chunks=True)
 
         with pytest.raises(TypeError, match='Empty') as err:
-            self.f.create_dataset('foo', dtype='S100', maxshape=20)
+            self.f.create_dataset(str(uuid4()), dtype='S100', maxshape=20)
 
 
 class TestCreateFillvalue(BaseDataset):
@@ -465,33 +466,33 @@ class TestCreateFillvalue(BaseDataset):
 
     def test_create_fillval(self):
         """ Fill value is reflected in dataset contents """
-        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0)
+        dset = self.f.create_dataset(str(uuid4()), (10,), fillvalue=4.0)
         self.assertEqual(dset[0], 4.0)
         self.assertEqual(dset[7], 4.0)
 
     def test_property(self):
         """ Fill value is recoverable via property """
-        dset = self.f.create_dataset('foo', (10,), fillvalue=3.0)
+        dset = self.f.create_dataset(str(uuid4()), (10,), fillvalue=3.0)
         self.assertEqual(dset.fillvalue, 3.0)
         self.assertNotIsInstance(dset.fillvalue, np.ndarray)
 
     def test_property_none(self):
         """ .fillvalue property works correctly if not set """
-        dset = self.f.create_dataset('foo', (10,))
+        dset = self.f.create_dataset(str(uuid4()), (10,))
         self.assertEqual(dset.fillvalue, 0)
 
     def test_compound(self):
         """ Fill value works with compound types """
         dt = np.dtype([('a', 'f4'), ('b', 'i8')])
         v = np.ones((1,), dtype=dt)[0]
-        dset = self.f.create_dataset('foo', (10,), dtype=dt, fillvalue=v)
+        dset = self.f.create_dataset(str(uuid4()), (10,), dtype=dt, fillvalue=v)
         self.assertEqual(dset.fillvalue, v)
         self.assertAlmostEqual(dset[4], v)
 
     def test_exc(self):
         """ Bogus fill value raises ValueError """
         with self.assertRaises(ValueError):
-            dset = self.f.create_dataset('foo', (10,),
+            dset = self.f.create_dataset(str(uuid4()), (10,),
                     dtype=[('a', 'i'), ('b', 'f')], fillvalue=42)
 
 
@@ -503,7 +504,7 @@ class TestFillTime(BaseDataset):
 
     def test_fill_time_default(self):
         """ Fill time default to IFSET """
-        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0)
+        dset = self.f.create_dataset(str(uuid4()), (10,), fillvalue=4.0)
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
         self.assertEqual(dset[0], 4.0)
@@ -512,7 +513,7 @@ class TestFillTime(BaseDataset):
     @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
     def test_compressed_default(self):
         """ Fill time is IFSET for compressed dataset (chunked) """
-        dset = self.f.create_dataset('foo', (10,), compression='gzip',
+        dset = self.f.create_dataset(str(uuid4()), (10,), compression='gzip',
                                      fillvalue=4.0)
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
@@ -521,7 +522,7 @@ class TestFillTime(BaseDataset):
 
     def test_fill_time_never(self):
         """ Fill time set to NEVER """
-        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0,
+        dset = self.f.create_dataset(str(uuid4()), (10,), fillvalue=4.0,
                                      fill_time='never')
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_NEVER)
@@ -531,14 +532,14 @@ class TestFillTime(BaseDataset):
 
     def test_fill_time_alloc(self):
         """ Fill time explicitly set to ALLOC """
-        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0,
+        dset = self.f.create_dataset(str(uuid4()), (10,), fillvalue=4.0,
                                      fill_time='alloc')
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_ALLOC)
 
     def test_fill_time_ifset(self):
         """ Fill time explicitly set to IFSET """
-        dset = self.f.create_dataset('foo', (10,), chunks=(2,), fillvalue=4.0,
+        dset = self.f.create_dataset(str(uuid4()), (10,), chunks=(2,), fillvalue=4.0,
                                      fill_time='ifset')
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
@@ -546,16 +547,16 @@ class TestFillTime(BaseDataset):
     def test_invalid_fill_time(self):
         """ Choice of fill_time is 'alloc', 'never', 'ifset' """
         with self.assertRaises(ValueError):
-            dset = self.f.create_dataset('foo', (10,), fill_time='fill_bad')
+            dset = self.f.create_dataset(str(uuid4()), (10,), fill_time='fill_bad')
 
     def test_non_str_fill_time(self):
         """ fill_time must be a string """
         with self.assertRaises(ValueError):
-            dset = self.f.create_dataset('foo', (10,), fill_time=2)
+            dset = self.f.create_dataset(str(uuid4()), (10,), fill_time=2)
 
     def test_resize_chunk_fill_time_default(self):
         """ The resize dataset will be filled (by default fill value 0) """
-        dset = self.f.create_dataset('foo', (50, ), maxshape=(100, ),
+        dset = self.f.create_dataset(str(uuid4()), (50, ), maxshape=(100, ),
                                      chunks=(5, ))
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
@@ -567,7 +568,7 @@ class TestFillTime(BaseDataset):
 
     def test_resize_chunk_fill_time_never(self):
         """ The resize dataset won't be filled """
-        dset = self.f.create_dataset('foo', (50, ), maxshape=(100, ),
+        dset = self.f.create_dataset(str(uuid4()), (50, ), maxshape=(100, ),
                                      fillvalue=4.0, fill_time='never',
                                      chunks=(5, ))
         plist = dset.id.get_create_plist()
@@ -594,7 +595,7 @@ class TestFillTime(BaseDataset):
 
 ])
 def test_get_unset_fill_value(dt, expected, writable_file):
-    dset = writable_file.create_dataset('foo', (10,), dtype=dt)
+    dset = writable_file.create_dataset(str(uuid4()), (10,), dtype=dt)
     assert dset.fillvalue == expected
 
 
@@ -606,10 +607,10 @@ class TestCreateNamedType(BaseDataset):
 
     def test_named(self):
         """ Named type object works and links the dataset to type """
-        self.f['type'] = np.dtype('f8')
-        dset = self.f.create_dataset('x', (100,), dtype=self.f['type'])
+        self.f[(uid:=str(uuid4()))] = np.dtype('f8')
+        dset = self.f.create_dataset(str(uuid4()), (100,), dtype=self.f[uid])
         self.assertEqual(dset.dtype, np.dtype('f8'))
-        self.assertEqual(dset.id.get_type(), self.f['type'].id)
+        self.assertEqual(dset.id.get_type(), self.f[uid].id)
         self.assertTrue(dset.id.get_type().committed())
 
 
@@ -622,20 +623,20 @@ class TestCreateGzip(BaseDataset):
 
     def test_gzip(self):
         """ Create with explicit gzip options """
-        dset = self.f.create_dataset('foo', (20, 30), compression='gzip',
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), compression='gzip',
                                      compression_opts=9)
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 9)
 
     def test_gzip_implicit(self):
         """ Create with implicit gzip level (level 4) """
-        dset = self.f.create_dataset('foo', (20, 30), compression='gzip')
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), compression='gzip')
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 4)
 
     def test_gzip_number(self):
         """ Create with gzip level by specifying integer """
-        dset = self.f.create_dataset('foo', (20, 30), compression=7)
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), compression=7)
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 7)
 
@@ -643,18 +644,18 @@ class TestCreateGzip(BaseDataset):
         try:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
             with self.assertRaises(ValueError):
-                dset = self.f.create_dataset('foo', (20, 30), compression=7)
+                dset = self.f.create_dataset(str(uuid4()), (20, 30), compression=7)
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
     def test_gzip_exc(self):
         """ Illegal gzip level (explicit or implicit) raises ValueError """
         with self.assertRaises((ValueError, RuntimeError)):
-            self.f.create_dataset('foo', (20, 30), compression=14)
+            self.f.create_dataset(str(uuid4()), (20, 30), compression=14)
         with self.assertRaises(ValueError):
-            self.f.create_dataset('foo', (20, 30), compression=-4)
+            self.f.create_dataset(str(uuid4()), (20, 30), compression=-4)
         with self.assertRaises(ValueError):
-            self.f.create_dataset('foo', (20, 30), compression='gzip',
+            self.f.create_dataset(str(uuid4()), (20, 30), compression='gzip',
                                   compression_opts=14)
 
 
@@ -670,7 +671,7 @@ class TestCreateCompressionNumber(BaseDataset):
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
-            dset = self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE, compression_opts=(7,))
+            dset = self.f.create_dataset(str(uuid4()), (20, 30), compression=h5py.h5z.FILTER_DEFLATE, compression_opts=(7,))
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
@@ -680,11 +681,11 @@ class TestCreateCompressionNumber(BaseDataset):
     def test_compression_number_invalid(self):
         """ Create with invalid compression numbers  """
         with self.assertRaises(ValueError) as e:
-            self.f.create_dataset('foo', (20, 30), compression=-999)
+            self.f.create_dataset(str(uuid4()), (20, 30), compression=-999)
         self.assertIn("Invalid filter", str(e.exception))
 
         with self.assertRaises(ValueError) as e:
-            self.f.create_dataset('foo', (20, 30), compression=100)
+            self.f.create_dataset(str(uuid4()), (20, 30), compression=100)
         self.assertIn("Unknown compression", str(e.exception))
 
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
@@ -693,7 +694,7 @@ class TestCreateCompressionNumber(BaseDataset):
 
             # Using gzip compression requires a compression level specified in compression_opts
             with self.assertRaises(IndexError):
-                self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE)
+                self.f.create_dataset(str(uuid4()), (20, 30), compression=h5py.h5z.FILTER_DEFLATE)
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
@@ -707,24 +708,24 @@ class TestCreateLZF(BaseDataset):
 
     def test_lzf(self):
         """ Create with explicit lzf """
-        dset = self.f.create_dataset('foo', (20, 30), compression='lzf')
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), compression='lzf')
         self.assertEqual(dset.compression, 'lzf')
         self.assertEqual(dset.compression_opts, None)
 
         testdata = np.arange(100)
-        dset = self.f.create_dataset('bar', data=testdata, compression='lzf')
+        dset = self.f.create_dataset(uid:=str(uuid4()), data=testdata, compression='lzf')
         self.assertEqual(dset.compression, 'lzf')
         self.assertEqual(dset.compression_opts, None)
 
         self.f.flush()  # Actually write to file
 
-        readdata = self.f['bar'][()]
+        readdata = self.f[uid][()]
         self.assertArrayEqual(readdata, testdata)
 
     def test_lzf_exc(self):
         """ Giving lzf options raises ValueError """
         with self.assertRaises(ValueError):
-            self.f.create_dataset('foo', (20, 30), compression='lzf',
+            self.f.create_dataset(str(uuid4()), (20, 30), compression='lzf',
                                   compression_opts=4)
 
 
@@ -737,7 +738,7 @@ class TestCreateSZIP(BaseDataset):
 
     def test_szip(self):
         """ Create with explicit szip """
-        dset = self.f.create_dataset('foo', (20, 30), compression='szip',
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), compression='szip',
                                      compression_opts=('ec', 16))
 
 
@@ -750,7 +751,7 @@ class TestCreateShuffle(BaseDataset):
 
     def test_shuffle(self):
         """ Enable shuffle filter """
-        dset = self.f.create_dataset('foo', (20, 30), shuffle=True)
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), shuffle=True)
         self.assertTrue(dset.shuffle)
 
 
@@ -762,7 +763,7 @@ class TestCreateFletcher32(BaseDataset):
 
     def test_fletcher32(self):
         """ Enable fletcher32 filter """
-        dset = self.f.create_dataset('foo', (20, 30), fletcher32=True)
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), fletcher32=True)
         self.assertTrue(dset.fletcher32)
 
 
@@ -776,19 +777,19 @@ class TestCreateScaleOffset(BaseDataset):
         """ Ensure that a scale factor is required for scaleoffset compression of floating point data """
 
         with self.assertRaises(ValueError):
-            dset = self.f.create_dataset('foo', (20, 30), dtype=float, scaleoffset=True)
+            dset = self.f.create_dataset(str(uuid4()), (20, 30), dtype=float, scaleoffset=True)
 
     def test_non_integer(self):
         """ Check when scaleoffset is negetive"""
 
         with self.assertRaises(ValueError):
-            dset = self.f.create_dataset('foo', (20, 30), dtype=float, scaleoffset=-0.1)
+            dset = self.f.create_dataset(str(uuid4()), (20, 30), dtype=float, scaleoffset=-0.1)
 
     def test_unsupport_dtype(self):
         """ Check when dtype is unsupported type"""
 
         with self.assertRaises(TypeError):
-            dset = self.f.create_dataset('foo', (20, 30), dtype=bool, scaleoffset=True)
+            dset = self.f.create_dataset(str(uuid4()), (20, 30), dtype=bool, scaleoffset=True)
 
     def test_float(self):
         """ Scaleoffset filter works for floating point data """
@@ -798,7 +799,7 @@ class TestCreateScaleOffset(BaseDataset):
         range = 20 * 10 ** scalefac
         testdata = (np.random.rand(*shape) - 0.5) * range
 
-        dset = self.f.create_dataset('foo', shape, dtype=np.float64, scaleoffset=scalefac)
+        dset = self.f.create_dataset(uid:=str(uuid4()), shape, dtype=np.float64, scaleoffset=scalefac)
 
         # Dataset reports that scaleoffset is in use
         assert dset.scaleoffset is not None
@@ -808,7 +809,7 @@ class TestCreateScaleOffset(BaseDataset):
         filename = self.f.filename
         self.f.close()
         self.f = h5py.File(filename, 'r')
-        readdata = self.f['foo'][...]
+        readdata = self.f[uid][...]
 
         # Test that data round-trips to requested precision
         self.assertArrayEqual(readdata, testdata, precision=10 ** (-scalefac))
@@ -824,7 +825,7 @@ class TestCreateScaleOffset(BaseDataset):
         testdata = np.random.randint(0, 2 ** nbits - 1, size=shape, dtype=np.int64)
 
         # Create dataset; note omission of nbits (for library-determined precision)
-        dset = self.f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=True)
+        dset = self.f.create_dataset(uid:=str(uuid4()), shape, dtype=np.int64, scaleoffset=True)
 
         # Dataset reports scaleoffset enabled
         assert dset.scaleoffset is not None
@@ -834,7 +835,7 @@ class TestCreateScaleOffset(BaseDataset):
         filename = self.f.filename
         self.f.close()
         self.f = h5py.File(filename, 'r')
-        readdata = self.f['foo'][...]
+        readdata = self.f[uid][...]
         self.assertArrayEqual(readdata, testdata)
 
     def test_int_with_minbits(self):
@@ -844,7 +845,7 @@ class TestCreateScaleOffset(BaseDataset):
         shape = (100, 300)
         testdata = np.random.randint(0, 2 ** nbits, size=shape, dtype=np.int64)
 
-        dset = self.f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=nbits)
+        dset = self.f.create_dataset(uid:=str(uuid4()), shape, dtype=np.int64, scaleoffset=nbits)
 
         # Dataset reports scaleoffset enabled with correct precision
         self.assertTrue(dset.scaleoffset == 12)
@@ -854,7 +855,7 @@ class TestCreateScaleOffset(BaseDataset):
         filename = self.f.filename
         self.f.close()
         self.f = h5py.File(filename, 'r')
-        readdata = self.f['foo'][...]
+        readdata = self.f[uid][...]
         self.assertArrayEqual(readdata, testdata)
 
     def test_int_with_minbits_lossy(self):
@@ -864,7 +865,7 @@ class TestCreateScaleOffset(BaseDataset):
         shape = (100, 300)
         testdata = np.random.randint(0, 2 ** (nbits + 1) - 1, size=shape, dtype=np.int64)
 
-        dset = self.f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=nbits)
+        dset = self.f.create_dataset(uid:=str(uuid4()), shape, dtype=np.int64, scaleoffset=nbits)
 
         # Dataset reports scaleoffset enabled with correct precision
         self.assertTrue(dset.scaleoffset == 12)
@@ -874,7 +875,7 @@ class TestCreateScaleOffset(BaseDataset):
         filename = self.f.filename
         self.f.close()
         self.f = h5py.File(filename, 'r')
-        readdata = self.f['foo'][...]
+        readdata = self.f[uid][...]
 
         # Compression is lossy
         assert not (readdata == testdata).all()
@@ -894,7 +895,7 @@ class TestExternal(BaseDataset):
         ext_file = self.mktemp()
         external = [(ext_file, 0, h5f.UNLIMITED)]
         # ${ORIGIN} should be replaced by the parent dir of the HDF5 file
-        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix="${ORIGIN}")
+        dset = self.f.create_dataset(str(uuid4()), shape, dtype=testdata.dtype, external=external, efile_prefix="${ORIGIN}")
         dset[...] = testdata
 
         assert dset.external is not None
@@ -918,7 +919,7 @@ class TestExternal(BaseDataset):
         ext_file = self.mktemp()
         # set only the basename, let the efile_prefix do the rest
         external = [(os.path.basename(ext_file), 0, h5f.UNLIMITED)]
-        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix=os.path.dirname(ext_file))
+        dset = self.f.create_dataset(uid:=str(uuid4()), shape, dtype=testdata.dtype, external=external, efile_prefix=os.path.dirname(ext_file))
         dset[...] = testdata
 
         assert dset.external is not None
@@ -933,19 +934,19 @@ class TestExternal(BaseDataset):
         parent = pathlib.Path(ext_file).parent.as_posix()
         assert efile_prefix == parent
 
-        dset2 = self.f.require_dataset('foo', shape, testdata.dtype, efile_prefix=os.path.dirname(ext_file))
+        dset2 = self.f.require_dataset(uid, shape, testdata.dtype, efile_prefix=os.path.dirname(ext_file))
         assert dset2.external is not None
         dset2[()] == testdata
 
     def test_name_str(self):
         """ External argument may be a file name str only """
 
-        self.f.create_dataset('foo', (6, 100), external=self.mktemp())
+        self.f.create_dataset(str(uuid4()), (6, 100), external=self.mktemp())
 
     def test_name_path(self):
         """ External argument may be a file name path only """
 
-        self.f.create_dataset('foo', (6, 100),
+        self.f.create_dataset(str(uuid4()), (6, 100),
                               external=pathlib.Path(self.mktemp()))
 
     def test_iter_multi(self):
@@ -954,7 +955,7 @@ class TestExternal(BaseDataset):
         ext_file = self.mktemp()
         N = 100
         external = iter((ext_file, x * 1000, 1000) for x in range(N))
-        dset = self.f.create_dataset('poo', (6, 100), external=external)
+        dset = self.f.create_dataset(str(uuid4()), (6, 100), external=external)
         assert len(dset.external) == N
 
     def test_invalid(self):
@@ -973,7 +974,7 @@ class TestExternal(BaseDataset):
             (TypeError, [(ext_file, 0, "h5f.UNLIMITED")]),
         ]:
             with self.assertRaises(exc_type):
-                self.f.create_dataset('foo', shape, external=external)
+                self.f.create_dataset(str(uuid4()), shape, external=external)
 
     def test_create_expandable(self):
         """ Create expandable external dataset """
@@ -981,7 +982,7 @@ class TestExternal(BaseDataset):
         ext_file = self.mktemp()
         shape = (128, 64)
         maxshape = (None, 64)
-        exp_dset = self.f.create_dataset('foo', shape=shape, maxshape=maxshape,
+        exp_dset = self.f.create_dataset(str(uuid4()), shape=shape, maxshape=maxshape,
                                          external=ext_file)
         assert exp_dset.chunks is None
         assert exp_dset.shape == shape
@@ -1002,73 +1003,81 @@ class TestAutoCreate(BaseDataset):
 
     def test_vlen_bytes(self):
         """Assigning byte strings produces a vlen string ASCII dataset """
-        self.f['x'] = b"Hello there"
-        self.assert_string_type(self.f['x'], h5py.h5t.CSET_ASCII)
+        uid1 = str(uuid4())
+        self.f[uid1] = b"Hello there"
+        self.assert_string_type(self.f[uid1], h5py.h5t.CSET_ASCII)
 
-        self.f['y'] = [b"a", b"bc"]
-        self.assert_string_type(self.f['y'], h5py.h5t.CSET_ASCII)
+        uid2 = str(uuid4())
+        self.f[uid2] = [b"a", b"bc"]
+        self.assert_string_type(self.f[uid2], h5py.h5t.CSET_ASCII)
 
-        self.f['z'] = np.array([b"a", b"bc"], dtype=np.object_)
-        self.assert_string_type(self.f['z'], h5py.h5t.CSET_ASCII)
+        uid3 = str(uuid4())
+        self.f[uid3] = np.array([b"a", b"bc"], dtype=np.object_)
+        self.assert_string_type(self.f[uid3], h5py.h5t.CSET_ASCII)
 
     def test_vlen_unicode(self):
         """Assigning unicode strings produces a vlen string UTF-8 dataset """
-        self.f['x'] = "Hello there" + chr(0x2034)
-        self.assert_string_type(self.f['x'], h5py.h5t.CSET_UTF8)
+        uid1 = str(uuid4())
+        self.f[uid1] = "Hello there" + chr(0x2034)
+        self.assert_string_type(self.f[uid1], h5py.h5t.CSET_UTF8)
 
-        self.f['y'] = ["a", "bc"]
-        self.assert_string_type(self.f['y'], h5py.h5t.CSET_UTF8)
+        uid2 = str(uuid4())
+        self.f[uid2] = ["a", "bc"]
+        self.assert_string_type(self.f[uid2], h5py.h5t.CSET_UTF8)
 
         # 2D array; this only works with an array, not nested lists
-        self.f['z'] = np.array([["a", "bc"]], dtype=np.object_)
-        self.assert_string_type(self.f['z'], h5py.h5t.CSET_UTF8)
+        uid3 = str(uuid4())
+        self.f[uid3] = np.array([["a", "bc"]], dtype=np.object_)
+        self.assert_string_type(self.f[uid3], h5py.h5t.CSET_UTF8)
 
     def test_string_fixed(self):
         """ Assignment of fixed-length byte string produces a fixed-length
         ascii dataset """
-        self.f['x'] = np.bytes_("Hello there")
-        ds = self.f['x']
+        self.f[(uid:=str(uuid4()))] = np.bytes_("Hello there")
+        ds = self.f[uid]
         self.assert_string_type(ds, h5py.h5t.CSET_ASCII, variable=False)
         self.assertEqual(ds.id.get_type().get_size(), 11)
 
 
 class TestCreateLike(BaseDataset):
     def test_no_chunks(self):
-        self.f['lol'] = np.arange(25).reshape(5, 5)
-        self.f.create_dataset_like('like_lol', self.f['lol'])
-        dslike = self.f['like_lol']
+        uid1 = str(uuid4())
+        self.f[uid1] = np.arange(25).reshape(5, 5)
+        uid2 = str(uuid4())
+        self.f.create_dataset_like(uid2, self.f[uid1])
+        dslike = self.f[uid2]
         self.assertEqual(dslike.shape, (5, 5))
         self.assertIs(dslike.chunks, None)
 
     def test_track_times(self):
-        orig = self.f.create_dataset('honda', data=np.arange(12),
+        orig = self.f.create_dataset(str(uuid4()), data=np.arange(12),
                                      track_times=True)
         self.assertNotEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
-        similar = self.f.create_dataset_like('hyundai', orig)
+        similar = self.f.create_dataset_like(str(uuid4()), orig)
         self.assertNotEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
 
-        orig = self.f.create_dataset('ibm', data=np.arange(12),
+        orig = self.f.create_dataset(str(uuid4()), data=np.arange(12),
                                      track_times=False)
         self.assertEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
-        similar = self.f.create_dataset_like('lenovo', orig)
+        similar = self.f.create_dataset_like(str(uuid4()), orig)
         self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
 
     def test_maxshape(self):
         """ Test when other.maxshape != other.shape """
 
-        other = self.f.create_dataset('other', (10,), maxshape=20)
-        similar = self.f.create_dataset_like('sim', other)
+        other = self.f.create_dataset(str(uuid4()), (10,), maxshape=20)
+        similar = self.f.create_dataset_like(str(uuid4()), other)
         self.assertEqual(similar.shape, (10,))
         self.assertEqual(similar.maxshape, (20,))
 
 class TestChunkIterator(BaseDataset):
     def test_no_chunks(self):
-        dset = self.f.create_dataset("foo", ())
+        dset = self.f.create_dataset(str(uuid4()), ())
         with self.assertRaises(TypeError):
             dset.iter_chunks()
 
     def test_1d(self):
-        dset = self.f.create_dataset("foo", (100,), chunks=(32,))
+        dset = self.f.create_dataset(str(uuid4()), (100,), chunks=(32,))
         expected = ((slice(0,32,1),), (slice(32,64,1),), (slice(64,96,1),),
             (slice(96,100,1),))
         self.assertEqual(list(dset.iter_chunks()), list(expected))
@@ -1076,7 +1085,7 @@ class TestChunkIterator(BaseDataset):
         self.assertEqual(list(dset.iter_chunks(np.s_[50:97])), list(expected))
 
     def test_2d(self):
-        dset = self.f.create_dataset("foo", (100,100), chunks=(32,64))
+        dset = self.f.create_dataset(str(uuid4()), (100,100), chunks=(32,64))
         expected = ((slice(0, 32, 1), slice(0, 64, 1)), (slice(0, 32, 1),
         slice(64, 100, 1)), (slice(32, 64, 1), slice(0, 64, 1)),
         (slice(32, 64, 1), slice(64, 100, 1)), (slice(64, 96, 1),
@@ -1089,7 +1098,7 @@ class TestChunkIterator(BaseDataset):
         self.assertEqual(list(dset.iter_chunks(np.s_[48:52,40:50])), list(expected))
 
     def test_2d_partial_slice(self):
-        dset = self.f.create_dataset("foo", (5,5), chunks=(2,2))
+        dset = self.f.create_dataset(str(uuid4()), (5,5), chunks=(2,2))
         expected = ((slice(3, 4, 1), slice(3, 4, 1)),
                    (slice(3, 4, 1), slice(4, 5, 1)),
                    (slice(4, 5, 1), slice(3, 4, 1)),
@@ -1107,22 +1116,22 @@ class TestResize(BaseDataset):
 
     def test_create(self):
         """ Create dataset with "maxshape" """
-        dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), maxshape=(20, 60))
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20, 60))
 
     def test_create_1D(self):
         """ Create dataset with "maxshape" using integer maxshape"""
-        dset = self.f.create_dataset('foo', (20,), maxshape=20)
+        dset = self.f.create_dataset(str(uuid4()), (20,), maxshape=20)
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20,))
 
-        dset = self.f.create_dataset('bar', 20, maxshape=20)
+        dset = self.f.create_dataset(str(uuid4()), 20, maxshape=20)
         self.assertEqual(dset.maxshape, (20,))
 
     def test_resize(self):
         """ Datasets may be resized up to maxshape """
-        dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), maxshape=(20, 60))
         self.assertEqual(dset.shape, (20, 30))
         dset.resize((20, 50))
         self.assertEqual(dset.shape, (20, 50))
@@ -1131,38 +1140,38 @@ class TestResize(BaseDataset):
 
     def test_resize_1D(self):
         """ Datasets may be resized up to maxshape using integer maxshape"""
-        dset = self.f.create_dataset('foo', 20, maxshape=40)
+        dset = self.f.create_dataset(str(uuid4()), 20, maxshape=40)
         self.assertEqual(dset.shape, (20,))
         dset.resize((30,))
         self.assertEqual(dset.shape, (30,))
 
     def test_resize_over(self):
         """ Resizing past maxshape triggers an exception """
-        dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), maxshape=(20, 60))
         with self.assertRaises(Exception):
             dset.resize((20, 70))
 
     def test_resize_nonchunked(self):
         """ Resizing non-chunked dataset raises TypeError """
-        dset = self.f.create_dataset("foo", (20, 30))
+        dset = self.f.create_dataset(str(uuid4()), (20, 30))
         with self.assertRaises(TypeError):
             dset.resize((20, 60))
 
     def test_resize_axis(self):
         """ Resize specified axis """
-        dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), maxshape=(20, 60))
         dset.resize(50, axis=1)
         self.assertEqual(dset.shape, (20, 50))
 
     def test_axis_exc(self):
         """ Illegal axis raises ValueError """
-        dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(str(uuid4()), (20, 30), maxshape=(20, 60))
         with self.assertRaises(ValueError):
             dset.resize(50, axis=2)
 
     def test_zero_dim(self):
         """ Allow zero-length initial dims for unlimited axes (issue 111) """
-        dset = self.f.create_dataset('foo', (15, 0), maxshape=(15, None))
+        dset = self.f.create_dataset(str(uuid4()), (15, 0), maxshape=(15, None))
         self.assertEqual(dset.shape, (15, 0))
         self.assertEqual(dset.maxshape, (15, None))
 
@@ -1175,14 +1184,14 @@ class TestDtype(BaseDataset):
 
     def test_dtype(self):
         """ Retrieve dtype from dataset """
-        dset = self.f.create_dataset('foo', (5,), '|S10')
+        dset = self.f.create_dataset(str(uuid4()), (5,), '|S10')
         self.assertEqual(dset.dtype, np.dtype('|S10'))
 
     def test_dtype_complex32(self):
         """ Retrieve dtype from complex float16 dataset (gh-2156) """
         # No native support in numpy as of v1.23.3, so expect compound type.
         complex32 = np.dtype([('r', np.float16), ('i', np.float16)])
-        dset = self.f.create_dataset('foo', (5,), complex32)
+        dset = self.f.create_dataset(str(uuid4()), (5,), complex32)
         self.assertEqual(dset.dtype, complex32)
 
 
@@ -1194,12 +1203,12 @@ class TestLen(BaseDataset):
 
     def test_len(self):
         """ Python len() (under 32 bits) """
-        dset = self.f.create_dataset('foo', (312, 15))
+        dset = self.f.create_dataset(str(uuid4()), (312, 15))
         self.assertEqual(len(dset), 312)
 
     def test_len_big(self):
         """ Python len() vs Dataset.len() """
-        dset = self.f.create_dataset('foo', (2 ** 33, 15))
+        dset = self.f.create_dataset(str(uuid4()), (2 ** 33, 15))
         self.assertEqual(dset.shape, (2 ** 33, 15))
         if sys.maxsize == 2 ** 31 - 1:
             with self.assertRaises(OverflowError):
@@ -1218,14 +1227,14 @@ class TestIter(BaseDataset):
     def test_iter(self):
         """ Iterating over a dataset yields rows """
         data = np.arange(30, dtype='f').reshape((10, 3))
-        dset = self.f.create_dataset('foo', data=data)
+        dset = self.f.create_dataset(str(uuid4()), data=data)
         for x, y in zip(dset, data):
             self.assertEqual(len(x), 3)
             self.assertArrayEqual(x, y)
 
     def test_iter_scalar(self):
         """ Iterating over scalar dataset raises TypeError """
-        dset = self.f.create_dataset('foo', shape=())
+        dset = self.f.create_dataset(str(uuid4()), shape=())
         with self.assertRaises(TypeError):
             [x for x in dset]
 
@@ -1240,7 +1249,7 @@ class TestStrings(BaseDataset):
     def test_vlen_bytes(self):
         """ Vlen bytes dataset maps to vlen ascii in the file """
         dt = h5py.string_dtype(encoding='ascii')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
@@ -1251,15 +1260,15 @@ class TestStrings(BaseDataset):
         """ Vlen bytes dataset handles fillvalue """
         dt = h5py.string_dtype(encoding='ascii')
         fill_value = b'bar'
-        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
-        self.assertEqual(self.f['x'][0], fill_value)
-        self.assertEqual(self.f['x'].asstr()[0], fill_value.decode())
-        self.assertEqual(self.f['x'].fillvalue, fill_value)
+        ds = self.f.create_dataset(uid:=str(uuid4()), (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f[uid][0], fill_value)
+        self.assertEqual(self.f[uid].asstr()[0], fill_value.decode())
+        self.assertEqual(self.f[uid].fillvalue, fill_value)
 
     def test_vlen_unicode(self):
         """ Vlen unicode dataset maps to vlen utf-8 in the file """
         dt = h5py.string_dtype()
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
@@ -1270,16 +1279,16 @@ class TestStrings(BaseDataset):
         """ Vlen unicode dataset handles fillvalue """
         dt = h5py.string_dtype()
         fill_value = 'bár'
-        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
-        self.assertEqual(self.f['x'][0], fill_value.encode("utf-8"))
-        self.assertEqual(self.f['x'].asstr()[0], fill_value)
-        self.assertEqual(self.f['x'].fillvalue, fill_value.encode("utf-8"))
+        ds = self.f.create_dataset(uid:=str(uuid4()), (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f[uid][0], fill_value.encode("utf-8"))
+        self.assertEqual(self.f[uid].asstr()[0], fill_value)
+        self.assertEqual(self.f[uid].fillvalue, fill_value.encode("utf-8"))
 
     def test_fixed_ascii(self):
         """ Fixed-length bytes dataset maps to fixed-length ascii in the file
         """
         dt = np.dtype("|S10")
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertFalse(tid.is_variable_str())
@@ -1293,14 +1302,14 @@ class TestStrings(BaseDataset):
         """ Vlen bytes dataset handles fillvalue """
         dt = h5py.string_dtype(encoding='ascii', length=10)
         fill_value = b'bar'
-        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
-        self.assertEqual(self.f['x'][0], fill_value)
-        self.assertEqual(self.f['x'].asstr()[0], fill_value.decode())
-        self.assertEqual(self.f['x'].fillvalue, fill_value)
+        ds = self.f.create_dataset(uid:=str(uuid4()), (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f[uid][0], fill_value)
+        self.assertEqual(self.f[uid].asstr()[0], fill_value.decode())
+        self.assertEqual(self.f[uid].fillvalue, fill_value)
 
     def test_fixed_utf8(self):
         dt = h5py.string_dtype(encoding='utf-8', length=5)
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         tid = ds.id.get_type()
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
         s = 'cù'
@@ -1318,22 +1327,22 @@ class TestStrings(BaseDataset):
         """ Vlen unicode dataset handles fillvalue """
         dt = h5py.string_dtype(encoding='utf-8', length=10)
         fill_value = 'bár'.encode("utf-8")
-        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
-        self.assertEqual(self.f['x'][0], fill_value)
-        self.assertEqual(self.f['x'].asstr()[0], fill_value.decode("utf-8"))
-        self.assertEqual(self.f['x'].fillvalue, fill_value)
+        ds = self.f.create_dataset(uid:=str(uuid4()), (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f[uid][0], fill_value)
+        self.assertEqual(self.f[uid].asstr()[0], fill_value.decode("utf-8"))
+        self.assertEqual(self.f[uid].fillvalue, fill_value)
 
     def test_fixed_unicode(self):
         """ Fixed-length unicode datasets are unsupported (raise TypeError) """
         dt = np.dtype("|U10")
         with self.assertRaises(TypeError):
-            ds = self.f.create_dataset('x', (100,), dtype=dt)
+            ds = self.f.create_dataset(str(uuid4), (100,), dtype=dt)
 
     def test_roundtrip_vlen_bytes(self):
         """ writing and reading to vlen bytes dataset preserves type and content
         """
         dt = h5py.string_dtype(encoding='ascii')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         data = b"Hello\xef"
         ds[0] = data
         out = ds[0]
@@ -1344,7 +1353,7 @@ class TestStrings(BaseDataset):
         """ Writing to and reading from fixed-length bytes dataset preserves
         type and content """
         dt = np.dtype("|S10")
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         data = b"Hello\xef"
         ds[0] = data
         out = ds[0]
@@ -1353,7 +1362,7 @@ class TestStrings(BaseDataset):
 
     def test_retrieve_vlen_unicode(self):
         dt = h5py.string_dtype()
-        ds = self.f.create_dataset('x', (10,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (10,), dtype=dt)
         data = "fàilte"
         ds[0] = data
         self.assertIsInstance(ds[0], bytes)
@@ -1362,7 +1371,7 @@ class TestStrings(BaseDataset):
         self.assertEqual(out, data)
 
     def test_asstr(self):
-        ds = self.f.create_dataset('x', (10,), dtype=h5py.string_dtype())
+        ds = self.f.create_dataset(str(uuid4()), (10,), dtype=h5py.string_dtype())
         data = "fàilte"
         ds[0] = data
 
@@ -1413,7 +1422,7 @@ class TestStrings(BaseDataset):
     def test_unicode_write_error(self):
         """Encoding error when writing a non-ASCII string to an ASCII vlen dataset"""
         dt = h5py.string_dtype('ascii')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         data = "fàilte"
         with self.assertRaises(UnicodeEncodeError):
             ds[0] = data
@@ -1422,7 +1431,7 @@ class TestStrings(BaseDataset):
         """ Writing valid utf-8 byte strings to a unicode vlen dataset is OK
         """
         dt = h5py.string_dtype()
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         data = (u"Hello there" + chr(0x2034)).encode('utf8')
         ds[0] = data
         out = ds[0]
@@ -1433,7 +1442,7 @@ class TestStrings(BaseDataset):
         """ Writing an ascii str to ascii vlen dataset is OK
         """
         dt = h5py.string_dtype('ascii')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         data = "ASCII string"
         ds[0] = data
         out = ds[0]
@@ -1462,8 +1471,8 @@ class TestCompound(BaseDataset):
         for key in dt.fields:
             testdata[key] = np.random.random((16,)) * 100
 
-        self.f['test'] = testdata
-        outdata = self.f['test'][...]
+        self.f[(uid:=str(uuid4()))] = testdata
+        outdata = self.f[uid][...]
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
 
@@ -1475,11 +1484,11 @@ class TestCompound(BaseDataset):
         for key in dt.fields:
             testdata[key] = np.random.random(size=testdata[key].shape) * 100
 
-        ds = self.f.create_dataset('test', (16,), dtype=dt)
+        ds = self.f.create_dataset(uid:=str(uuid4()), (16,), dtype=dt)
         for key in dt.fields:
             ds[key] = testdata[key]
 
-        outdata = self.f['test'][...]
+        outdata = self.f[uid][...]
 
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
@@ -1495,29 +1504,29 @@ class TestCompound(BaseDataset):
         for key in dt.fields:
             testdata[key] = np.random.random((16,)) * 100
 
-        self.f['test'] = testdata
+        self.f[(uid:=str(uuid4()))] = testdata
 
         # Extract multiple fields
         np.testing.assert_array_equal(
-            self.f['test'].fields(['x', 'y'])[:], testdata[['x', 'y']]
+            self.f[uid].fields(['x', 'y'])[:], testdata[['x', 'y']]
         )
         # Extract single field
         np.testing.assert_array_equal(
-            self.f['test'].fields('x')[:], testdata['x']
+            self.f[uid].fields('x')[:], testdata['x']
         )
         # Check __array__() method of fields wrapper
         np.testing.assert_array_equal(
-            np.asarray(self.f['test'].fields(['x', 'y'])), testdata[['x', 'y']]
+            np.asarray(self.f[uid].fields(['x', 'y'])), testdata[['x', 'y']]
         )
         # Check type conversion of __array__() method
         dt_int = np.dtype([('x', np.int32)])
         np.testing.assert_array_equal(
-            np.asarray(self.f['test'].fields(['x']), dtype=dt_int),
+            np.asarray(self.f[uid].fields(['x']), dtype=dt_int),
             testdata[['x']].astype(dt_int)
         )
 
         # Check len() on fields wrapper
-        assert len(self.f['test'].fields('x')) == 16
+        assert len(self.f[uid].fields('x')) == 16
 
     def test_nested_compound_vlen(self):
         dt_inner = np.dtype([('a', h5py.vlen_dtype(np.int32)),
@@ -1536,8 +1545,8 @@ class TestCompound(BaseDataset):
                         (np.array([inner1], dtype=dt_inner), 3)],
                         dtype=dt)
 
-        self.f["ds"] = data
-        out = self.f["ds"]
+        self.f[(uid:=str(uuid4()))] = data
+        out = self.f[uid]
 
         # Specifying check_alignment=False because vlen fields have 8 bytes of padding
         # because the vlen datatype in hdf5 occupies 16 bytes
@@ -1546,7 +1555,7 @@ class TestCompound(BaseDataset):
 
 class TestSubarray(BaseDataset):
     def test_write_list(self):
-        ds = self.f.create_dataset("a", (1,), dtype="3int8")
+        ds = self.f.create_dataset(str(uuid4()), (1,), dtype="3int8")
         ds[0] = [1, 2, 3]
         np.testing.assert_array_equal(ds[:], [[1, 2, 3]])
 
@@ -1554,7 +1563,7 @@ class TestSubarray(BaseDataset):
         np.testing.assert_array_equal(ds[:], [[4, 5, 6]])
 
     def test_write_array(self):
-        ds = self.f.create_dataset("a", (1,), dtype="3int8")
+        ds = self.f.create_dataset(str(uuid4()), (1,), dtype="3int8")
         ds[0] = np.array([1, 2, 3])
         np.testing.assert_array_equal(ds[:], [[1, 2, 3]])
 
@@ -1573,7 +1582,7 @@ class TestEnum(BaseDataset):
     def test_create(self):
         """ Enum datasets can be created and type correctly round-trips """
         dt = h5py.enum_dtype(self.EDICT, basetype='i')
-        ds = self.f.create_dataset('x', (100, 100), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100, 100), dtype=dt)
         dt2 = ds.dtype
         dict2 = h5py.check_enum_dtype(dt2)
         self.assertEqual(dict2, self.EDICT)
@@ -1581,7 +1590,7 @@ class TestEnum(BaseDataset):
     def test_readwrite(self):
         """ Enum datasets can be read/written as integers """
         dt = h5py.enum_dtype(self.EDICT, basetype='i4')
-        ds = self.f.create_dataset('x', (100, 100), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (100, 100), dtype=dt)
         ds[35, 37] = 42
         ds[1, :] = 1
         self.assertEqual(ds[35, 37], 42)
@@ -1595,7 +1604,7 @@ class TestFloats(BaseDataset):
     """
 
     def _exectest(self, dt):
-        dset = self.f.create_dataset('x', (100,), dtype=dt)
+        dset = self.f.create_dataset(str(uuid4()), (100,), dtype=dt)
         self.assertEqual(dset.dtype, dt)
         data = np.ones((100,), dtype=dt)
         dset[...] = data
@@ -1623,14 +1632,14 @@ class TestTrackTimes(BaseDataset):
 
     def test_disable_track_times(self):
         """ check that when track_times=False, the time stamp=0 (Jan 1, 1970) """
-        ds = self.f.create_dataset('foo', (4,), track_times=False)
+        ds = self.f.create_dataset(str(uuid4()), (4,), track_times=False)
         ds_mtime = h5py.h5g.get_objinfo(ds._id).mtime
         self.assertEqual(0, ds_mtime)
 
     def test_invalid_track_times(self):
         """ check that when give track_times an invalid value """
         with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', (4,), track_times='null')
+            self.f.create_dataset(str(uuid4()), (4,), track_times='null')
 
 
 class TestZeroShape(BaseDataset):
@@ -1641,19 +1650,19 @@ class TestZeroShape(BaseDataset):
 
     def test_array_conversion(self):
         """ Empty datasets can be converted to NumPy arrays """
-        ds = self.f.create_dataset('x', 0, maxshape=None)
+        ds = self.f.create_dataset(str(uuid4()), 0, maxshape=None)
         self.assertEqual(ds.shape, np.array(ds).shape)
 
-        ds = self.f.create_dataset('y', (0,), maxshape=(None,))
+        ds = self.f.create_dataset(str(uuid4()), (0,), maxshape=(None,))
         self.assertEqual(ds.shape, np.array(ds).shape)
 
-        ds = self.f.create_dataset('z', (0, 0), maxshape=(None, None))
+        ds = self.f.create_dataset(str(uuid4()), (0, 0), maxshape=(None, None))
         self.assertEqual(ds.shape, np.array(ds).shape)
 
     def test_reading(self):
         """ Slicing into empty datasets works correctly """
         dt = [('a', 'f'), ('b', 'i')]
-        ds = self.f.create_dataset('x', (0,), dtype=dt, maxshape=(None,))
+        ds = self.f.create_dataset(str(uuid4()), (0,), dtype=dt, maxshape=(None,))
         arr = np.empty((0,), dtype=dt)
 
         self.assertEqual(ds[...].shape, arr.shape)
@@ -1694,7 +1703,7 @@ class TestRegionRefs(BaseDataset):
 
     @empty_regionref_xfail
     def test_scalar_dataset(self):
-        ds = self.f.create_dataset("scalar", data=1.0, dtype='f4')
+        ds = self.f.create_dataset(str(uuid4()), data=1.0, dtype='f4')
         sid = h5py.h5s.create(h5py.h5s.SCALAR)
 
         # Deselected
@@ -1719,19 +1728,19 @@ class TestAstype(BaseDataset):
     """.astype() wrapper & context manager
     """
     def test_astype_wrapper(self):
-        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset = self.f.create_dataset(str(uuid4()), (100,), dtype='i2')
         dset[...] = np.arange(100)
         arr = dset.astype('f4')[:]
         self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
 
 
     def test_astype_wrapper_len(self):
-        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset = self.f.create_dataset(str(uuid4()), (100,), dtype='i2')
         dset[...] = np.arange(100)
         self.assertEqual(100, len(dset.astype('f4')))
 
     def test_astype_wrapper_asarray(self):
-        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset = self.f.create_dataset(str(uuid4()), (100,), dtype='i2')
         dset[...] = np.arange(100)
         arr = np.asarray(dset.astype('f4'), dtype='i2')
         self.assertArrayEqual(arr, np.arange(100, dtype='i2'))
@@ -1747,14 +1756,14 @@ class TestScalarCompound(BaseDataset):
     def test_scalar_compound(self):
 
         dt = np.dtype([('a', 'i')])
-        dset = self.f.create_dataset('x', (), dtype=dt)
+        dset = self.f.create_dataset(str(uuid4()), (), dtype=dt)
         self.assertEqual(dset['a'].dtype, np.dtype('i'))
 
 
 class TestVlen(BaseDataset):
     def test_int(self):
         dt = h5py.vlen_dtype(int)
-        ds = self.f.create_dataset('vlen', (4,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (4,), dtype=dt)
         ds[0] = np.arange(3)
         ds[1] = np.arange(0)
         ds[2] = [1, 2, 3]
@@ -1772,20 +1781,20 @@ class TestVlen(BaseDataset):
 
     def test_reuse_from_other(self):
         dt = h5py.vlen_dtype(int)
-        ds = self.f.create_dataset('vlen', (1,), dtype=dt)
-        self.f.create_dataset('vlen2', (1,), ds[()].dtype)
+        ds = self.f.create_dataset(str(uuid4()), (1,), dtype=dt)
+        self.f.create_dataset(str(uuid4()), (1,), ds[()].dtype)
 
     def test_reuse_struct_from_other(self):
         dt = [('a', int), ('b', h5py.vlen_dtype(int))]
-        ds = self.f.create_dataset('vlen', (1,), dtype=dt)
+        ds = self.f.create_dataset(uid:=str(uuid4()), (1,), dtype=dt)
         fname = self.f.filename
         self.f.close()
         self.f = h5py.File(fname, 'a')
-        self.f.create_dataset('vlen2', (1,), self.f['vlen']['b'][()].dtype)
+        self.f.create_dataset(str(uuid4()), (1,), self.f[uid]['b'][()].dtype)
 
     def test_convert(self):
         dt = h5py.vlen_dtype(int)
-        ds = self.f.create_dataset('vlen', (3,), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (3,), dtype=dt)
         ds[0] = np.array([1.4, 1.2])
         ds[1] = np.array([1.2])
         ds[2] = [1.2, 2, 3]
@@ -1802,14 +1811,14 @@ class TestVlen(BaseDataset):
 
     def test_multidim(self):
         dt = h5py.vlen_dtype(int)
-        ds = self.f.create_dataset('vlen', (2, 2), dtype=dt)
+        ds = self.f.create_dataset(str(uuid4()), (2, 2), dtype=dt)
         ds[0, 0] = np.arange(1)
         ds[:, :] = np.array([[np.arange(3), np.arange(2)],
                             [np.arange(1), np.arange(2)]], dtype=object)
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
 
-    def _help_float_testing(self, np_dt, dataset_name='vlen'):
+    def _help_float_testing(self, np_dt, dataset_name):
         """
         Helper for testing various vlen numpy data types.
         :param np_dt: Numpy datatype to test
@@ -1859,38 +1868,38 @@ class TestVlen(BaseDataset):
 
     def test_numpy_float16(self):
         np_dt = np.dtype('float16')
-        self._help_float_testing(np_dt)
+        self._help_float_testing(np_dt, dataset_name=str(uuid4()))
 
     def test_numpy_float32(self):
         np_dt = np.dtype('float32')
-        self._help_float_testing(np_dt)
+        self._help_float_testing(np_dt, dataset_name=str(uuid4()))
 
     def test_numpy_float64_from_dtype(self):
         np_dt = np.dtype('float64')
-        self._help_float_testing(np_dt)
+        self._help_float_testing(np_dt, dataset_name=str(uuid4()))
 
     def test_numpy_float64_2(self):
         np_dt = np.float64
-        self._help_float_testing(np_dt)
+        self._help_float_testing(np_dt, dataset_name=str(uuid4()))
 
     def test_non_contiguous_arrays(self):
         """Test that non-contiguous arrays are stored correctly"""
-        self.f.create_dataset('nc', (10,), dtype=h5py.vlen_dtype('bool'))
+        self.f.create_dataset(uid1:=str(uuid4()), (10,), dtype=h5py.vlen_dtype('bool'))
         x = np.array([True, False, True, True, False, False, False])
-        self.f['nc'][0] = x[::2]
+        self.f[uid1][0] = x[::2]
 
-        assert all(self.f['nc'][0] == x[::2]), f"{self.f['nc'][0]} != {x[::2]}"
+        assert all(self.f[uid1][0] == x[::2]), f"{self.f[uid1][0]} != {x[::2]}"
 
-        self.f.create_dataset('nc2', (10,), dtype=h5py.vlen_dtype('int8'))
+        self.f.create_dataset(uid2:=str(uuid4()), (10,), dtype=h5py.vlen_dtype('int8'))
         y = np.array([2, 4, 1, 5, -1, 3, 7])
-        self.f['nc2'][0] = y[::2]
+        self.f[uid2][0] = y[::2]
 
-        assert all(self.f['nc2'][0] == y[::2]), f"{self.f['nc2'][0]} != {y[::2]}"
+        assert all(self.f[uid2][0] == y[::2]), f"{self.f[uid2][0]} != {y[::2]}"
 
     def test_asstr_array_dtype(self):
         dt = h5py.string_dtype(encoding='ascii')
         fill_value = b'bar'
-        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
+        ds = self.f.create_dataset(str(uuid4()), (100,), dtype=dt, fillvalue=fill_value)
         with pytest.raises(ValueError):
             np.array(ds.asstr(), dtype=int)
 
@@ -1899,15 +1908,15 @@ class TestLowOpen(BaseDataset):
 
     def test_get_access_list(self):
         """ Test H5Dget_access_plist """
-        ds = self.f.create_dataset('foo', (4,))
+        ds = self.f.create_dataset(str(uuid4()), (4,))
         p_list = ds.id.get_access_plist()
 
     def test_dapl(self):
         """ Test the dapl keyword to h5d.open """
         dapl = h5py.h5p.create(h5py.h5p.DATASET_ACCESS)
-        dset = self.f.create_dataset('x', (100,))
+        dset = self.f.create_dataset(uid:=str(uuid4()), (100,))
         del dset
-        dsid = h5py.h5d.open(self.f.id, b'x', dapl)
+        dsid = h5py.h5d.open(self.f.id, bytes(uid, 'utf-8'), dapl)
         self.assertIsInstance(dsid, h5py.h5d.DatasetID)
 
 
@@ -1915,12 +1924,12 @@ def test_get_chunk_details():
     from io import BytesIO
     buf = BytesIO()
     with h5py.File(buf, 'w') as fout:
-        fout.create_dataset('test', shape=(100, 100), chunks=(10, 10), dtype='i4')
-        fout['test'][:] = 1
+        fout.create_dataset(uid:=str(uuid4()), shape=(100, 100), chunks=(10, 10), dtype='i4')
+        fout[uid][:] = 1
 
     buf.seek(0)
     with h5py.File(buf, 'r') as fin:
-        ds = fin['test'].id
+        ds = fin[uid].id
 
         assert ds.get_num_chunks() == 100
         for j in range(100):
@@ -1947,12 +1956,12 @@ def test_chunk_iter():
     from io import BytesIO
     buf = BytesIO()
     with h5py.File(buf, 'w') as f:
-        f.create_dataset('test', shape=(100, 100), chunks=(10, 10), dtype='i4')
-        f['test'][:] = 1
+        f.create_dataset(uid:=str(uuid4()), shape=(100, 100), chunks=(10, 10), dtype='i4')
+        f[uid][:] = 1
 
     buf.seek(0)
     with h5py.File(buf, 'r') as f:
-        dsid = f['test'].id
+        dsid = f[uid].id
 
         num_chunks = dsid.get_num_chunks()
         assert num_chunks == 100
@@ -1972,7 +1981,7 @@ def test_chunk_iter():
 
 
 def test_empty_shape(writable_file):
-    ds = writable_file.create_dataset('empty', dtype='int32')
+    ds = writable_file.create_dataset(str(uuid4()), dtype='int32')
     assert ds.shape is None
     assert ds.maxshape is None
 
@@ -1982,13 +1991,13 @@ def test_zero_storage_size():
     from io import BytesIO
     buf = BytesIO()
     with h5py.File(buf, 'w') as fout:
-        fout.create_dataset('empty', dtype='uint8')
+        fout.create_dataset(uid:=str(uuid4()), dtype='uint8')
 
     buf.seek(0)
     with h5py.File(buf, 'r') as fin:
-        assert fin['empty'].chunks is None
-        assert fin['empty'].id.get_offset() is None
-        assert fin['empty'].id.get_storage_size() == 0
+        assert fin[uid].chunks is None
+        assert fin[uid].id.get_offset() is None
+        assert fin[uid].id.get_storage_size() == 0
 
 
 def test_python_int_uint64(writable_file):
@@ -1996,7 +2005,7 @@ def test_python_int_uint64(writable_file):
     data = [np.iinfo(np.int64).max, np.iinfo(np.int64).max + 1]
 
     # Check creating a new dataset
-    ds = writable_file.create_dataset('x', data=data, dtype=np.uint64)
+    ds = writable_file.create_dataset(str(uuid4()), data=data, dtype=np.uint64)
     assert ds.dtype == np.dtype(np.uint64)
     np.testing.assert_array_equal(ds[:], np.array(data, dtype=np.uint64))
 
@@ -2007,7 +2016,7 @@ def test_python_int_uint64(writable_file):
 
 def test_setitem_fancy_indexing(writable_file):
     # https://github.com/h5py/h5py/issues/1593
-    arr = writable_file.create_dataset('data', (5, 1000, 2), dtype=np.uint8)
+    arr = writable_file.create_dataset(str(uuid4()), (5, 1000, 2), dtype=np.uint8)
     block = np.random.randint(255, size=(5, 3, 2))
     arr[:, [0, 2, 4], ...] = block
 
@@ -2026,7 +2035,7 @@ def test_allow_unknown_filter(writable_file):
     # apparently 256-511 are reserved for testing purposes
     fake_filter_id = 256
     ds = writable_file.create_dataset(
-        'data', shape=(10, 10), dtype=np.uint8, compression=fake_filter_id,
+        str(uuid4()), shape=(10, 10), dtype=np.uint8, compression=fake_filter_id,
         allow_unknown_filter=True
     )
     assert str(fake_filter_id) in ds._filters
@@ -2038,7 +2047,7 @@ def test_dset_chunk_cache():
     buf = BytesIO()
     with h5py.File(buf, 'w') as fout:
         ds = fout.create_dataset(
-            'x', shape=(10, 20), chunks=(5, 4), dtype='i4',
+            uid:=str(uuid4()), shape=(10, 20), chunks=(5, 4), dtype='i4',
             rdcc_nbytes=2 * 1024 * 1024, rdcc_w0=0.2, rdcc_nslots=997)
         ds_chunk_cache = ds.id.get_access_plist().get_chunk_cache()
         assert fout.id.get_access_plist().get_cache()[1:] != ds_chunk_cache
@@ -2047,7 +2056,7 @@ def test_dset_chunk_cache():
     buf.seek(0)
     with h5py.File(buf, 'r') as fin:
         ds = fin.require_dataset(
-            'x', shape=(10, 20), dtype='i4',
+            uid, shape=(10, 20), dtype='i4',
             rdcc_nbytes=3 * 1024 * 1024, rdcc_w0=0.67, rdcc_nslots=709)
         ds_chunk_cache = ds.id.get_access_plist().get_chunk_cache()
         assert fin.id.get_access_plist().get_cache()[1:] != ds_chunk_cache
@@ -2065,7 +2074,7 @@ class TestCommutative(BaseDataset):
         Check that it returns symmetric response to == and !=
         """
         shape = (100,1)
-        dset = self.f.create_dataset("test", shape, dtype=float,
+        dset = self.f.create_dataset(str(uuid4()), shape, dtype=float,
                                      data=np.random.rand(*shape))
 
         # grab a value from the elements, ie dset[0, 0]
@@ -2090,7 +2099,7 @@ class TestCommutative(BaseDataset):
         not meaningful.
         """
         shape = (100,1)
-        dset = self.f.create_dataset("test", shape, dtype=float,
+        dset = self.f.create_dataset(str(uuid4()), shape, dtype=float,
                                      data=np.random.rand(*shape))
 
         # generate float type, sample float(0.)
@@ -2106,7 +2115,7 @@ class TestVirtualPrefix(BaseDataset):
     def test_virtual_prefix_create(self):
         shape = (100,1)
         virtual_prefix = "/path/to/virtual"
-        dset = self.f.create_dataset("test", shape, dtype=float,
+        dset = self.f.create_dataset(str(uuid4()), shape, dtype=float,
                                      data=np.random.rand(*shape),
                                      virtual_prefix = virtual_prefix)
 
@@ -2115,7 +2124,7 @@ class TestVirtualPrefix(BaseDataset):
 
     def test_virtual_prefix_require(self):
         virtual_prefix = "/path/to/virtual"
-        dset = self.f.require_dataset('foo', (10, 3), 'f', virtual_prefix = virtual_prefix)
+        dset = self.f.require_dataset(str(uuid4()), (10, 3), 'f', virtual_prefix = virtual_prefix)
         virtual_prefix_readback = pathlib.Path(dset.id.get_access_plist().get_virtual_prefix().decode()).as_posix()
         self.assertEqual(virtual_prefix, virtual_prefix_readback)
         self.assertIsInstance(dset, Dataset)
@@ -2125,7 +2134,7 @@ class TestVirtualPrefix(BaseDataset):
 def ds_str(file, shape=(10, )):
     dt = h5py.string_dtype(encoding='ascii')
     fill_value = b'fill'
-    return file.create_dataset('x', shape, dtype=dt, fillvalue=fill_value)
+    return file.create_dataset(str(uuid4()), shape, dtype=dt, fillvalue=fill_value)
 
 
 def ds_fields(file, shape=(10, )):
@@ -2134,8 +2143,8 @@ def ds_fields(file, shape=(10, )):
         ('bar', np.float64),
     ])
     fill_value = np.asarray(('fill', 0.0), dtype=dt)
-    file['x'] = np.broadcast_to(fill_value, shape)
-    return file['x']
+    file[(uid:=str(uuid4()))] = np.broadcast_to(fill_value, shape)
+    return file[uid]
 
 
 view_getters = pytest.mark.parametrize(

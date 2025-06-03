@@ -12,6 +12,7 @@
 
     Tests features common to all high-level objects, like the .name property.
 """
+from uuid import uuid4
 
 from h5py import File
 from h5py._hl.base import is_hdf5, Empty
@@ -56,10 +57,10 @@ class TestParent(BaseTest):
             grp.parent
 
         # Named objects
-        grp = self.f.create_group("bar")
+        grp = self.f.create_group(uid:=str(uuid4()))
         sub_grp = grp.create_group("foo")
         parent = sub_grp.parent.name
-        self.assertEqual(parent, "/bar")
+        self.assertEqual(parent, f"/{uid}")
 
 class TestMapping(BaseTest):
 
@@ -106,18 +107,18 @@ class TestRepr(BaseTest):
 
     def test_group(self):
         """ Group repr() with unicode """
-        grp = self.f.create_group(self.USTRING)
+        grp = self.f.create_group(f"{self.USTRING}{uuid4()}")
         self._check_type(grp)
 
     def test_dataset(self):
         """ Dataset repr() with unicode """
-        dset = self.f.create_dataset(self.USTRING, (1,))
+        dset = self.f.create_dataset(f"{self.USTRING}{uuid4()}", (1,))
         self._check_type(dset)
 
     def test_namedtype(self):
         """ Named type repr() with unicode """
-        self.f['type'] = np.dtype('f')
-        typ = self.f['type']
+        self.f[(uid:=str(uuid4()))] = np.dtype('f')
+        typ = self.f[uid]
         self._check_type(typ)
 
     def test_empty(self):
