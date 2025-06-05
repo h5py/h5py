@@ -6,6 +6,7 @@ requires = [
     "numpy >=2.0.0, <3",
     "pkgconfig",
     "setuptools >=77",
+    "wheel >=0.38",
 ]
 build-backend = "setuptools.build_meta"
 
