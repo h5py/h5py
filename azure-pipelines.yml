@@ -85,7 +85,7 @@ jobs:
 
 - job: 'Windows'
   pool:
-    vmImage: windows-2019
+    vmImage: windows-2022
   strategy:
     matrix:
     # -deps : test with default (latest) versions of dependencies
