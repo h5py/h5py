@@ -1,0 +1,38 @@
+What's new in h5py 3.14
+=======================
+
+New features
+------------
+
+* On NumPy 2.x, it is now possible to read and write native `NumPy variable-width
+  strings <https://numpy.org/doc/stable/user/basics.strings.html#variable-width-strings>`_,
+  a.k.a. ``StringDType()`` or ``dtype='T'``, which are more efficient
+  than arrays of Python string objects (:pr:`2557`). Variable length string data
+  is still read as string objects by default, for consistency with previous
+  versions of h5py and to work with NumPy 1.x; use ``dset.astype('T')`` to read
+  in the new format. See :ref:`npystrings`.
+
+Exposing HDF5 functions
+-----------------------
+
+* :meth:`h5py.h5d.DatasetID.write_direct_chunk` now wraps ``H5Dwrite_chunk``
+  instead of ``H5DOwrite_chunk``. This should not change its behaviour (:pr:`2586`).
+
+Bug fixes
+---------
+
+* Fixed a problem with `phil` Lock handling in forked processes when h5py is
+  also used from other threads (:pr:`2585`).
+* Fixed an error using :meth:`.Dataset.read_direct` with a zero-size selection
+  (:pr:`2577`).
+* Creating a virtual dataset containing 0 mappings from the high-level API now
+  works, making a dataset with virtual layout (:pr:`2562`).
+
+Building h5py
+-------------
+
+* setuptools 77 or above is now required, due to changes in the license metadata
+  in ``pyproject.toml`` (:pr:`2580`).
+* Numpy variable-width string support does not alter the build process: you need
+  NumPy 2.x to build (as before), but the built packages remain backwards
+  compatible with NumPy 1.x.
