@@ -70,6 +70,8 @@ Data passed as NpyStrings is always encoded as UTF-8.
 NumPy variable-width strings
 ----------------------------
 
+.. versionadded:: 3.14
+
 Starting with NumPy 2.0 and h5py 3.14, you can also use ``np.dtypes.StringDType()``,
 or ``np.dtype('T')`` for short, to specify native NumPy variable-width string dtypes,
 a.k.a. NpyStrings.

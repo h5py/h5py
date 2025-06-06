@@ -20,7 +20,7 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '3.13.0'
+VERSION = '3.14.0'
 
 
 # these are required to use h5py
