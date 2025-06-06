@@ -2,43 +2,51 @@
 
 Release Guide
 =============
-h5py uses `rever <https://regro.github.io/rever-docs/>`_ for release management.
-To install rever, use either pip or conda:
 
-.. code-block:: sh
+Steps to make an h5py release:
 
-    # pip
-    $ pip install re-ver
+1. Have a look for any open issues or PRs which we might want to solve/merge
+   before the release.
+2. Prepare a new branch, e.g. ``git switch -c prepare-3.14``
+3. Prepare the release notes. The goal is to describe changes visible to users
+   & repackagers of h5py in a form that doesn't assume 'internal' development
+   knowledge. If something breaks, or behaviour changes unexpectedly, the
+   release notes should let someone make a good guess which change is involved.
 
-    # conda
-    $ conda install -c conda-forge rever
+   - Check for recent `merged PRs with no milestone <https://github.com/h5py/h5py/pulls?q=is%3Amerged+is%3Apr+no%3Amilestone>`_,
+     and assign them to the current release milestone. We can ignore PRs which
+     only touch CI with no consequences for users.
+   - Go to the milestone page. If there are open issues/PRs there, decide whether
+     to include or defer them.
+   - Assemble the release notes in ``docs/whatsnew`` based on the list of merged
+     PRs. Commit the changes.
 
+4. Update the version number & commit the changes. The files that need changing
+   are:
 
-Performing releases
--------------------
-Once rever is installed, always run the ``check`` command to make sure
-that everything you need to perform the release is correctly installed
-and that you have the correct permissions. All rever commands should be
-run in the root level of the repository.
+    - ``setup.py``
+    - ``h5py/version.py``
+    - ``docs/conf.py``
 
+5. Push the branch, open a PR, wait for the CI. Check the RTD build for the
+   newly added release notes (formatting & cross-links). Optionally, wait for
+   other maintainers to check it as well.
+6. When everything looks good, merge the PR.
+7. Checkout the master branch, pull, make and push the tag, which will cause
+   CI to build wheels & make a GitHub release::
 
-**Step 1 (repeat until successful)**
+    git switch master
+    git pull
+    git tag 3.14.0  # <-- change this
+    git push --tags
 
-.. code-block:: sh
+8. Prepare the sdist::
 
-    $ rever check
+    git clean -xfdi
+    python -m build --sdist
 
-Resolve any issues that may have come up, and keep running ``rever check``
-until it passes. After it is successful, simply pass the version number
-you want to release (e.g. ``X.Y.Z``) into the rever command.
-
-**Step 2**
-
-.. code-block:: sh
-
-    $ rever X.Y.Z
-
-You probably want to make sure (with ``git tag``) that the new version
-number is available. If any release activities fail while running this
-command, you may safely re-run this command. You can also safely undo
-previously run activities. Please see the rever docs for more details.
+9. Download the wheels: ``gh release download 3.14.0 -D dist/``
+10. Upload to PyPI: ``twine upload dist/h5py-3.14.0*`` - this requires a token
+    from PyPI, which must be `supplied to twine <https://twine.readthedocs.io/en/stable/#configuration>`_.
+11. Close the GitHub milestone for this release and open one for the next
+    version.
