@@ -45,7 +45,7 @@ def stash_config(dct):
 def validate_version(s):
     """Ensure that s contains an X.Y.Z format version string, or ValueError."""
     # HDF5 tags can have a patch version, which we'll ignore for now.
-    m = re.match('(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$', s)
+    m = re.match(r'(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$', s)
     if m:
         return tuple(int(x) for x in m.groups())
     raise ValueError(f"HDF5 version string {s!r} not in X.Y.Z[.P] format")
