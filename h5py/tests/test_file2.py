@@ -173,9 +173,9 @@ class TestFileObj(TestCase):
             os.remove(fname)
 
     @pytest.mark.filterwarnings(
-        # on Windows, a resource warning may be emitted
+        # at least on Windows and MacOS, a resource warning may be emitted
         # when this test returns
-        "ignore:unclosed file:ResourceWarning"
+        "ignore::ResourceWarning"
     )
     def test_TemporaryFile(self):
         # in this test, we check explicitly that temp file gets
