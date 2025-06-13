@@ -12,17 +12,27 @@ except ImportError:
 from distutils.command.build_ext import build_ext
 import copy
 import sys
+import sysconfig
 import os
 import os.path as op
 from pathlib import Path
 
 import api_gen
 from setup_configure import BuildConfig
+from wheel.bdist_wheel import bdist_wheel
 
 
 def localpath(*args):
     return op.abspath(op.join(op.dirname(__file__), *args))
 
+
+USE_PY_LIMITED_API = (
+    os.getenv('H5PY_LIMITED_API', '0') == '1'
+    and sys.version_info >= (3, 11)
+    and not sysconfig.get_config_var("Py_GIL_DISABLED")
+)
+ABI3_TARGET_VERSION = "".join(str(_) for _ in sys.version_info[:2])
+ABI3_TARGET_HEX = hex(sys.hexversion & 0xFFFF00F0)
 
 MODULES_NUMPY2 = ['_npystrings']
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
@@ -45,6 +55,8 @@ COMPILER_SETTINGS = {
                        ('NPY_NO_DEPRECATED_API', 0),
                       ]
 }
+if USE_PY_LIMITED_API:
+    COMPILER_SETTINGS['define_macros'].append(('Py_LIMITED_API', ABI3_TARGET_HEX))
 
 EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c") ]}
 
@@ -69,6 +81,14 @@ if sys.platform.startswith('win'):
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
 
+class h5py_bdist_wheel(bdist_wheel):
+    def get_tag(self):
+        python, abi, plat = super().get_tag()
+
+        if python.startswith("cp") and USE_PY_LIMITED_API:
+            return f"cp{ABI3_TARGET_VERSION}", "abi3", plat
+
+        return python, abi, plat
 
 class h5py_build_ext(build_ext):
 
@@ -132,6 +152,8 @@ class h5py_build_ext(build_ext):
             # Enable NumPy 2.0 C API for modules that require it.
             # These modules will not be importable when NumPy 1.x is installed.
             settings['define_macros'].append(('NPY_TARGET_VERSION', 0x00000012))
+
+        settings["limited_api"] = USE_PY_LIMITED_API
 
         return Extension('h5py.' + module, sources, **settings)
 
