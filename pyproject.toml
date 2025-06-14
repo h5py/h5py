@@ -83,7 +83,7 @@ packages = [
 ]
 
 [tool.cibuildwheel]
-skip = ["cp39-*", "cp310-*", "cp311-*", "cp312-*"] # tmp
+skip = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"] # tmp
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
 manylinux-x86_64-image = "ghcr.io/h5py/manylinux2014_x86_64-hdf5"
