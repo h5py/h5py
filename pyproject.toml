@@ -83,7 +83,7 @@ packages = [
 ]
 
 [tool.cibuildwheel]
-selec = "cp314" # tmp
+select = "cp314" # tmp
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
 manylinux-x86_64-image = "ghcr.io/h5py/manylinux2014_x86_64-hdf5"
