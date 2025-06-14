@@ -33,6 +33,6 @@ PYTHON="${PYTHON%-dev*}"
 
 # replace dots in PYTHON with nothing, e.g., 3.8->38
 CIBW_BUILD="cp${PYTHON//./}-*_$ARCH"
-echo "CIBW_BUILD=$CIBW_BUILD" | tee -a $GITHUB_ENV
-echo "CIBW_SKIP=$CIBW_SKIP" | tee -a $GITHUB_ENV
+#echo "CIBW_BUILD=$CIBW_BUILD" | tee -a $GITHUB_ENV
+#echo "CIBW_SKIP=$CIBW_SKIP" | tee -a $GITHUB_ENV
 echo "CIBW_ENABLE=$CIBW_ENABLE" | tee -a $GITHUB_ENV
