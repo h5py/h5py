@@ -21,9 +21,10 @@ KIND="$RUNNER_OS $ARCH"
 CIBW_SKIP="*musllinux*"
 # If it's a scheduled build or [pip-pre] in commit message, use pip-pre
 if [[ "$GITHUB_EVENT_NAME" == "schedule" ]] || [[ "$MSG" = *'[pip-pre]'* ]]; then
-    echo "Using NumPy pip-pre wheel and (on Linux), setting CIBW_BEFORE_BUILD, CIBW_BUILD_FRONTEND"
+    echo "Using NumPy pip-pre wheel and, setting CIBW_BEFORE_BUILD, CIBW_BUILD_FRONTEND and CIBW_ENABLE"
     echo "CIBW_BEFORE_BUILD=pip install --pre --only-binary numpy --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \"numpy>=2.0.0.dev0\" \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=77\" wheel" | tee -a $GITHUB_ENV
     echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" | tee -a $GITHUB_ENV
+    CIBW_ENABLE="$CIBW_ENABLE cpython-prerelease"
 fi
 
 # strip '-dev' suffix for pre-releases Pythons
