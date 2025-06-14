@@ -36,6 +36,9 @@ permissions:
   actions: read
   contents: write
 
+env:
+  CIBW_ENABLE: ${{ (github.event_name == 'schedule' || github.event_name == 'pull_request') && 'cpython-prerelease' || '' }}
+
 jobs:
   build_wheels:
     name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }} ${{ matrix.python }}'
