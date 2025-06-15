@@ -97,7 +97,6 @@ jobs:
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
           CIBW_ENABLE: ${{ env.CIBW_ENABLE }}
-          CIBW_BEFORE_TEST: ${{ env.CIBW_BEFORE_TEST }}
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
