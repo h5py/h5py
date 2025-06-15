@@ -88,7 +88,7 @@ jobs:
       - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}" "${{ matrix.python }}"
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@v2.23.3
+      - uses: pypa/cibuildwheel@v3.0.0
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -96,7 +96,7 @@ jobs:
           CIBW_SKIP: ${{ env.CIBW_SKIP }}
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
-          CIBW_PRERELEASE_PYTHONS: ${{ env.CIBW_PRERELEASE_PYTHONS }}
+          CIBW_ENABLE: ${{ env.CIBW_ENABLE }}
           CIBW_BEFORE_TEST: ${{ env.CIBW_BEFORE_TEST }}
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse

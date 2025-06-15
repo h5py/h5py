@@ -18,7 +18,7 @@ fi
 MSG="$(git show -s --format=%s $SHA)"
 KIND="$RUNNER_OS $ARCH"
 
-CIBW_SKIP="pp* *musllinux*"
+CIBW_SKIP="*musllinux*"
 # If it's a scheduled build or [pip-pre] in commit message, use pip-pre
 if [[ "$GITHUB_EVENT_NAME" == "schedule" ]] || [[ "$MSG" = *'[pip-pre]'* ]]; then
     echo "Using NumPy pip-pre wheel and (on Linux), setting CIBW_BEFORE_BUILD, CIBW_BUILD_FRONTEND and CIBW_BEFORE_TEST"
@@ -35,4 +35,4 @@ PYTHON="${PYTHON%-dev*}"
 CIBW_BUILD="cp${PYTHON//./}-*_$ARCH"
 echo "CIBW_BUILD=$CIBW_BUILD" | tee -a $GITHUB_ENV
 echo "CIBW_SKIP=$CIBW_SKIP" | tee -a $GITHUB_ENV
-echo "CIBW_PRERELEASE_PYTHONS=$CIBW_PRERELEASE_PYTHONS" | tee -a $GITHUB_ENV
+echo "CIBW_ENABLE=$CIBW_ENABLE" | tee -a $GITHUB_ENV
