@@ -20,6 +20,7 @@ import pickle
 import tempfile
 import subprocess
 import sys
+from uuid import uuid4
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py._hl.files import direct_vfd
@@ -175,11 +176,11 @@ class TestSpaceStrategy(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'w', fs_strategy="invalid")
 
-        dset = fid.create_dataset('foo', (100,), dtype='uint8')
+        dset = fid.create_dataset((uid1:=str(uuid4())), (100,), dtype='uint8')
         dset[...] = 1
-        dset = fid.create_dataset('bar', (100,), dtype='uint8')
+        dset = fid.create_dataset(str(uuid4()), (100,), dtype='uint8')
         dset[...] = 1
-        del fid['foo']
+        del fid[uid1]
         fid.close()
 
         fid = File(fname, 'a')
@@ -189,7 +190,7 @@ class TestSpaceStrategy(TestCase):
         assert(fs_strat[1] == True)
         assert(fs_strat[2] == 100)
 
-        dset = fid.create_dataset('foo2', (100,), dtype='uint8')
+        dset = fid.create_dataset(str(uuid4()), (100,), dtype='uint8')
         dset[...] = 1
         fid.close()
 
