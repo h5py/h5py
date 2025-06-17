@@ -12,7 +12,7 @@ environment:
       TOXENV: "py39-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.6"
+      HDF5_VERSION: "1.10.7"
 
     ### USING HDF5 1.12 ###
 
@@ -20,7 +20,7 @@ environment:
       TOXENV: "py39-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.12.0"
+      HDF5_VERSION: "1.12.1"
 
     - PYTHON: "C:\\Python311"
       TOXENV: "py311-test-deps"

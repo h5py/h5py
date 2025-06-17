@@ -945,10 +945,6 @@ class TestSWMRMode(TestCase):
         fid.close()
 
 
-@pytest.mark.skipif(
-    h5py.version.hdf5_version_tuple < (1, 12, 1) and (
-    h5py.version.hdf5_version_tuple[:2] != (1, 10) or h5py.version.hdf5_version_tuple[2] < 7),
-    reason="Requires HDF5 >= 1.12.1 or 1.10.x >= 1.10.7")
 @pytest.mark.skipif("HDF5_USE_FILE_LOCKING" in os.environ,
                     reason="HDF5_USE_FILE_LOCKING env. var. is set")
 class TestFileLocking:

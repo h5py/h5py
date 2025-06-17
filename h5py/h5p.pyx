@@ -1499,30 +1499,28 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_page_buffer_size(self.id, &buf_size, &min_meta_per, &min_raw_per)
         return (buf_size, min_meta_per, min_raw_per)
 
-    IF HDF5_VERSION >= (1, 12, 1) or (HDF5_VERSION[:2] == (1, 10) and HDF5_VERSION[2] >= 7):
+    @with_phil
+    def get_file_locking(self):
+        """ () => (BOOL, BOOL)
 
-        @with_phil
-        def get_file_locking(self):
-            """ () => (BOOL, BOOL)
+        Return file locking information as a 2-tuple of boolean:
+        (use_file_locking, ignore_when_disabled)
+        """
+        cdef hbool_t use_file_locking = 0
+        cdef hbool_t ignore_when_disabled = 0
 
-            Return file locking information as a 2-tuple of boolean:
-            (use_file_locking, ignore_when_disabled)
-            """
-            cdef hbool_t use_file_locking = 0
-            cdef hbool_t ignore_when_disabled = 0
+        H5Pget_file_locking(self.id, &use_file_locking, &ignore_when_disabled)
+        return use_file_locking, ignore_when_disabled
 
-            H5Pget_file_locking(self.id, &use_file_locking, &ignore_when_disabled)
-            return use_file_locking, ignore_when_disabled
+    @with_phil
+    def set_file_locking(self, bint use_file_locking, bint ignore_when_disabled):
+        """ (BOOL use_file_locking, BOOL ignore_when_disabled)
 
-        @with_phil
-        def set_file_locking(self, bint use_file_locking, bint ignore_when_disabled):
-            """ (BOOL use_file_locking, BOOL ignore_when_disabled)
-
-            Set HDF5 file locking behavior.
-            Warning: This setting is overridden by the HDF5_USE_FILE_LOCKING environment variable.
-            """
-            H5Pset_file_locking(
-                self.id, <hbool_t>use_file_locking, <hbool_t>ignore_when_disabled)
+        Set HDF5 file locking behavior.
+        Warning: This setting is overridden by the HDF5_USE_FILE_LOCKING environment variable.
+        """
+        H5Pset_file_locking(
+            self.id, <hbool_t>use_file_locking, <hbool_t>ignore_when_disabled)
 
 
 # Link creation
