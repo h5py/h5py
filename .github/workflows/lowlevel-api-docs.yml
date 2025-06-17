@@ -13,7 +13,7 @@ jobs:
   api-docs:
     runs-on: ubuntu-latest
     env:
-      HDF5_VERSION: 1.12.0
+      HDF5_VERSION: 1.14.6
       HDF5_DIR: ${{ github.workspace }}/cache/hdf5
       TOXENV: apidocs
     steps:
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       - name: Install tox
         run: |
