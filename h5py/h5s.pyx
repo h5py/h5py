@@ -645,12 +645,12 @@ cdef class SpaceID(ObjectID):
 
     @with_phil
     def modify_select(self, SpaceID space2, int op=H5S_SELECT_OR):
-        """(SpaceID space2, INT op=SELECT_OR) => SpaceID
+        """(SpaceID space2, INT op=SELECT_OR)
 
         Refines a hyperslab selection with an operation, using a second hyperslab
         to modify it.
         """
-        return SpaceID(H5Smodify_select(self.id, <H5S_seloper_t>op, space2.id))
+        H5Smodify_select(self.id, <H5S_seloper_t>op, space2.id)
 
     @with_phil
     def is_regular_hyperslab(self):
