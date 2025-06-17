@@ -242,23 +242,22 @@ cdef class Selector:
             self.is_fancy = False
         return True
 
-    cdef build_fancy_hyperslab(self, ndarray array_arg, int array_ix, hsize_t* tmp_start, hsize_t* tmp_count):
+    cdef build_fancy_hyperslab(self, space, ndarray array_arg, int array_ix, hsize_t* tmp_start, hsize_t* tmp_count):
         """Recursive merge algorithm to help select_fancy quickly apply selection to the dataspace"""
 
         # With fewer than 16 elements, looping through fancy indices is faster
         if len(array_arg)<16:
-            space = H5Scopy(self.space)
-            H5Sselect_none(space)
             for i in array_arg:
                 tmp_start[array_ix] = i
                 H5Sselect_hyperslab(space, H5S_SELECT_OR, tmp_start, self.stride, tmp_count, self.block)
             return space
         else:
-            space1 = self.build_fancy_hyperslab(array_arg[:len(array_arg)//2], array_ix, tmp_start, tmp_count)
-            space2 = self.build_fancy_hyperslab(array_arg[len(array_arg)//2:], array_ix, tmp_start, tmp_count)
-            H5Smodify_select(space1, H5S_SELECT_OR, space2)
+            self.build_fancy_hyperslab(space, array_arg[:len(array_arg)//2], array_ix, tmp_start, tmp_count)
+            space2 = H5Screate_simple(self.rank, self.dims, NULL)
+            H5Sselect_none(space2)
+            self.build_fancy_hyperslab(space2, array_arg[len(array_arg)//2:], array_ix, tmp_start, tmp_count)
+            H5Smodify_select(space, H5S_SELECT_OR, space2)
             H5Sclose(space2)
-            return space1
 
     cdef select_fancy(self, int array_ix, ndarray array_arg):
         """Apply a 'fancy' selection (array of indices) to the dataspace"""
@@ -275,9 +274,7 @@ cdef class Selector:
             memcpy(tmp_count, self.count, sizeof(hsize_t) * self.rank)
             tmp_count[array_ix] = 1
 
-            new_space = self.build_fancy_hyperslab(array_arg, array_ix, tmp_start, tmp_count)
-            H5Sselect_copy(self.space, new_space)
-            H5Sclose(new_space)
+            self.build_fancy_hyperslab(self.space, array_arg, array_ix, tmp_start, tmp_count)
         finally:
             efree(tmp_start)
             efree(tmp_count)
