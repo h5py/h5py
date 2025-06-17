@@ -489,7 +489,7 @@ hdf5:
 
   hid_t     H5Scombine_hyperslab(hid_t space_id, H5S_seloper_t op,  hsize_t *start, hsize_t *_stride, hsize_t *count, hsize_t *_block)
   hid_t     H5Scombine_select(hid_t space1_id, H5S_seloper_t op, hid_t space2_id)
-  hid_t     H5Smodify_select(hid_t space1_id, H5S_seloper_t op, hid_t space2_id)
+  herr_t     H5Smodify_select(hid_t space1_id, H5S_seloper_t op, hid_t space2_id)
 
   herr_t    H5Sencode(hid_t obj_id, void *buf, size_t *nalloc)
   hid_t     H5Sdecode(void *buf)
