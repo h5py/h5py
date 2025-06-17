@@ -96,7 +96,7 @@ jobs:
       py39-hdf5110:
         python.version: '3.9'
         TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
-        HDF5_VERSION: 1.10.6
+        HDF5_VERSION: 1.10.7
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "16-64"
         H5PY_ENFORCE_COVERAGE: yes
