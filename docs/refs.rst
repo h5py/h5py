@@ -48,7 +48,7 @@ Using region references
 Region references always contain a selection.  You create them using the
 dataset property "regionref" and standard NumPy slicing syntax:
 
-    >>> myds = myfile.create_dataset('dset', (200,200))
+    >>> myds = myfile.create_dataset('dset', shape=(200,200))
     >>> regref = myds.regionref[0:10, 0:5]
     >>> print(regref)
     <HDF5 region reference>
@@ -82,16 +82,25 @@ These dtypes are available from h5py for references and region references:
 * ``h5py.ref_dtype`` - for object references
 * ``h5py.regionref_dtype`` - for region references
 
-To store an array of references, use the appropriate dtype when creating the
+To store an array of references, use the appropriate dtype when initalizing the
 dataset:
 
-    >>> ref_dataset = myfile.create_dataset("MyRefs", (100,), dtype=h5py.ref_dtype)
+    >>> ref_dataset = myfile.create_dataset("MyRefs", shape=(100,), dtype=h5py.ref_dtype)
 
-You can read from and write to the array as normal:
+You can write the reference to the dataset and retrieve the reference as you would any other dataset:
 
     >>> ref_dataset[0] = myfile.ref
     >>> print(ref_dataset[0])
     <HDF5 object reference>
+
+You can also write the reference to the dataset in a single line, without specifying the shape. 
+Here is an example with the region reference ``regref`` defined above:
+
+    >>> regref_dataset = myfile.create_dataset("MyRegRefs", data=regref, dtype=h5py.regionref_dtype)
+
+Note that this specifies the data type as a region reference.
+If you do not specify the correct data type, 
+you will get a TypeError when trying to index a dataset with a region reference.
 
 Storing references in an attribute
 ----------------------------------
