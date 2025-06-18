@@ -7,9 +7,9 @@
 
     <title>Module H5D &#8212; Low-level API for h5py (v3.14.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
     <script src="_static/documentation_options.js?v=e4f4b189"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -65,7 +65,7 @@ anonymous.</p>
 <h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">DatasetID</span></span><a class="headerlink" href="#h5py.h5d.DatasetID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">DatasetID</span></span><a class="headerlink" href="#h5py.h5d.DatasetID" title="Link to this definition">¶</a></dt>
 <dd><p>Represents an HDF5 dataset identifier.</p>
 <p>Objects of this class may be used in any HDF5 function which expects
 a dataset identifier.  Also, all H5D* functions which take a dataset
@@ -79,6 +79,21 @@ rank:   Integer giving dataset rank</p>
 <li><p>Hashable: Yes, unless anonymous</p></li>
 <li><p>Equality: True HDF5 identity if unless anonymous</p></li>
 </ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5d.DatasetID.chunk_iter">
+<span class="sig-name descname"><span class="pre">chunk_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CALLABLE</span> <span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropDXID</span> <span class="pre">dxpl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.chunk_iter" title="Link to this definition">¶</a></dt>
+<dd><p>Iterate over each chunk and invoke user-supplied “func” callable object.
+The “func” receives chunk information: logical offset, filter mask,
+file location, and size. Any not-None return value from “func” ends iteration.</p>
+<dl class="simple">
+<dt>Feature requires: HDF5 1.10.10 or any later 1.10</dt><dd><p>HDF5 1.12.3 or later</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 3.8.</span></p>
+</div>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.dtype">
 <span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#h5py.h5d.DatasetID.dtype" title="Link to this definition">¶</a></dt>
@@ -421,6 +436,7 @@ been applied to the data before calling this function.</p>
 </li>
 <li><a class="reference internal" href="#dataset-objects">Dataset Objects</a><ul>
 <li><a class="reference internal" href="#h5py.h5d.DatasetID"><code class="docutils literal notranslate"><span class="pre">DatasetID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.chunk_iter"><code class="docutils literal notranslate"><span class="pre">DatasetID.chunk_iter()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5d.DatasetID.dtype"><code class="docutils literal notranslate"><span class="pre">DatasetID.dtype</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5d.DatasetID.extend"><code class="docutils literal notranslate"><span class="pre">DatasetID.extend()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5d.DatasetID.flush"><code class="docutils literal notranslate"><span class="pre">DatasetID.flush()</span></code></a></li>
@@ -538,7 +554,7 @@ been applied to the data before calling this function.</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Jun 18, 2025.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

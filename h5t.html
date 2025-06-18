@@ -7,9 +7,9 @@
 
     <title>Module H5T &#8212; Low-level API for h5py (v3.14.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
     <script src="_static/documentation_options.js?v=e4f4b189"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -243,7 +243,7 @@ or a tuple describing the conversion path.  Currently tuple entries are:</p>
 <h2>Type classes<a class="headerlink" href="#type-classes" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeID</span></span><a class="headerlink" href="#h5py.h5t.TypeID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeID</span></span><a class="headerlink" href="#h5py.h5t.TypeID" title="Link to this definition">¶</a></dt>
 <dd><p>Base class for type identifiers (implements common operations)</p>
 <ul class="simple">
 <li><p>Hashable: If committed or locked</p></li>
@@ -342,7 +342,7 @@ Once locked, it can’t be unlocked.</p>
 inherited from the base class <a class="reference internal" href="#h5py.h5t.TypeAtomicID" title="h5py.h5t.TypeAtomicID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeAtomicID</span></code></a>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeAtomicID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeAtomicID</span></span><a class="headerlink" href="#h5py.h5t.TypeAtomicID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeAtomicID</span></span><a class="headerlink" href="#h5py.h5t.TypeAtomicID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>Base class for atomic datatypes (float or integer)</p>
 <dl class="py method">
@@ -415,7 +415,7 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeIntegerID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeIntegerID</span></span><a class="headerlink" href="#h5py.h5t.TypeIntegerID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeIntegerID</span></span><a class="headerlink" href="#h5py.h5t.TypeIntegerID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeAtomicID" title="h5py.h5t.TypeAtomicID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeAtomicID</span></code></a></p>
 <p>Integer atomic datatypes</p>
 <dl class="py method">
@@ -446,7 +446,7 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeFloatID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeFloatID</span></span><a class="headerlink" href="#h5py.h5t.TypeFloatID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeFloatID</span></span><a class="headerlink" href="#h5py.h5t.TypeFloatID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeAtomicID" title="h5py.h5t.TypeAtomicID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeAtomicID</span></code></a></p>
 <p>Floating-point atomic datatypes</p>
 <dl class="py method">
@@ -533,7 +533,7 @@ argument definitions.</p>
 <h3>Strings<a class="headerlink" href="#strings" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeStringID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeStringID</span></span><a class="headerlink" href="#h5py.h5t.TypeStringID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeStringID</span></span><a class="headerlink" href="#h5py.h5t.TypeStringID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>String datatypes, both fixed and vlen.</p>
 <dl class="py method">
@@ -591,7 +591,7 @@ argument definitions.</p>
 a base class, <a class="reference internal" href="#h5py.h5t.TypeCompositeID" title="h5py.h5t.TypeCompositeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeCompositeID</span></code></a>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompositeID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeCompositeID</span></span><a class="headerlink" href="#h5py.h5t.TypeCompositeID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeCompositeID</span></span><a class="headerlink" href="#h5py.h5t.TypeCompositeID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>Base class for enumerated and compound types.</p>
 <dl class="py method">
@@ -618,7 +618,7 @@ identified by its index (0 &lt;= member &lt; nmembers).</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompoundID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeCompoundID</span></span><a class="headerlink" href="#h5py.h5t.TypeCompoundID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeCompoundID</span></span><a class="headerlink" href="#h5py.h5t.TypeCompoundID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeCompositeID" title="h5py.h5t.TypeCompositeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeCompositeID</span></code></a></p>
 <p>Represents a compound datatype</p>
 <dl class="py method">
@@ -661,7 +661,7 @@ alignment rules) from a compound datatype.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeEnumID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeEnumID</span></span><a class="headerlink" href="#h5py.h5t.TypeEnumID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeEnumID</span></span><a class="headerlink" href="#h5py.h5t.TypeEnumID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeCompositeID" title="h5py.h5t.TypeCompositeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeCompositeID</span></code></a></p>
 <p>Represents an enumerated type</p>
 <dl class="py method">
@@ -700,7 +700,7 @@ limitation of the HDF5 library, this can only retrieve names up to
 <h3>Other types<a class="headerlink" href="#other-types" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeArrayID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeArrayID</span></span><a class="headerlink" href="#h5py.h5t.TypeArrayID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeArrayID</span></span><a class="headerlink" href="#h5py.h5t.TypeArrayID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>Represents an array datatype</p>
 <dl class="py method">
@@ -720,7 +720,7 @@ a tuple of integers.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeOpaqueID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeOpaqueID</span></span><a class="headerlink" href="#h5py.h5t.TypeOpaqueID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeOpaqueID</span></span><a class="headerlink" href="#h5py.h5t.TypeOpaqueID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>Represents an opaque type</p>
 <dl class="py method">
@@ -740,14 +740,14 @@ Limited to 256 characters.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeVlenID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeVlenID</span></span><a class="headerlink" href="#h5py.h5t.TypeVlenID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeVlenID</span></span><a class="headerlink" href="#h5py.h5t.TypeVlenID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>Non-string vlen datatypes.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeBitfieldID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeBitfieldID</span></span><a class="headerlink" href="#h5py.h5t.TypeBitfieldID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeBitfieldID</span></span><a class="headerlink" href="#h5py.h5t.TypeBitfieldID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>HDF5 bitfield type</p>
 <dl class="py method">
@@ -764,7 +764,7 @@ Limited to 256 characters.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5t.TypeReferenceID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeReferenceID</span></span><a class="headerlink" href="#h5py.h5t.TypeReferenceID" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">TypeReferenceID</span></span><a class="headerlink" href="#h5py.h5t.TypeReferenceID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeID</span></code></a></p>
 <p>HDF5 object or region reference</p>
 </dd></dl>
@@ -1458,7 +1458,7 @@ Limited to 256 characters.</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Jun 18, 2025.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>
