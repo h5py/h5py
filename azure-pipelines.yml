@@ -10,7 +10,7 @@ jobs:
   pool:
     vmImage: ubuntu-22.04
   variables:
-    TOXENV: docs,checkreadme
+    TOXENV: checkreadme,checkmanifest
   steps:
     - task: UsePythonVersion@0
       inputs:
