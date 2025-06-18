@@ -85,8 +85,8 @@ packages = [
 [tool.cibuildwheel]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
-manylinux-x86_64-image = "ghcr.io/h5py/manylinux2014_x86_64-hdf5"
-manylinux-aarch64-image = "ghcr.io/h5py/manylinux2014_aarch64-hdf5"
+manylinux-x86_64-image = "ghcr.io/h5py/manylinux_2_28_x86_64-hdf5"
+manylinux-aarch64-image = "ghcr.io/h5py/manylinux_2_28_aarch64-hdf5"
 test-requires = [
     "tox",
     "codecov",

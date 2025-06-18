@@ -12,7 +12,10 @@ WHEEL_PATH=$2
 echo "WHEEL_PATH=$WHEEL_PATH"
 
 export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])))")
-ENVLIST="py$PYVER-test-deps,py$PYVER-test-mindeps,py$PYVER-test-deps-pre"
+ENVLIST="py$PYVER-test-deps-pre"
+if [[ "$PYVER" != "314" ]]; then
+    ENVLIST="py$PYVER-test-deps,py$PYVER-test-mindeps,"$ENVLIST
+fi
 export H5PY_TEST_CHECK_FILTERS=1
 echo "ENVLIST=$ENVLIST"
 cd $PROJECT_PATH
