@@ -100,7 +100,7 @@ Here is an example with the region reference ``regref`` defined above:
 
 Note that this specifies the data type as a region reference.
 If you do not specify the correct data type, 
-you will get a TypeError when trying to index a dataset with a region reference.
+you will get a ``TypeError`` when trying to index a dataset with a region reference.
 
 Storing references in an attribute
 ----------------------------------
