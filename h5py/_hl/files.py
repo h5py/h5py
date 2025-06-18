@@ -147,10 +147,6 @@ def make_fapl(
         plist.set_meta_block_size(int(meta_block_size))
 
     if locking is not None:
-        if hdf5_version < (1, 12, 1) and (hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
-            raise ValueError(
-                "HDF5 version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
-
         if locking in ("false", False):
             plist.set_file_locking(False, ignore_when_disabled=False)
         elif locking in ("true", True):
@@ -478,8 +474,6 @@ class File(Group):
                 The HDF5_USE_FILE_LOCKING environment variable can override
                 this parameter.
 
-            Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
-
         alignment_threshold
             Together with ``alignment_interval``, this property ensures that
             any file object greater than or equal in size to the alignment
@@ -514,10 +508,6 @@ class File(Group):
             else:
                 raise ValueError(
                     "h5py was built without ROS3 support, can't use ros3 driver")
-
-        if locking is not None and hdf5_version < (1, 12, 1) and (
-                hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
-            raise ValueError("HDF5 version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking options.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:

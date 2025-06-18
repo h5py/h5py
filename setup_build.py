@@ -155,9 +155,9 @@ class h5py_build_ext(build_ext):
         config = BuildConfig.from_env()
         config.summarise()
 
-        if config.hdf5_version < (1, 10, 6):
+        if config.hdf5_version < (1, 10, 7) or config.hdf5_version == (1, 12, 0):
             raise Exception(
-                f"This version of h5py requires HDF5 >= 1.10.6 (got version "
+                f"This version of h5py requires HDF5 >= 1.10.7 and != 1.12.0 (got version "
                 f"{config.hdf5_version} from environment variable or library)"
             )
 

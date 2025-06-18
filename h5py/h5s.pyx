@@ -394,15 +394,14 @@ cdef class SpaceID(ObjectID):
             efree(start)
             efree(end)
 
-    IF HDF5_VERSION >= (1, 10, 7):
-        @with_phil
-        def select_shape_same(self, SpaceID space2):
-            """(SpaceID space2) => BOOL
+    @with_phil
+    def select_shape_same(self, SpaceID space2):
+        """(SpaceID space2) => BOOL
 
-            Check if two selections are the same shape. HDF5 may read data
-            faster if the source & destination selections are the same shape.
-            """
-            return <bint>H5Sselect_shape_same(self.id, space2.id)
+        Check if two selections are the same shape. HDF5 may read data
+        faster if the source & destination selections are the same shape.
+        """
+        return <bint>H5Sselect_shape_same(self.id, space2.id)
 
     @with_phil
     def select_all(self):

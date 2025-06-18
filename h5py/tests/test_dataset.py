@@ -1661,11 +1661,6 @@ class TestZeroShape(BaseDataset):
         self.assertEqual(ds[()].shape, arr.shape)
         self.assertEqual(ds[()].dtype, arr.dtype)
 
-# https://github.com/h5py/h5py/issues/1492
-empty_regionref_xfail = pytest.mark.xfail(
-    h5py.version.hdf5_version_tuple == (1, 10, 6),
-    reason="Issue with empty region refs in HDF5 1.10.6",
-)
 
 class TestRegionRefs(BaseDataset):
 
@@ -1685,14 +1680,12 @@ class TestRegionRefs(BaseDataset):
         ref = self.dset.regionref[slic]
         self.assertArrayEqual(self.dset[ref], self.data[slic])
 
-    @empty_regionref_xfail
     def test_empty_region(self):
         ref = self.dset.regionref[:0]
         out = self.dset[ref]
         assert out.size == 0
         # Ideally we should preserve shape (0, 100), but it seems this is lost.
 
-    @empty_regionref_xfail
     def test_scalar_dataset(self):
         ds = self.f.create_dataset("scalar", data=1.0, dtype='f4')
         sid = h5py.h5s.create(h5py.h5s.SCALAR)
