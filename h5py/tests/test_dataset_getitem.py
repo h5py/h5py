@@ -463,7 +463,7 @@ class Test1DFloat(TestCase):
     def test_indexlist_numpyarray_single_index_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([0]), ...])
 
-    def test_indexlist_long(self):
+    def test_indexlist_long_ellipsis(self):
         # selection logic changes with >16 indices
         self.assertNumpyBehavior(self.dset, self.data, np.s_[range(0, 50, 2), ...])
 
