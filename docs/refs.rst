@@ -98,9 +98,10 @@ Here is an example with the region reference ``regref`` defined above:
 
     >>> regref_dataset = myfile.create_dataset("MyRegRefs", data=regref, dtype=h5py.regionref_dtype)
 
-Note that this specifies the data type as a region reference.
-If you do not specify the correct data type, 
-you will get a ``TypeError`` when trying to index a dataset with a region reference.
+To read a reference from a dataset:
+    >>> myregref = regref_dataset[()]
+Then, the reference can be used to access the region within the dataset it points to:
+    >>> myds[myregref]
 
 Storing references in an attribute
 ----------------------------------
