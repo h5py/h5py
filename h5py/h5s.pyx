@@ -590,51 +590,6 @@ cdef class SpaceID(ObjectID):
             efree(block_array)
 
     @with_phil
-    def combine_hyperslab(self, object start, object count, object stride=None,
-                          object block=None, int op=H5S_SELECT_SET):
-        """(TUPLE start, TUPLE count, TUPLE stride=None, TUPLE block=None,
-             INT op=SELECT_SET) => SpaceID
-
-        Performs an operation on a hyperslab and an existing selection and
-        returns the resulting selection.
-        """
-        cdef int rank
-        cdef hsize_t* start_array = NULL
-        cdef hsize_t* count_array = NULL
-        cdef hsize_t* stride_array = NULL
-        cdef hsize_t* block_array = NULL
-
-        # Dataspace rank.  All provided tuples must match this.
-        rank = H5Sget_simple_extent_ndims(self.id)
-
-        require_tuple(start, 0, rank, b"start")
-        require_tuple(count, 0, rank, b"count")
-        require_tuple(stride, 1, rank, b"stride")
-        require_tuple(block, 1, rank, b"block")
-
-        try:
-            start_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-            count_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-            convert_tuple(start, start_array, rank)
-            convert_tuple(count, count_array, rank)
-
-            if stride is not None:
-                stride_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-                convert_tuple(stride, stride_array, rank)
-            if block is not None:
-                block_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-                convert_tuple(block, block_array, rank)
-
-            return SpaceID(H5Scombine_hyperslab(self.id, <H5S_seloper_t>op, start_array,
-                                         stride_array, count_array, block_array))
-
-        finally:
-            efree(start_array)
-            efree(count_array)
-            efree(stride_array)
-            efree(block_array)
-
-    @with_phil
     def combine_select(self, SpaceID space2, int op=H5S_SELECT_OR):
         """(SpaceID space2, INT op=SELECT_OR) => SpaceID
 
