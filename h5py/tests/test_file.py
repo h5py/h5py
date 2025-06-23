@@ -13,13 +13,16 @@
     Tests all aspects of File objects, including their creation.
 """
 
-import pytest
 import os
 import stat
 import pickle
 import tempfile
+import time
 import subprocess
 import sys
+from hashlib import sha256
+
+import pytest
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py._hl.files import direct_vfd
@@ -1065,3 +1068,18 @@ def test_close_gc(writable_file):
             refs = [d.id for d in f.values()]
             refs.append(refs)   # Make a reference cycle so GC is involved
             del refs  # GC is likely to fire while closing the file
+
+
+def test_reproducible_file(tmp_path):
+    def write(path):
+        with File(path, 'w', track_order=True) as hf:
+            g = hf.create_group("group", track_order=True)
+            g.create_dataset("dset", shape=10, dtype='f4')
+
+    f1 = tmp_path / "f1.h5"
+    write(f1)
+    time.sleep(1.1)  # Ensure any timestamps are different
+    f2 = tmp_path / "f2.h5"
+    write(f2)
+
+    assert sha256(f1.read_bytes()).hexdigest() == sha256(f2.read_bytes()).hexdigest()
