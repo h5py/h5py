@@ -182,32 +182,35 @@ def make_fapl(
     return plist
 
 
-def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False,
+def make_fcpl(track_order=False, track_times=False, fs_strategy=None, fs_persist=False,
               fs_threshold=1, fs_page_size=None):
     """ Set up a file creation property list """
-    if track_order or fs_strategy:
-        plist = h5p.create(h5p.FILE_CREATE)
-        if track_order:
-            plist.set_link_creation_order(
-                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-            plist.set_attr_creation_order(
-                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-        if fs_strategy:
-            strategies = {
-                'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
-                'page': h5f.FSPACE_STRATEGY_PAGE,
-                'aggregate': h5f.FSPACE_STRATEGY_AGGR,
-                'none': h5f.FSPACE_STRATEGY_NONE
-            }
-            fs_strat_num = strategies.get(fs_strategy, -1)
-            if fs_strat_num == -1:
-                raise ValueError("Invalid file space strategy type")
-
-            plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
-            if fs_page_size and fs_strategy == 'page':
-                plist.set_file_space_page_size(int(fs_page_size))
+    plist = h5p.create(h5p.FILE_CREATE)
+    if track_order:
+        plist.set_link_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        plist.set_attr_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+    if track_times is None:
+        track_times = False  # Allow explicit None to mean h5py's default
+    if track_times in (True, False):
+        plist.set_obj_track_times(track_times)
     else:
-        plist = None
+        raise TypeError("track_times must be either True or False")
+    if fs_strategy:
+        strategies = {
+            'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
+            'page': h5f.FSPACE_STRATEGY_PAGE,
+            'aggregate': h5f.FSPACE_STRATEGY_AGGR,
+            'none': h5f.FSPACE_STRATEGY_NONE
+        }
+        fs_strat_num = strategies.get(fs_strategy, -1)
+        if fs_strat_num == -1:
+            raise ValueError("Invalid file space strategy type")
+
+        plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
+        if fs_page_size and fs_strategy == 'page':
+            plist.set_file_space_page_size(int(fs_page_size))
     return plist
 
 
@@ -376,7 +379,8 @@ class File(Group):
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
                  page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
-                 alignment_threshold=1, alignment_interval=1, meta_block_size=None, **kwds):
+                 alignment_threshold=1, alignment_interval=1, meta_block_size=None,
+                 *, track_times=False, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -429,6 +433,8 @@ class File(Group):
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
+        track_times
+            Store timestamps for the root group in the file.
         fs_strategy
             The file space handling strategy to be used.  Only allowed when
             creating a new file (mode w, w- or x).  Defined as:
