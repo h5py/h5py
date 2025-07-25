@@ -52,7 +52,7 @@ jobs:
             arch: AMD64
           - os: macos-14
             arch: arm64
-          - os: macos-13
+          - os: macos-latest
             arch: x86_64
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -83,6 +83,8 @@ jobs:
       # macOS HDF5
       - run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
         if: runner.os == 'macOS'
+        env:
+          ARCH: ${{ matrix.arch }}
 
       # Triage build
       - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}" "${{ matrix.python }}"
