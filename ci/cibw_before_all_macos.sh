@@ -7,7 +7,6 @@ if [[ "$1" == "" ]] ; then
     exit 1
 fi
 PROJECT_PATH="$1"
-ARCH=$(uname -m)
 export HDF5_VERSION="1.14.6"
 export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION-$ARCH"
 # When compiling HDF5, we should use the minimum across all Python versions for a given
@@ -15,8 +14,10 @@ export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION-$ARCH"
 # https://github.com/pypa/cibuildwheel/blob/89a5cfe2721c179f4368a2790669e697759b6644/cibuildwheel/macos.py#L296-L310
 if [[ "$ARCH" == "arm64" ]]; then
     export MACOSX_DEPLOYMENT_TARGET="11.0"
+    export HOST_ARG="--host=arm-apple-darwin"
 else
     export MACOSX_DEPLOYMENT_TARGET="10.9"
+    export HOST_ARG="--host=x86_64-apple-darwin"
 fi
 source $PROJECT_PATH/ci/get_hdf5_if_needed.sh
 

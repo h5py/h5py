@@ -78,6 +78,7 @@ else
             ${EXTRA_MPI_FLAGS} \
             ${BUILD_MODE} \
             ${ENABLE_DIRECT_VFD} \
+            ${HOST_ARG} \
             --enable-tests=no
 
         make -j "$NPROC"
