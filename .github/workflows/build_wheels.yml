@@ -90,7 +90,6 @@ jobs:
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@v3.1.1
         env:
-          # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
