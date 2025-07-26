@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   build_wheels:
-    name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }} ${{ matrix.python }}'
+    name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }}'
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     strategy:
@@ -52,7 +52,7 @@ jobs:
             arch: AMD64
           - os: macos-14
             arch: arm64
-          - os: macos-13
+          - os: macos-latest
             arch: x86_64
     steps:
       - uses: actions/checkout@v4
