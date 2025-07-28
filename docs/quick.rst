@@ -34,10 +34,13 @@ when using h5py is:
 
     **Groups work like dictionaries, and datasets work like NumPy arrays**
 
-Suppose someone has sent you a HDF5 file, :code:`mytestfile.hdf5`. (To create this file, read `Appendix: Creating a file`_.) The very first thing you'll need to do is to open the file for reading::
+Suppose someone has sent you a HDF5 file, :code:`mytestfile.hdf5`. (To create
+this file, follow the commands in `Appendix: Creating a file`_.) The very first
+thing you'll need to do is to open the file for reading and writing (omit the
+:code:`'a'` or replace it with the option :code:`'r'` to read only)::
 
     >>> import h5py
-    >>> f = h5py.File('mytestfile.hdf5', 'r')
+    >>> f = h5py.File('mytestfile.hdf5', 'a')
 
 The :ref:`File object <file>` is your starting point. What is stored in this file? Remember :py:class:`h5py.File` acts like a Python dictionary, thus we can check the keys,
 
@@ -73,11 +76,12 @@ For more, see :ref:`file` and :ref:`dataset`.
 Appendix: Creating a file
 +++++++++++++++++++++++++
 
-At this point, you may wonder how :code:`mytestdata.hdf5` is created.
-We can create a file by setting the :code:`mode` to :code:`w` when
-the File object is initialized. Some other modes are :code:`a`
-(for read/write/create access), and
-:code:`r+` (for read/write access).
+At this point, you may wonder how :code:`mytestdata.hdf5` is created.  We can
+create a new file by setting the :code:`mode` to :code:`w` when the File object is
+initialized. Some other modes are 
+:code:`a` (for read/write/create access),
+:code:`r+` (for read/write access), and 
+:code:`r` (for read only access).  
 A full list of file access modes and their meanings is at :ref:`file`. ::
 
     >>> import h5py
@@ -85,9 +89,10 @@ A full list of file access modes and their meanings is at :ref:`file`. ::
     >>> f = h5py.File("mytestfile.hdf5", "w")
 
 The :ref:`File object <file>` has a couple of methods which look interesting. One of them is ``create_dataset``, which
-as the name suggests, creates a data set of given shape and dtype ::
+as the name suggests, creates a data set of given shape and dtype and then close the file::
 
     >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
+    >>> f.close()
 
 The File object is a context manager; so the following code works too ::
 
@@ -113,9 +118,8 @@ created is itself a group, in this case the `root group`, named ``/``:
     >>> f.name
     '/'
 
-Creating a subgroup is accomplished via the aptly-named ``create_group``. But we need to open the file in the "append" mode first (Read/write if exists, create otherwise) ::
+Creating a subgroup is accomplished via the aptly-named ``create_group``::
 
-    >>> f = h5py.File('mydataset.hdf5', 'a')
     >>> grp = f.create_group("subgroup")
 
 All ``Group`` objects also have the ``create_*`` methods like File::
@@ -191,3 +195,7 @@ implements the dictionary interface::
     True
 
 For more, see :ref:`attributes`.
+
+Save the file to finalize changes::
+
+    >>> f.close()
