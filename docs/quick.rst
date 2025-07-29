@@ -78,10 +78,10 @@ Appendix: Creating a file
 
 At this point, you may wonder how :code:`mytestdata.hdf5` is created.  We can
 create a new file by setting the :code:`mode` to :code:`w` when the File object is
-initialized. Some other modes are 
+initialized. Some other modes are
 :code:`a` (for read/write/create access),
-:code:`r+` (for read/write access), and 
-:code:`r` (for read only access).  
+:code:`r+` (for read/write access), and
+:code:`r` (for read only access).
 A full list of file access modes and their meanings is at :ref:`file`. ::
 
     >>> import h5py
