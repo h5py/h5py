@@ -496,8 +496,10 @@ class TestNewLibver(TestCase):
             cls.latest = 'v110'
         elif h5py.version.hdf5_version_tuple < (1, 13, 0):
             cls.latest = 'v112'
-        else:
+        elif h5py.version.hdf5_version_tuple < (2, 0, 0):
             cls.latest = 'v114'
+        else:
+            cls.latest = 'v200'
 
     def test_default(self):
         """ Opening with no libver arg """

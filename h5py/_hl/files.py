@@ -43,6 +43,10 @@ if hdf5_version >= (1, 13, 0):
     libver_dict.update({'v114': h5f.LIBVER_V114})
     libver_dict_r.update({h5f.LIBVER_V114: 'v114'})
 
+if hdf5_version >= (2, 0, 0):
+    libver_dict.update({'v200': h5f.LIBVER_V200})
+    libver_dict_r.update({h5f.LIBVER_V200: 'v200'})
+
 
 def _set_fapl_mpio(plist, **kwargs):
     """Set file access property list for mpio driver"""
