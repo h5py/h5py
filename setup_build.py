@@ -11,6 +11,7 @@ except ImportError:
     from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
 import copy
+import platform
 import sys
 import os
 import os.path as op
@@ -62,8 +63,17 @@ else:
 
     EXTRA_LIBRARIES = {}
 
-if sys.platform.startswith('win'):
+
+if sys.platform == 'win32':
     COMPILER_SETTINGS['include_dirs'].append(localpath('windows'))
+
+if (
+    sys.platform == 'win32'
+    or (
+        sys.platform == "darwin"
+        and platform.processor() in {"i386", "x86_64"}
+    )
+):
     COMPILER_SETTINGS['define_macros'].extend([
         ('_HDF5USEDLL_', None),
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
