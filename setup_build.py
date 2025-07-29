@@ -18,7 +18,7 @@ import os.path as op
 from pathlib import Path
 
 import api_gen
-from setup_configure import BuildConfig
+from setup_configure import BuildConfig, USE_HDF5_AS_STATIC_LIB
 
 
 def localpath(*args):
@@ -67,13 +67,8 @@ else:
 if sys.platform == 'win32':
     COMPILER_SETTINGS['include_dirs'].append(localpath('windows'))
 
-if (
-    sys.platform == 'win32'
-    or (
-        sys.platform == "darwin"
-        and platform.processor() in {"i386", "x86_64"}
-    )
-):
+
+if USE_HDF5_AS_STATIC_LIB:
     COMPILER_SETTINGS['define_macros'].extend([
         ('_HDF5USEDLL_', None),
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
