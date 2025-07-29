@@ -507,16 +507,17 @@ class File(Group):
         """
         if driver == 'ros3':
             if ros3:
-                from urllib.parse import urlparse
-                url = urlparse(name)
-                if url.scheme == 's3':
-                    aws_region = kwds.get('aws_region', b'').decode('ascii')
-                    if len(aws_region) == 0:
-                        raise ValueError('AWS region required for s3:// location')
-                    name = f'https://s3.{aws_region}.amazonaws.com/{url.netloc}{url.path}'
-                elif url.scheme not in ('https', 'http'):
-                    raise ValueError(f'{name}: S3 location must begin with '
-                                     'either "https://", "http://", or "s3://"')
+                if hdf5_version < (2, 0, 0):
+                    from urllib.parse import urlparse
+                    url = urlparse(name)
+                    if url.scheme == 's3':
+                        aws_region = kwds.get('aws_region', b'').decode('ascii')
+                        if len(aws_region) == 0:
+                            raise ValueError('AWS region required for s3:// location')
+                        name = f'https://s3.{aws_region}.amazonaws.com/{url.netloc}{url.path}'
+                    elif url.scheme not in ('https', 'http'):
+                        raise ValueError(f'{name}: S3 location must begin with '
+                                        'either "https://", "http://", or "s3://"')
             else:
                 raise ValueError(
                     "h5py was built without ROS3 support, can't use ros3 driver")
