@@ -54,7 +54,13 @@ def validate_version(s):
 def mpi_enabled():
     return os.environ.get('HDF5_MPI') == "ON"
 
-
+USE_HDF5_AS_STATIC_LIB = (
+    sys.platform == 'win32'
+        or (
+            sys.platform == "darwin"
+            and platform.processor() in {"i386", "x86_64"}
+        )
+    )
 class BuildConfig:
     def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros,
                  hdf5_version, mpi, ros3, direct_vfd):
@@ -146,7 +152,7 @@ class BuildConfig:
         if hdf5:
             inc_dirs = [op.join(hdf5, 'include')]
             lib_dirs = [op.join(hdf5, 'lib')]
-            if sys.platform.startswith('win'):
+            if USE_HDF5_AS_STATIC_LIB:
                 lib_dirs.append(op.join(hdf5, 'bin'))
             return (inc_dirs, lib_dirs, [])
 
