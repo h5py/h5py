@@ -48,8 +48,9 @@ class Group(HLObject, MutableMappingHDF5):
         track_order
             Track dataset/group/attribute creation order under this group
             if True. If None use global default h5.get_config().track_order.
-        track_times: bool, default: False
+        track_times: bool or None, default: False
             If True, store timestamps for this group in the file.
+            If None, fall back to the default value.
         """
         if track_order is None:
             track_order = h5.get_config().track_order
@@ -66,7 +67,7 @@ class Group(HLObject, MutableMappingHDF5):
             if track_times in (True, False):
                 gcpl.set_obj_track_times(track_times)
             else:
-                raise TypeError("track_times must be either True or False")
+                raise TypeError("track_times must be either True, False, or None")
             gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
             return Group(gid)
 

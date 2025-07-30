@@ -433,8 +433,9 @@ class File(Group):
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
-        track_times
-            Store timestamps for the root group in the file.
+        track_times: bool or None, default: False
+            If True, store timestamps for this group in the file.
+            If None, fall back to the default value.
         fs_strategy
             The file space handling strategy to be used.  Only allowed when
             creating a new file (mode w, w- or x).  Defined as:
