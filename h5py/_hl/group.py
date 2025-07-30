@@ -48,8 +48,8 @@ class Group(HLObject, MutableMappingHDF5):
         track_order
             Track dataset/group/attribute creation order under this group
             if True. If None use global default h5.get_config().track_order.
-        track_times
-            Store timestamps for this group in the file.
+        track_times: bool, default: False
+            If True, store timestamps for this group in the file.
         """
         if track_order is None:
             track_order = h5.get_config().track_order
