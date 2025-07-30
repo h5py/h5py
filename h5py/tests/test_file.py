@@ -1070,6 +1070,7 @@ def test_close_gc(writable_file):
             del refs  # GC is likely to fire while closing the file
 
 
+@pytest.mark.slow
 def test_reproducible_file(tmp_path):
     def write(path):
         with File(path, 'w', track_order=True) as hf:
