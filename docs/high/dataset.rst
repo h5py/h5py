@@ -588,6 +588,18 @@ Reference
 
         Return the size of the first axis.
 
+    .. method:: refresh
+
+        Refresh the dataset metadata by reloading from the file.
+        This is part of the :doc:`swmr` features.
+
+    .. method:: flush
+
+        Flush the dataset data and metadata to the file.
+        If the dataset is chunked, raw data chunks are written to the file.
+        This is part of the :doc:`swmr` features. Use it in SWMR write mode to
+        allow readers to be updated with the dataset changes.
+
     .. method:: make_scale(name='')
 
        Make this dataset an HDF5 :ref:`dimension scale <dimension_scales>`.

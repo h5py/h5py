@@ -1143,27 +1143,23 @@ class Dataset(HLObject):
 
         return f'<HDF5 dataset {name}: shape {self.shape}, type "{self.dtype.str}">'
 
-    if hasattr(h5d.DatasetID, "refresh"):
-        @with_phil
-        def refresh(self):
-            """ Refresh the dataset metadata by reloading from the file.
+    @with_phil
+    def refresh(self):
+        """ Refresh the dataset metadata by reloading from the file.
 
-            This is part of the SWMR features and only exist when the HDF5
-            library version >=1.9.178
-            """
-            self._id.refresh()
-            self._cache_props.clear()
+        This is part of the SWMR features.
+        """
+        self._id.refresh()
+        self._cache_props.clear()
 
-    if hasattr(h5d.DatasetID, "flush"):
-        @with_phil
-        def flush(self):
-            """ Flush the dataset data and metadata to the file.
-            If the dataset is chunked, raw data chunks are written to the file.
+    @with_phil
+    def flush(self):
+        """ Flush the dataset data and metadata to the file.
+        If the dataset is chunked, raw data chunks are written to the file.
 
-            This is part of the SWMR features and only exist when the HDF5
-            library version >=1.9.178
-            """
-            self._id.flush()
+        This is part of the SWMR features.
+        """
+        self._id.flush()
 
     if vds_support:
         @property
