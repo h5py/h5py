@@ -16,6 +16,7 @@
     specific fields of a compound type.
 """
 
+from uuid import uuid4
 import numpy as np
 
 from .common import ut, TestCase
@@ -69,7 +70,7 @@ class TestSingleElement(BaseSlicing):
         """ Compound scalar is numpy.void, not tuple (issue 135) """
         dt = np.dtype([('a','i4'),('b','f8')])
         v = np.ones((4,), dtype=dt)
-        dset = self.f.create_dataset('foo', (4,), data=v)
+        dset = self.f.create_dataset(str(uuid4()), (4,), data=v)
         self.assertEqual(dset[0], v[0])
         self.assertIsInstance(dset[0], np.void)
 
