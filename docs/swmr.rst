@@ -78,7 +78,7 @@ The following snippet demonstrate how to monitor a dataset as a SWMR reader::
     f = h5py.File("swmr.h5", 'r', libver='latest', swmr=True)
     dset = f["data"]
     while True:
-        dset.id.refresh()
+        dset.refresh()
         shape = dset.shape
         print( shape )
 
