@@ -20,8 +20,6 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '3.14.0'
-
 
 # these are required to use h5py
 RUN_REQUIRES = [
@@ -69,7 +67,6 @@ if os.name == 'nt':
 
 setup(
   name = 'h5py',
-  version = VERSION,
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
