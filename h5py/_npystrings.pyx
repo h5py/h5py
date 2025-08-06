@@ -87,7 +87,9 @@ cdef herr_t npystrings_pack_cb(
     cdef npystrings_pack_t* info = <npystrings_pack_t*>operator_data
     cdef const char* buf = info[0].contig[info[0].i]
     if buf is NULL:
-        NpyString_pack_null(info[0].allocator, <npy_packed_static_string*>elem)
+        # Special case of default values created by resize(). Regular empty strings
+        # are valid char* with strlen(buf) == 0.
+        res = NpyString_pack_null(info[0].allocator, <npy_packed_static_string*>elem)
     else:
         # Deep copy char* from h5py into the NumPy array
         res = NpyString_pack(

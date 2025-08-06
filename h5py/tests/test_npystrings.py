@@ -164,6 +164,9 @@ def test_astype_nonstring(writable_file):
 
 
 def test_resized_read(writable_file):
+    """Read default values created by resize(). This triggers a special case
+    where libhdf5 returns a char** containing NULL pointers.
+    """
     l = ["string1", "string2", "string3"]
     data = np.array(l, dtype='T')
     d = writable_file.create_dataset("dset", data=data, maxshape=(None,))
