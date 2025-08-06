@@ -115,14 +115,13 @@ wheels = [
 ]
 
 [tool.cibuildwheel]
-skip = [
-    "*musllinux*",
-    "cp314t-*",
-]
+skip = ["cp314t-*"]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
 manylinux-x86_64-image = "ghcr.io/h5py/manylinux_2_28_x86_64-hdf5"
 manylinux-aarch64-image = "ghcr.io/h5py/manylinux_2_28_aarch64-hdf5"
+musllinux-x86_64-image = "ghcr.io/h5py/musllinux_1_2_x86_64-hdf5"
+musllinux-aarch64-image = "ghcr.io/h5py/musllinux_1_2_aarch64-hdf5"
 test-groups = ["wheels"]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 
