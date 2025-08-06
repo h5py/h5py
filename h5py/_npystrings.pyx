@@ -58,6 +58,7 @@ ELSE:
         npy_static_string,
         npy_packed_static_string,
         NpyString_pack,
+        NpyString_pack_null,
         NpyString_load,
         NpyString_acquire_allocator,
         NpyString_release_allocator,
@@ -85,13 +86,18 @@ cdef herr_t npystrings_pack_cb(
 ) except -1:
     cdef npystrings_pack_t* info = <npystrings_pack_t*>operator_data
     cdef const char* buf = info[0].contig[info[0].i]
-    # Deep copy char* from h5py into the NumPy array
-    res = NpyString_pack(
-        info[0].allocator,
-        <npy_packed_static_string*>elem,
-        buf,
-        strlen(buf),
-    )
+    if buf is NULL:
+        # Special case of default values created by resize(). Regular empty strings
+        # are valid char* with strlen(buf) == 0.
+        res = NpyString_pack_null(info[0].allocator, <npy_packed_static_string*>elem)
+    else:
+        # Deep copy char* from h5py into the NumPy array
+        res = NpyString_pack(
+            info[0].allocator,
+            <npy_packed_static_string*>elem,
+            buf,
+            strlen(buf),
+        )
     info[0].i += 1
     return res
 

@@ -161,3 +161,18 @@ def test_astype_nonstring(writable_file):
     x = writable_file.create_dataset("x", shape=(2, ), dtype="i8")
     with pytest.raises(TypeError, match="HDF5 string datatype"):
         x.astype("T")
+
+
+def test_resized_read(writable_file):
+    """Read default values created by resize(). This triggers a special case
+    where libhdf5 returns a char** containing NULL pointers.
+    """
+    l = ["string1", "string2", "string3"]
+    data = np.array(l, dtype='T')
+    d = writable_file.create_dataset("dset", data=data, maxshape=(None,))
+    d.resize((10,))
+
+    np.testing.assert_array_equal(d[:], np.array(
+        [s.encode() for s in l] + [b''] * 7, dtype=object
+    ))
+    np.testing.assert_array_equal(d.astype('T')[:], np.array(l + [''] * 7, dtype='T'))
