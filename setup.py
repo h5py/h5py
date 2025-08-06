@@ -66,7 +66,6 @@ if os.name == 'nt':
     package_data['h5py'].append('*.dll')
 
 setup(
-  name = 'h5py',
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
