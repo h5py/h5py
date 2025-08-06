@@ -106,7 +106,7 @@ tables = [
 test = [
     "pytest>=8.2.2",
     "pytest-cov>=5.0.0",
-    "pytest-mpi>=0.2",
+    "pytest-mpi>=0.6",
 ]
 wheels = [
     "codecov>=2.1.13",
