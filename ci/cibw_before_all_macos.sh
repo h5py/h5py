@@ -14,10 +14,10 @@ export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION-$ARCH"
 # https://github.com/pypa/cibuildwheel/blob/89a5cfe2721c179f4368a2790669e697759b6644/cibuildwheel/macos.py#L296-L310
 if [[ "$ARCH" == "arm64" ]]; then
     export MACOSX_DEPLOYMENT_TARGET="11.0"
-    export HOST_ARG="--host=arm-apple"
+    export HOST_ARG="--host=arm-apple-darwin"
 else
     export MACOSX_DEPLOYMENT_TARGET="10.9"
-    export HOST_ARG="--host=x86_64-apple"
+    export HOST_ARG="--host=x86_64-apple-darwin"
 fi
 source $PROJECT_PATH/ci/get_hdf5_if_needed.sh
 
