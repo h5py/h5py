@@ -28,4 +28,5 @@ if [[ "$GITHUB_ENV" != "" ]]; then
 fi
 
 ranlib --version
+which -a ranlib
 exit 1
