@@ -11,6 +11,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "h5py"
+version = '3.14.0'
 description = "Read and write HDF5 files from Python"
 authors = [
     {name = "Andrew Collette", email = "andrew.collette@gmail.com"},
@@ -39,7 +40,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">=3.9"
-dynamic = ["dependencies", "version"]
+dynamic = ["dependencies"]
 
 [project.readme]
 text = """\
