@@ -26,3 +26,7 @@ if [[ "$GITHUB_ENV" != "" ]]; then
     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
     echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" | tee -a $GITHUB_ENV
 fi
+
+#ranlib --version
+which -a ranlib
+exit 1
