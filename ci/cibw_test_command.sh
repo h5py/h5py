@@ -14,12 +14,12 @@ echo "WHEEL_PATH=$WHEEL_PATH"
 export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])))")
 ENVLIST="py$PYVER-test-deps,py$PYVER-test-deps-pre"
 
-if ! ( [[ "$AUDITWHEEL_PLAT" == musllinux_* ]] && [[ "$PYVER" == "39" || "$PYVER" == "310" || "$PYVER" == "311" ]] ); then
-    # skip mindeps on musllinux + python 3.9 to 3.11 because oldest supported numpy versions
-    # are higher for this target (1.25.0) and there's no way (that I found) to specify it
-    # directly in package metadata.
-    ENVLIST="py$PYVER-test-mindeps,$ENVLIST"
-fi
+# if ! ( [[ "$AUDITWHEEL_PLAT" == musllinux_* ]] && [[ "$PYVER" == "39" || "$PYVER" == "310" || "$PYVER" == "311" ]] ); then
+#     # skip mindeps on musllinux + python 3.9 to 3.11 because oldest supported numpy versions
+#     # are higher for this target (1.25.0) and there's no way (that I found) to specify it
+#     # directly in package metadata.
+#     ENVLIST="py$PYVER-test-mindeps,$ENVLIST"
+# fi
 
 export H5PY_TEST_CHECK_FILTERS=1
 echo "ENVLIST=$ENVLIST"
