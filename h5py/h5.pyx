@@ -35,9 +35,6 @@ class ByteStringContext:
     def __bool__(self):
         return self._readbytes
 
-    def __nonzero__(self):
-        return self.__bool__()
-
     def __enter__(self):
         self._readbytes = True
 
