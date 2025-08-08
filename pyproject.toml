@@ -112,6 +112,7 @@ wheels = [
     "codecov>=2.1.13",
     "coverage>=7.9.1",
     "tox>=4.26.0",
+    "tox-uv>=1.27.0",
 ]
 
 [tool.cibuildwheel]
