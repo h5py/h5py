@@ -11,8 +11,6 @@
     Low-level operations on HDF5 file objects.
 """
 
-include "config.pxi"
-
 # C level imports
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
@@ -65,11 +63,13 @@ LIBVER_LATEST = H5F_LIBVER_LATEST
 LIBVER_V18 = H5F_LIBVER_V18
 LIBVER_V110 = H5F_LIBVER_V110
 
-IF HDF5_VERSION >= VOL_MIN_HDF5_VERSION:
-    LIBVER_V112 = H5F_LIBVER_V112
+### {{if HDF5_VERSION >= VOL_MIN_HDF5_VERSION}}
+LIBVER_V112 = H5F_LIBVER_V112
+### {{endif}}
 
-IF HDF5_VERSION >= (1, 13, 0):
-    LIBVER_V114 = H5F_LIBVER_V114
+### {{if HDF5_VERSION >= (1, 13, 0)}}
+LIBVER_V114 = H5F_LIBVER_V114
+### {{endif}}
 
 FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
 
@@ -455,34 +455,34 @@ cdef class FileID(GroupID):
 
         return image
 
-    IF MPI:
+    ### {{if MPI}}
+    @with_phil
+    def set_mpi_atomicity(self, bint atomicity):
+        """ (BOOL atomicity)
 
-        @with_phil
-        def set_mpi_atomicity(self, bint atomicity):
-            """ (BOOL atomicity)
+        For MPI-IO driver, set to atomic (True), which guarantees sequential
+        I/O semantics, or non-atomic (False), which improves  performance.
 
-            For MPI-IO driver, set to atomic (True), which guarantees sequential
-            I/O semantics, or non-atomic (False), which improves  performance.
+        Default is False.
 
-            Default is False.
-
-            Feature requires: Parallel HDF5
-            """
-            H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
+        Feature requires: Parallel HDF5
+        """
+        H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
 
 
-        @with_phil
-        def get_mpi_atomicity(self):
-            """ () => BOOL
+    @with_phil
+    def get_mpi_atomicity(self):
+        """ () => BOOL
 
-            Return atomicity setting for MPI-IO driver.
+        Return atomicity setting for MPI-IO driver.
 
-            Feature requires: Parallel HDF5
-            """
-            cdef hbool_t atom
+        Feature requires: Parallel HDF5
+        """
+        cdef hbool_t atom
 
-            H5Fget_mpi_atomicity(self.id, &atom)
-            return <bint>atom
+        H5Fget_mpi_atomicity(self.id, &atom)
+        return <bint>atom
+    ### {{endif}}
 
 
     @with_phil

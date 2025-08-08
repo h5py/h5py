@@ -11,8 +11,6 @@
     HDF5 property list interface.
 """
 
-include "config.pxi"
-
 # C-level imports
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
@@ -30,11 +28,11 @@ from .h5ac cimport CacheConfig
 # Python level imports
 from ._objects import phil, with_phil
 
-if MPI:
-    from mpi4py.libmpi cimport (
-        MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
-        MPI_Comm_free, MPI_Info_free)
-
+### {{if MPI}}
+from mpi4py.libmpi cimport (
+    MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+    MPI_Comm_free, MPI_Info_free)
+### {{endif}}
 
 # Initialization
 import_array()
@@ -1083,66 +1081,68 @@ cdef class PropFAID(PropInstanceID):
         return (msize, plist)
 
 
-    if ROS3:
-        @with_phil
-        def set_fapl_ros3(self, char* aws_region="", char* secret_id="",
-                          char* secret_key=""):
-            """(STRING aws_region, STRING secret_id, STRING secret_key)
+    ### {{if ROS3}}
+    @with_phil
+    def set_fapl_ros3(self, char* aws_region="", char* secret_id="",
+                        char* secret_key=""):
+        """(STRING aws_region, STRING secret_id, STRING secret_key)
 
-            Set up the ros3 driver.
-            """
-            cdef H5FD_ros3_fapl_t config
-            config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
-            if len(aws_region) and len(secret_id) and len(secret_key):
-                config.authenticate = <hbool_t>1
-            else:
-                config.authenticate = <hbool_t>0
-            config.aws_region = aws_region
-            config.secret_id = secret_id
-            config.secret_key = secret_key
-            H5Pset_fapl_ros3(self.id, &config)
-
-
-        @with_phil
-        def get_fapl_ros3(self):
-            """ () => STRUCT config
-
-            Retrieve the ROS3 config
-            """
-            cdef H5FD_ros3_fapl_t config
-
-            H5Pget_fapl_ros3(self.id, &config)
-            return config
-
-        IF HDF5_VERSION >= (1, 14, 2):
-            @with_phil
-            def get_fapl_ros3_token(self):
-                """ () => BYTES token
-
-                Get session token from the file access property list.
-                """
-                cdef size_t size = 0
-                cdef char *token = NULL
-
-                size = H5FD_ROS3_MAX_SECRET_TOK_LEN + 1
-                try:
-                    token = <char*>emalloc(size)
-                    token[0] = 0
-                    H5Pget_fapl_ros3_token(self.id, size, token)
-                    pytoken = <bytes>token
-                finally:
-                    efree(token)
-
-                return pytoken
+        Set up the ros3 driver.
+        """
+        cdef H5FD_ros3_fapl_t config
+        config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
+        if len(aws_region) and len(secret_id) and len(secret_key):
+            config.authenticate = <hbool_t>1
+        else:
+            config.authenticate = <hbool_t>0
+        config.aws_region = aws_region
+        config.secret_id = secret_id
+        config.secret_key = secret_key
+        H5Pset_fapl_ros3(self.id, &config)
 
 
-            @with_phil
-            def set_fapl_ros3_token(self, char *token=""):
-                """ (BYTES token="")
+    @with_phil
+    def get_fapl_ros3(self):
+        """ () => STRUCT config
 
-                Set session token in the file access property list.
-                """
-                H5Pset_fapl_ros3_token(self.id, token)
+        Retrieve the ROS3 config
+        """
+        cdef H5FD_ros3_fapl_t config
+
+        H5Pget_fapl_ros3(self.id, &config)
+        return config
+
+    ### {{if HDF5_VERSION >= (1, 14, 2)}}
+    @with_phil
+    def get_fapl_ros3_token(self):
+        """ () => BYTES token
+
+        Get session token from the file access property list.
+        """
+        cdef size_t size = 0
+        cdef char *token = NULL
+
+        size = H5FD_ROS3_MAX_SECRET_TOK_LEN + 1
+        try:
+            token = <char*>emalloc(size)
+            token[0] = 0
+            H5Pget_fapl_ros3_token(self.id, size, token)
+            pytoken = <bytes>token
+        finally:
+            efree(token)
+
+        return pytoken
+
+
+    @with_phil
+    def set_fapl_ros3_token(self, char *token=""):
+        """ (BYTES token="")
+
+        Set session token in the file access property list.
+        """
+        H5Pset_fapl_ros3_token(self.id, token)
+    ### {{endif}}
+    ### {{endif}}
 
 
     @with_phil
@@ -1163,36 +1163,37 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_sec2(self.id)
 
-    if DIRECT_VFD:
-        @with_phil
-        def set_fapl_direct(self, size_t alignment=0, size_t block_size=0, size_t cbuf_size=0):
-            """(size_t alignment, size_t block_size, size_t cbuf_size)
+    ### {{if DIRECT_VFD}}
+    @with_phil
+    def set_fapl_direct(self, size_t alignment=0, size_t block_size=0, size_t cbuf_size=0):
+        """(size_t alignment, size_t block_size, size_t cbuf_size)
 
-            Select the "direct" driver (h5fd.DIRECT).
+        Select the "direct" driver (h5fd.DIRECT).
 
-            Parameters:
-                hid_t fapl_id       IN: File access property list identifier
-                size_t alignment    IN: Required memory alignment boundary
-                size_t block_size   IN: File system block size
-                size_t cbuf_size    IN: Copy buffer size
+        Parameters:
+            hid_t fapl_id       IN: File access property list identifier
+            size_t alignment    IN: Required memory alignment boundary
+            size_t block_size   IN: File system block size
+            size_t cbuf_size    IN: Copy buffer size
 
-            Properties with value of 0 indicate that the HDF5 library should
-            choose the value.
-            """
-            H5Pset_fapl_direct(self.id, alignment, block_size, cbuf_size)
+        Properties with value of 0 indicate that the HDF5 library should
+        choose the value.
+        """
+        H5Pset_fapl_direct(self.id, alignment, block_size, cbuf_size)
 
-        @with_phil
-        def get_fapl_direct(self):
-            """ () => (alignment, block_size, cbuf_size)
+    @with_phil
+    def get_fapl_direct(self):
+        """ () => (alignment, block_size, cbuf_size)
 
-            Retrieve the DIRECT VFD config
-            """
-            cdef size_t alignment
-            cdef size_t block_size
-            cdef size_t cbuf_size
+        Retrieve the DIRECT VFD config
+        """
+        cdef size_t alignment
+        cdef size_t block_size
+        cdef size_t cbuf_size
 
-            H5Pget_fapl_direct(self.id, &alignment, &block_size, &cbuf_size)
-            return alignment, block_size, cbuf_size
+        H5Pget_fapl_direct(self.id, &alignment, &block_size, &cbuf_size)
+        return alignment, block_size, cbuf_size
+    ### {{endif}}
 
 
     @with_phil
@@ -1357,57 +1358,57 @@ cdef class PropFAID(PropInstanceID):
 
         return (<int>low, <int>high)
 
-    IF MPI:
-        @with_phil
-        def set_fapl_mpio(self, comm, info):
-            """ (Comm comm, Info info)
+    ### {{if MPI}}
+    @with_phil
+    def set_fapl_mpio(self, comm, info):
+        """ (Comm comm, Info info)
 
-            Set MPI-I/O Parallel HDF5 driver.
+        Set MPI-I/O Parallel HDF5 driver.
 
-            Comm: An mpi4py.MPI.Comm instance
-            Info: An mpi4py.MPI.Info instance
-            """
-            from mpi4py.MPI import Comm, Info, _handleof
-            assert isinstance(comm, Comm)
-            assert isinstance(info, Info)
-            cdef Py_uintptr_t _comm = _handleof(comm)
-            cdef Py_uintptr_t _info = _handleof(info)
-            H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
+        Comm: An mpi4py.MPI.Comm instance
+        Info: An mpi4py.MPI.Info instance
+        """
+        from mpi4py.MPI import Comm, Info, _handleof
+        assert isinstance(comm, Comm)
+        assert isinstance(info, Info)
+        cdef Py_uintptr_t _comm = _handleof(comm)
+        cdef Py_uintptr_t _info = _handleof(info)
+        H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
 
-        @with_phil
-        def get_fapl_mpio(self):
-            """ () => (mpi4py.MPI.Comm, mpi4py.MPI.Info)
+    @with_phil
+    def get_fapl_mpio(self):
+        """ () => (mpi4py.MPI.Comm, mpi4py.MPI.Info)
 
-            Determine mpio driver MPI information.
+        Determine mpio driver MPI information.
 
-            0. The mpi4py.MPI.Comm Communicator
-            1. The mpi4py.MPI.Comm Info
-            """
-            cdef MPI_Comm comm
-            cdef MPI_Info info
-            from mpi4py.MPI import Comm, Info, _addressof
+        0. The mpi4py.MPI.Comm Communicator
+        1. The mpi4py.MPI.Comm Info
+        """
+        cdef MPI_Comm comm
+        cdef MPI_Info info
+        from mpi4py.MPI import Comm, Info, _addressof
 
-            H5Pget_fapl_mpio(self.id, &comm, &info)
+        H5Pget_fapl_mpio(self.id, &comm, &info)
 
-            # TODO: Do we actually need these dup steps? Could we pass the
-            # addresses directly to H5Pget_fapl_mpio?
-            pycomm = Comm()
-            MPI_Comm_dup(comm, <MPI_Comm *>PyLong_AsVoidPtr(_addressof(pycomm)))
-            MPI_Comm_free(&comm)
+        # TODO: Do we actually need these dup steps? Could we pass the
+        # addresses directly to H5Pget_fapl_mpio?
+        pycomm = Comm()
+        MPI_Comm_dup(comm, <MPI_Comm *>PyLong_AsVoidPtr(_addressof(pycomm)))
+        MPI_Comm_free(&comm)
 
-            pyinfo = Info()
-            MPI_Info_dup(info, <MPI_Info *>PyLong_AsVoidPtr(_addressof(pyinfo)))
-            MPI_Info_free(&info)
+        pyinfo = Info()
+        MPI_Info_dup(info, <MPI_Info *>PyLong_AsVoidPtr(_addressof(pyinfo)))
+        MPI_Info_free(&info)
 
-            return (pycomm, pyinfo)
+        return (pycomm, pyinfo)
 
 
-        @with_phil
-        def set_fapl_mpiposix(self, comm, bint use_gpfs_hints=0):
-            """ Obsolete.
-            """
-            raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
-
+    @with_phil
+    def set_fapl_mpiposix(self, comm, bint use_gpfs_hints=0):
+        """ Obsolete.
+        """
+        raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
+    ### {{endif}}
 
     @with_phil
     def get_mdc_config(self):
@@ -1980,21 +1981,22 @@ cdef class PropDXID(PropInstanceID):
 
     """ Data transfer property list """
 
-    IF MPI:
-        def set_dxpl_mpio(self, int xfer_mode):
-            """ Set the transfer mode for MPI I/O.
-            Must be one of:
-            - h5fd.MPIO_INDEPENDENT (default)
-            - h5fd.MPIO_COLLECTIVE
-            """
-            H5Pset_dxpl_mpio(self.id, <H5FD_mpio_xfer_t>xfer_mode)
+    ### {{if MPI}}
+    def set_dxpl_mpio(self, int xfer_mode):
+        """ Set the transfer mode for MPI I/O.
+        Must be one of:
+        - h5fd.MPIO_INDEPENDENT (default)
+        - h5fd.MPIO_COLLECTIVE
+        """
+        H5Pset_dxpl_mpio(self.id, <H5FD_mpio_xfer_t>xfer_mode)
 
-        def get_dxpl_mpio(self):
-            """ Get the current transfer mode for MPI I/O.
-            Will be one of:
-            - h5fd.MPIO_INDEPENDENT (default)
-            - h5fd.MPIO_COLLECTIVE
-            """
-            cdef H5FD_mpio_xfer_t mode
-            H5Pget_dxpl_mpio(self.id, &mode)
-            return <int>mode
+    def get_dxpl_mpio(self):
+        """ Get the current transfer mode for MPI I/O.
+        Will be one of:
+        - h5fd.MPIO_INDEPENDENT (default)
+        - h5fd.MPIO_COLLECTIVE
+        """
+        cdef H5FD_mpio_xfer_t mode
+        H5Pget_dxpl_mpio(self.id, &mode)
+        return <int>mode
+    ### {{endif}}

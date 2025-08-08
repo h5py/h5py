@@ -3,8 +3,7 @@
     Implements a new custom Distutils command for handling library
     configuration.
 
-    The "configure" command here doesn't directly affect things like
-    config.pxi; rather, it exists to provide a set of attributes that are
+    The "configure" command exists to provide a set of attributes that are
     used by the build_ext replacement in setup_build.py.
 
     Options from the command line and environment variables are stored
