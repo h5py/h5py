@@ -251,7 +251,7 @@ cdef class ObjectID:
         # which have nonlocal effects should override this.
         self._close()
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.valid
 
     def __copy__(self):

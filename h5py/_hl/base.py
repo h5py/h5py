@@ -354,7 +354,6 @@ class HLObject(CommonStateObject):
     def __bool__(self):
         with phil:
             return bool(self.id)
-    __nonzero__ = __bool__
 
     def __getnewargs__(self):
         """Disable pickle.
