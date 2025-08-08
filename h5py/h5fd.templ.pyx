@@ -42,10 +42,11 @@ SEC2 = H5FD_SEC2
 DIRECT = H5FD_DIRECT
 STDIO = H5FD_STDIO
 ROS3D = H5FD_ROS3
-IF UNAME_SYSNAME == "Windows":
-    WINDOWS = H5FD_WINDOWS
-ELSE:
-    WINDOWS = -1
+### {{if PLATFORM_SYSTEM == "Windows"}}
+WINDOWS = H5FD_WINDOWS
+### {{else}}
+WINDOWS = -1
+### {{endif}}
 
 # === Logging driver ==========================================================
 

@@ -14,6 +14,7 @@ import copy
 import sys
 import os
 import os.path as op
+import platform
 from pathlib import Path
 import tempita
 import api_gen
@@ -191,6 +192,9 @@ class h5py_build_ext(build_ext):
             "NUMPY_BUILD_VERSION": numpy.__version__,
             "NUMPY_BUILD_VERSION_TUPLE": tuple(int(x) for x in numpy.__version__.split('.')[:3]),
             "CYTHON_BUILD_VERSION": cython_version,
+            "PLATFORM_SYSTEM": platform.system(),
+            "OBJECTS_USE_LOCKING": True,
+            "OBJECTS_DEBUG_ID": False,
         }
         # Run Cython
         print("Executing cythonize()")

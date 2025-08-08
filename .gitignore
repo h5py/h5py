@@ -4,6 +4,7 @@ h5py/_conv.c
 h5py/_conv.pyx
 h5py/_npystrings.c
 h5py/_npystrings.pyx
+h5py/_objects.pyx
 h5py/_proxy.c
 h5py/_proxy.pyx
 h5py/_objects.c
