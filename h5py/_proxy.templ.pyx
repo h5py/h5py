@@ -13,8 +13,6 @@
     Proxy functions for read/write, to work around the HDF5 bogus type issue.
 """
 
-include "config.pxi"
-
 from .h5t import NUMPY_GE2
 if NUMPY_GE2:
     # Numpy native variable-width strings

@@ -14,7 +14,6 @@
     These functions are probably not thread safe.
 """
 
-include "config.pxi"
 from .utils cimport emalloc, efree
 
 # === C API ===================================================================

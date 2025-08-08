@@ -12,8 +12,6 @@
     Low-level HDF5 "H5G" group interface.
 """
 
-include "config.pxi"
-
 import sys
 
 # C-level imports
