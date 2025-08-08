@@ -127,7 +127,7 @@ class h5py_build_ext(build_ext):
         settings = copy.deepcopy(settings)
         settings['libraries'] += EXTRA_LIBRARIES.get(module, [])
 
-        assert numpy.__version__ >= '2.0'  # See build dependencies in pyproject.toml
+        assert int(numpy.__version__.split('.')[0]) >= 2  # See build dependencies in pyproject.toml
         if module in MODULES_NUMPY2:
             # Enable NumPy 2.0 C API for modules that require it.
             # These modules will not be importable when NumPy 1.x is installed.
