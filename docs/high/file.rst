@@ -258,9 +258,10 @@ compatible.
 
 The default is "earliest".
 
-Specifying version bounds has changed from HDF5 version 1.10.2. There are two new
-compatibility levels: `v108` (for HDF5 1.8) and `v110` (for HDF5 1.10). This
-change enables, for example, something like this:
+Specifying version bounds has changed from HDF5 version 1.10.2. There are now
+five compatibility levels: `v108` (for HDF5 1.8), `v110` (for HDF5 1.10), `v112`
+(for HDF5 1.12), `v114` (for HDF5 1.14), and `v200` (for HDF5 2.0). This change
+enables, for example, something like this:
 
     >>> f = h5py.File('name.hdf5', libver=('earliest', 'v108'))
 
