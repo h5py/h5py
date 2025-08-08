@@ -9,11 +9,13 @@ from .utils cimport emalloc
 from numpy cimport PyArray_Descr
 import numpy as np
 
+assert {{NUMPY_BUILD_VERSION_TUPLE >= (2, 0, 0)}}  # See pyproject.toml
+
 # =========================================================================
 # Scatter/gather routines for vlen strings to/from NumPy StringDType arrays
 # See also: _proxy.pyx::h5py_copy, h5py_scatter_cb, h5py_gather_cb
 
-### {{if NUMPY_BUILD_VERSION < '2.3'}}
+### {{if NUMPY_BUILD_VERSION_TUPLE < (2, 3, 0)}}
 # Backport NpyStrings from 2.3 to 2.0
 # The C API was available since 2.0, but the Cython API was added in 2.3.
 # This is a copy-paste from numpy/__init__.pxd of NumPy 2.3

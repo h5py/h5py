@@ -189,6 +189,7 @@ class h5py_build_ext(build_ext):
             "VOL_MIN_HDF5_VERSION": (1, 11, 5),
             "COMPLEX256_SUPPORT": complex256_support,
             "NUMPY_BUILD_VERSION": numpy.__version__,
+            "NUMPY_BUILD_VERSION_TUPLE": tuple(int(x) for x in numpy.__version__.split('.')[:3]),
             "CYTHON_BUILD_VERSION": cython_version,
         }
         # Run Cython
