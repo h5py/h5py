@@ -496,11 +496,11 @@ class File(Group):
             This property should be used in conjunction with
             ``alignment_threshold``. See the description above. For more
             details, see
-            https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT
+            https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gab99d5af749aeb3896fd9e3ceb273677a
 
         meta_block_size
             Set the current minimum size, in bytes, of new metadata block allocations.
-            See https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE
+            See https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga8822e3dedc8e1414f20871a87d533cb1
 
         Additional keywords
             Passed on to the selected file driver.
