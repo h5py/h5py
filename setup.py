@@ -28,8 +28,8 @@ RUN_REQUIRES = [
     # But we don't want to duplicate the information in oldest-supported-numpy
     # here, and if you can build an older NumPy on a newer Python, h5py probably
     # works (assuming you build it from source too).
-    # NumPy 1.19.3 is the first with wheels for Python 3.9, our minimum Python.
-    "numpy >=1.19.3",
+    # NumPy 1.21.2 is the first release with any wheels for Python 3.10, our minimum Python.
+    "numpy >=1.21.2",
 ]
 
 # Packages needed to build h5py (in addition to static list in pyproject.toml)
@@ -43,8 +43,9 @@ SETUP_REQUIRES = []
 if setup_configure.mpi_enabled():
     # mpi4py 3.1.1 fixed a typo in python_requires, which made older versions
     # incompatible with newer setuptools.
-    RUN_REQUIRES.append('mpi4py >=3.1.1')
-    SETUP_REQUIRES.append("mpi4py ==3.1.1; python_version<'3.11'")
+    # 3.1.2 is the first release with any wheels for Python 3.10
+    RUN_REQUIRES.append('mpi4py >=3.1.2')
+    SETUP_REQUIRES.append("mpi4py ==3.1.2; python_version=='3.10.*'")
     SETUP_REQUIRES.append("mpi4py ==3.1.4; python_version=='3.11.*'")
     SETUP_REQUIRES.append("mpi4py ==3.1.6; python_version=='3.12.*'")
     SETUP_REQUIRES.append("mpi4py ==4.0.1; python_version=='3.13.*'")
