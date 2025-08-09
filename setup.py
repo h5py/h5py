@@ -47,7 +47,10 @@ if setup_configure.mpi_enabled():
     SETUP_REQUIRES.append("mpi4py ==3.1.1; python_version<'3.11'")
     SETUP_REQUIRES.append("mpi4py ==3.1.4; python_version=='3.11.*'")
     SETUP_REQUIRES.append("mpi4py ==3.1.6; python_version=='3.12.*'")
-    SETUP_REQUIRES.append("mpi4py ==4.0.1; python_version>='3.13'")
+    SETUP_REQUIRES.append("mpi4py ==4.0.1; python_version=='3.13.*'")
+    SETUP_REQUIRES.append("mpi4py ==4.1.0; python_version=='3.14.*'")
+    # leave dependency unpinned for unstable Python versions
+    SETUP_REQUIRES.append("mpi4py")
 
 # Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
 # setup_requires for any reason.
