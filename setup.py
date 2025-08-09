@@ -56,7 +56,11 @@ if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
 
 # --- Custom Distutils commands -----------------------------------------------
 
-CMDCLASS = {'build_ext': setup_build.h5py_build_ext}
+
+CMDCLASS = {
+    'build_ext': setup_build.h5py_build_ext,
+    'bdist_wheel': setup_build.h5py_bdist_wheel
+}
 
 
 # --- Dynamic metadata for setuptools -----------------------------------------
