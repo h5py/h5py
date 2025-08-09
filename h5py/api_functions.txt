@@ -124,6 +124,9 @@ hdf5:
   1.10.10-1.10.99 herr_t H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, H5D_chunk_iter_op_t cb, void *op_data)
   1.12.3    herr_t H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, H5D_chunk_iter_op_t cb, void *op_data)
 
+  # HDF5 Append
+  1.10.0    herr_t H5DOappend(hid_t dset_id, hid_t dxpl_id, unsigned index, size_t num_elem, hid_t memtype, const void *buffer)
+
 
   # === H5E - Minimal error-handling interface ================================
 
