@@ -150,7 +150,7 @@ class Group(HLObject, MutableMappingHDF5):
             compresses the data before handing it to h5py.
         rdcc_nbytes
             Total size of the dataset's chunk cache in bytes. The default size
-            is 1024**2 (1 MiB).
+            is 1024**2 (1 MiB) for HDF5 before 2.0 and 8 MiB for HDF5 2.0 or later.
         rdcc_w0
             The chunk preemption policy for this dataset.  This must be
             between 0 and 1 inclusive and indicates the weighting according to

@@ -407,8 +407,9 @@ class File(Group):
         swmr
             Open the file in SWMR read mode. Only used when mode = 'r'.
         rdcc_nbytes
-            Total size of the dataset chunk cache in bytes. The default size
-            is 1024**2 (1 MiB) per dataset. Applies to all datasets unless individually changed.
+            Total size of the dataset chunk cache in bytes. The default size per
+            dataset is 1024**2 (1 MiB) for HDF5 before 2.0 and 8 MiB for HDF5
+            2.0 and later. Applies to all datasets unless individually changed.
         rdcc_w0
             The chunk preemption policy for all datasets.  This must be
             between 0 and 1 inclusive and indicates the weighting according to
