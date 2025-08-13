@@ -34,12 +34,17 @@ classifiers = [
     "Programming Language :: Cython",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering",
     "Topic :: Database",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dynamic = ["dependencies"]
 
 [project.readme]
@@ -98,10 +103,10 @@ lint = [
     "pre-commit>=4.2.0",
 ]
 mpi = [
-    "mpi4py>=3.1.1",
+    "mpi4py>=3.1.2",
 ]
 tables = [
-    "tables>=3.4.4",
+    "tables>=3.7.0",
 ]
 test = [
     "pytest>=8.2.2",
