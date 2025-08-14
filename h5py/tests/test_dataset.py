@@ -49,12 +49,19 @@ class TestRepr(BaseDataset):
         Feature: repr(Dataset) behaves sensibly
     """
 
-    def test_repr_open(self):
+    def test_repr_basic(self):
+        ds = self.f.create_dataset('foo', (4,), dtype='int32')
+        assert repr(ds) == '<HDF5 dataset "foo": shape (4,), type "<i4">'
+
+    def test_repr_closed(self):
         """ repr() works on live and dead datasets """
         ds = self.f.create_dataset('foo', (4,))
-        self.assertIsInstance(repr(ds), str)
         self.f.close()
-        self.assertIsInstance(repr(ds), str)
+        assert repr(ds) == '<Closed HDF5 dataset>'
+
+    def test_repr_anonymous(self):
+        ds = self.f.create_dataset(None, (4,), dtype='int32')
+        assert repr(ds) == '<HDF5 dataset (anonymous): shape (4,), type "<i4">'
 
 
 class TestCreateShape(BaseDataset):
@@ -263,6 +270,18 @@ class TestReadDirectly:
         arr = np.ones((10, 10), order='F')
         with pytest.raises(TypeError):
             dset.read_direct(arr)
+
+    def test_zero_length(self, writable_file):
+        shape = (0, 20)
+        dset = writable_file.create_dataset("dset", shape, dtype=np.int64)
+        arr = np.zeros(shape, dtype=np.int64)
+        dset.read_direct(arr)
+
+        # We should still get an error if the shape is wrong
+        arr2 = np.zeros((0, 25), dtype=np.int64)
+        with pytest.raises(TypeError):
+            dset.read_direct(arr2)
+
 
 class TestWriteDirectly:
 
@@ -1642,11 +1661,6 @@ class TestZeroShape(BaseDataset):
         self.assertEqual(ds[()].shape, arr.shape)
         self.assertEqual(ds[()].dtype, arr.dtype)
 
-# https://github.com/h5py/h5py/issues/1492
-empty_regionref_xfail = pytest.mark.xfail(
-    h5py.version.hdf5_version_tuple == (1, 10, 6),
-    reason="Issue with empty region refs in HDF5 1.10.6",
-)
 
 class TestRegionRefs(BaseDataset):
 
@@ -1666,14 +1680,12 @@ class TestRegionRefs(BaseDataset):
         ref = self.dset.regionref[slic]
         self.assertArrayEqual(self.dset[ref], self.data[slic])
 
-    @empty_regionref_xfail
     def test_empty_region(self):
         ref = self.dset.regionref[:0]
         out = self.dset[ref]
         assert out.size == 0
         # Ideally we should preserve shape (0, 100), but it seems this is lost.
 
-    @empty_regionref_xfail
     def test_scalar_dataset(self):
         ds = self.f.create_dataset("scalar", data=1.0, dtype='f4')
         sid = h5py.h5s.create(h5py.h5s.SCALAR)

@@ -15,6 +15,8 @@
 include "_locks.pxi"
 from .defs cimport *
 
+import os
+
 DEF USE_LOCKING = True
 DEF DEBUG_ID = False
 
@@ -57,6 +59,26 @@ def with_phil(func):
 
     functools.update_wrapper(wrapper, func)
     return wrapper
+
+def _phil_before_fork():
+    """
+    Acquire the `phil` lock before forking so no thread other
+    than the current (forking) thread is holding the lock.
+    """
+    _phil.acquire()
+
+def _phil_after_fork():
+    """
+    Release the lock after forking in both the parent and the child.
+    """
+    _phil.release()
+
+# Register fork handlers to safely handle `phil` Lock in forked child processes
+# in the presence of other threads which might potentially hold the lock.
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(before=_phil_before_fork,
+                        after_in_child=_phil_after_fork,
+                        after_in_parent=_phil_after_fork)
 
 # --- End locking code --------------------------------------------------------
 
@@ -230,7 +252,7 @@ cdef class ObjectID:
         # which have nonlocal effects should override this.
         self._close()
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.valid
 
     def __copy__(self):

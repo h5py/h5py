@@ -15,18 +15,18 @@
 include "config.pxi"
 
 # Compile-time imports
-
-from collections import namedtuple
 cimport cython
+from libc.string cimport strcmp
 from ._objects cimport pdefault
-from numpy cimport ndarray, import_array, PyArray_DATA
+from numpy cimport ndarray, import_array, PyArray_DATA, PyArray_Descr, PyArray_DESCR
 from .utils cimport  check_numpy_read, check_numpy_write, \
                      convert_tuple, convert_dims, emalloc, efree
-from .h5t cimport TypeID, typewrap, py_create
+from .h5t cimport TypeID, typewrap, py_create, H5PY_NUMPY_STRING_TAG
 from .h5s cimport SpaceID
 from .h5p cimport PropID, propwrap
-from ._proxy cimport dset_rw
+from ._proxy cimport dset_rw, dset_rw_vlen_strings
 
+from collections import namedtuple
 from ._objects import phil, with_phil
 from cpython cimport PyBUF_ANY_CONTIGUOUS, \
                      PyBuffer_Release, \
@@ -151,7 +151,23 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
     """
     return DatasetID(H5Dopen(loc.id, name, pdefault(dapl)))
 
-# --- Proxy functions for safe(r) threading -----------------------------------
+
+cdef bint _is_numpy_vlen_string(hid_t obj):
+    # Check for HDF5 datatype representing numpy variable-length strings
+    # This complexity is needed to ensure:
+    #   1) That ctag is freed
+    #   2) We don't segfault (for some reason a try-finally statement is needed,
+    #   even if we do (what I think are) the right steps in copying and freeing.
+    cdef char* ctag = NULL
+    try:
+        if H5Tget_class(obj) == H5T_OPAQUE:
+            ctag = H5Tget_tag(obj)
+            if ctag != NULL:
+                if strcmp(ctag, H5PY_NUMPY_STRING_TAG) == 0:
+                    return True
+        return False
+    finally:
+        H5free_memory(ctag)
 
 
 cdef class DatasetID(ObjectID):
@@ -226,6 +242,7 @@ cdef class DatasetID(ObjectID):
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
+        cdef PyArray_Descr* descr
         cdef int oldflags
 
         if mtype is None:
@@ -239,7 +256,11 @@ cdef class DatasetID(ObjectID):
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
+        if _is_numpy_vlen_string(mtype_id):
+            descr = PyArray_DESCR(arr_obj)
+            dset_rw_vlen_strings(self_id, mspace_id, fspace_id, plist_id, data, descr, 1)
+        else:
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
 
 
     @with_phil
@@ -266,6 +287,7 @@ cdef class DatasetID(ObjectID):
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
+        cdef PyArray_Descr* descr
         cdef int oldflags
 
         if mtype is None:
@@ -279,7 +301,11 @@ cdef class DatasetID(ObjectID):
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
+        if _is_numpy_vlen_string(mtype_id):
+            descr = PyArray_DESCR(arr_obj)
+            dset_rw_vlen_strings(self_id, mspace_id, fspace_id, plist_id, data, descr, 0)
+        else:
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
 
 
     @with_phil
@@ -439,8 +465,6 @@ cdef class DatasetID(ObjectID):
 
         Use this in SWMR write mode to allow readers to be updated with the
         dataset changes.
-
-        Feature requires: 1.9.178 HDF5
         """
         H5Dflush(self.id)
 
@@ -458,8 +482,6 @@ cdef class DatasetID(ObjectID):
         The reopened dataset is automatically re-registered with the same ID.
 
         Use this in SWMR read mode to poll for dataset changes.
-
-        Feature requires: 1.9.178 HDF5
         """
         H5Drefresh(self.id)
 
@@ -503,7 +525,7 @@ cdef class DatasetID(ObjectID):
             offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(offsets, offset, rank)
             PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
-            H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
+            H5Dwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
         finally:
             efree(offset)
             PyBuffer_Release(&view)

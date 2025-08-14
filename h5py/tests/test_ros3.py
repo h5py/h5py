@@ -18,12 +18,12 @@ import pytest
 
 pytestmark = [
     pytest.mark.skipif(
-        h5py.version.hdf5_version_tuple < (1, 10, 6) or not h5py.h5.get_config().ros3,
+        not h5py.h5.get_config().ros3,
         reason="ros3 driver not available")
 ]
 
 
-@pytest.mark.nonetwork
+@pytest.mark.network
 def test_ros3():
     """ ROS3 driver and options """
 
@@ -43,7 +43,7 @@ def test_ros3_s3_fails():
         h5py.File('foo://wrong/scheme', 'r', driver='ros3')
 
 
-@pytest.mark.nonetwork
+@pytest.mark.network
 def test_ros3_s3uri():
     """Use S3 URI with ROS3 driver"""
     with h5py.File('s3://dandiarchive/ros3test.hdf5', 'r', driver='ros3',

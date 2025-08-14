@@ -393,7 +393,7 @@ To run these tests, you'll need to:
 
 Then running::
 
-   $ CC='mpicc' HDF5_MPI=ON tox -e py312-test-deps-mpi4py
+   $ CC='mpicc' HDF5_MPI=ON tox -e py312-test-deps-mpi
 
 should run the tests. You may need to pass ``HDF5_DIR`` depending on the
 location of the HDF5 with MPI support. You can choose which python version to

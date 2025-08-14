@@ -7,10 +7,5 @@ repos:
     -   id: trailing-whitespace
         exclude: .+\.patch
 
--   repo: https://github.com/mgedmin/check-manifest
-    rev: "0.39"
-    hooks:
-    -   id: check-manifest
-
 ci:
     autoupdate_schedule: monthly

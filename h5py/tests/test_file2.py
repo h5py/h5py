@@ -109,11 +109,18 @@ class TestDriverRegistration(TestCase):
 
 
 class TestCache(TestCase):
+    def setUp(self):
+        MiB = 1024 * 1024
+        if h5py.version.hdf5_version_tuple < (2, 0, 0):
+            self.dflt_chunk_cache = MiB
+        else:
+            self.dflt_chunk_cache = 8 * MiB
+
     def test_defaults(self):
         fname = self.mktemp()
         f = h5py.File(fname, 'w')
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
-                         [0, 521, 1048576, 0.75])
+                         [0, 521, self.dflt_chunk_cache, 0.75])
 
     def test_nbytes(self):
         fname = self.mktemp()
@@ -125,13 +132,13 @@ class TestCache(TestCase):
         fname = self.mktemp()
         f = h5py.File(fname, 'w', rdcc_nslots=125)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
-                         [0, 125, 1048576, 0.75])
+                         [0, 125, self.dflt_chunk_cache, 0.75])
 
     def test_w0(self):
         fname = self.mktemp()
         f = h5py.File(fname, 'w', rdcc_w0=0.25)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
-                         [0, 521, 1048576, 0.25])
+                         [0, 521, self.dflt_chunk_cache, 0.25])
 
 
 class TestFileObj(TestCase):
@@ -173,9 +180,9 @@ class TestFileObj(TestCase):
             os.remove(fname)
 
     @pytest.mark.filterwarnings(
-        # on Windows, a resource warning may be emitted
+        # at least on Windows and MacOS, a resource warning may be emitted
         # when this test returns
-        "ignore:unclosed file:ResourceWarning"
+        "ignore::ResourceWarning"
     )
     def test_TemporaryFile(self):
         # in this test, we check explicitly that temp file gets

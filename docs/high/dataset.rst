@@ -504,13 +504,25 @@ Reference
 
     .. method:: astype(dtype)
 
-        Return a wrapper allowing you to read data as a particular
+        Return a read-only view allowing you to read data as a particular
         type.  Conversion is handled by HDF5 directly, on the fly::
 
             >>> dset = f.create_dataset("bigint", (1000,), dtype='int64')
-            >>> out = dset.astype('int16')[:]
+            >>> out = dset.astype('int16')[:500]
             >>> out.dtype
             dtype('int16')
+
+        This can be faster than reading the data and then
+        converting it with NumPy:
+
+            >>> out = dset[:500].astype('int16')  # Typically slower
+
+        In case of variable-width strings, calling ``.astype('T')``
+        (NumPy's native variable-width strings) is more efficient than reading
+        the data into an object-type array; read more at :ref:`npystrings`.
+
+        .. versionchanged:: 3.14
+           Added support for NumPy variable-width strings (``dtype='T'``).
 
         .. versionchanged:: 3.9
            :meth:`astype` can no longer be used as a context manager.
@@ -525,6 +537,13 @@ Reference
        encoding and errors work like ``bytes.decode()``, but the default
        encoding is defined by the datatype - ASCII or UTF-8.
        This is not guaranteed to be correct.
+
+       .. note::
+          If you don't require backwards compatibility with NumPy 1.x or
+          h5py <3.14, you should consider reading into NumPy native strings
+          instead, which can be much faster, with
+          :meth:`.astype('T')<astype>`.
+          Read more at :ref:`npystrings`.
 
        .. versionadded:: 3.0
 
@@ -568,6 +587,18 @@ Reference
     .. method:: len()
 
         Return the size of the first axis.
+
+    .. method:: refresh
+
+        Refresh the dataset metadata by reloading from the file.
+        This is part of the :doc:`swmr` features.
+
+    .. method:: flush
+
+        Flush the dataset data and metadata to the file.
+        If the dataset is chunked, raw data chunks are written to the file.
+        This is part of the :doc:`swmr` features. Use it in SWMR write mode to
+        allow readers to be updated with the dataset changes.
 
     .. method:: make_scale(name='')
 

@@ -172,7 +172,7 @@ cdef class Reference:
         self.typecode = H5R_OBJECT
         self.typesize = sizeof(hobj_ref_t)
 
-    def __nonzero__(self):
+    def __bool__(self):
         cdef int i
         for i in range(self.typesize):
             if (<unsigned char*>&self.ref)[i] != 0: return True

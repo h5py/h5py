@@ -39,13 +39,7 @@ class Group(HLObject, MutableMappingHDF5):
                 raise ValueError("%s is not a GroupID" % bind)
             super().__init__(bind)
 
-    _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
-    _gcpl_crt_order.set_link_creation_order(
-        h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-    _gcpl_crt_order.set_attr_creation_order(
-        h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-
-    def create_group(self, name, track_order=None):
+    def create_group(self, name, track_order=None, *, track_times=False):
         """ Create and return a new subgroup.
 
         Name may be absolute or relative.  Fails if the target name already
@@ -54,13 +48,26 @@ class Group(HLObject, MutableMappingHDF5):
         track_order
             Track dataset/group/attribute creation order under this group
             if True. If None use global default h5.get_config().track_order.
+        track_times: bool or None, default: False
+            If True, store timestamps for this group in the file.
+            If None, fall back to the default value.
         """
         if track_order is None:
             track_order = h5.get_config().track_order
 
         with phil:
             name, lcpl = self._e(name, lcpl=True)
-            gcpl = Group._gcpl_crt_order if track_order else None
+            gcpl = h5p.create(h5p.GROUP_CREATE)
+            if track_order:
+                order_flags = h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED
+                gcpl.set_link_creation_order(order_flags)
+                gcpl.set_attr_creation_order(order_flags)
+            if track_times is None:
+                track_times = False  # Allow explicit None to mean h5py's default
+            if track_times in (True, False):
+                gcpl.set_obj_track_times(track_times)
+            else:
+                raise TypeError("track_times must be either True, False, or None")
             gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
             return Group(gid)
 
@@ -143,7 +150,7 @@ class Group(HLObject, MutableMappingHDF5):
             compresses the data before handing it to h5py.
         rdcc_nbytes
             Total size of the dataset's chunk cache in bytes. The default size
-            is 1024**2 (1 MiB).
+            is 1024**2 (1 MiB) for HDF5 before 2.0 and 8 MiB for HDF5 2.0 or later.
         rdcc_w0
             The chunk preemption policy for this dataset.  This must be
             between 0 and 1 inclusive and indicates the weighting according to

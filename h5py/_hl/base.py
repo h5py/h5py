@@ -102,6 +102,9 @@ def is_float16_dtype(dt):
 def array_for_new_object(data, specified_dtype=None):
     """Prepare an array from data used to create a new dataset or attribute"""
 
+    if not isinstance(specified_dtype, (np.dtype, type(None))):
+        specified_dtype = np.dtype(specified_dtype)
+
     # We mostly let HDF5 convert data as necessary when it's written.
     # But if we are going to a float16 datatype, pre-convert in python
     # to workaround a bug in the conversion.
@@ -351,7 +354,6 @@ class HLObject(CommonStateObject):
     def __bool__(self):
         with phil:
             return bool(self.id)
-    __nonzero__ = __bool__
 
     def __getnewargs__(self):
         """Disable pickle.

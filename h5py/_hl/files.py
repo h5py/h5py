@@ -147,10 +147,6 @@ def make_fapl(
         plist.set_meta_block_size(int(meta_block_size))
 
     if locking is not None:
-        if hdf5_version < (1, 12, 1) and (hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
-            raise ValueError(
-                "HDF5 version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
-
         if locking in ("false", False):
             plist.set_file_locking(False, ignore_when_disabled=False)
         elif locking in ("true", True):
@@ -186,32 +182,35 @@ def make_fapl(
     return plist
 
 
-def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False,
+def make_fcpl(track_order=False, track_times=False, fs_strategy=None, fs_persist=False,
               fs_threshold=1, fs_page_size=None):
     """ Set up a file creation property list """
-    if track_order or fs_strategy:
-        plist = h5p.create(h5p.FILE_CREATE)
-        if track_order:
-            plist.set_link_creation_order(
-                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-            plist.set_attr_creation_order(
-                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-        if fs_strategy:
-            strategies = {
-                'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
-                'page': h5f.FSPACE_STRATEGY_PAGE,
-                'aggregate': h5f.FSPACE_STRATEGY_AGGR,
-                'none': h5f.FSPACE_STRATEGY_NONE
-            }
-            fs_strat_num = strategies.get(fs_strategy, -1)
-            if fs_strat_num == -1:
-                raise ValueError("Invalid file space strategy type")
-
-            plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
-            if fs_page_size and fs_strategy == 'page':
-                plist.set_file_space_page_size(int(fs_page_size))
+    plist = h5p.create(h5p.FILE_CREATE)
+    if track_order:
+        plist.set_link_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        plist.set_attr_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+    if track_times is None:
+        track_times = False  # Allow explicit None to mean h5py's default
+    if track_times in (True, False):
+        plist.set_obj_track_times(track_times)
     else:
-        plist = None
+        raise TypeError("track_times must be either True or False")
+    if fs_strategy:
+        strategies = {
+            'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
+            'page': h5f.FSPACE_STRATEGY_PAGE,
+            'aggregate': h5f.FSPACE_STRATEGY_AGGR,
+            'none': h5f.FSPACE_STRATEGY_NONE
+        }
+        fs_strat_num = strategies.get(fs_strategy, -1)
+        if fs_strat_num == -1:
+            raise ValueError("Invalid file space strategy type")
+
+        plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
+        if fs_page_size and fs_strategy == 'page':
+            plist.set_file_space_page_size(int(fs_page_size))
     return plist
 
 
@@ -380,7 +379,8 @@ class File(Group):
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
                  page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
-                 alignment_threshold=1, alignment_interval=1, meta_block_size=None, **kwds):
+                 alignment_threshold=1, alignment_interval=1, meta_block_size=None,
+                 *, track_times=False, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -407,8 +407,9 @@ class File(Group):
         swmr
             Open the file in SWMR read mode. Only used when mode = 'r'.
         rdcc_nbytes
-            Total size of the dataset chunk cache in bytes. The default size
-            is 1024**2 (1 MiB) per dataset. Applies to all datasets unless individually changed.
+            Total size of the dataset chunk cache in bytes. The default size per
+            dataset is 1024**2 (1 MiB) for HDF5 before 2.0 and 8 MiB for HDF5
+            2.0 and later. Applies to all datasets unless individually changed.
         rdcc_w0
             The chunk preemption policy for all datasets.  This must be
             between 0 and 1 inclusive and indicates the weighting according to
@@ -433,6 +434,9 @@ class File(Group):
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
+        track_times: bool or None, default: False
+            If True, store timestamps for this group in the file.
+            If None, fall back to the default value.
         fs_strategy
             The file space handling strategy to be used.  Only allowed when
             creating a new file (mode w, w- or x).  Defined as:
@@ -478,8 +482,6 @@ class File(Group):
                 The HDF5_USE_FILE_LOCKING environment variable can override
                 this parameter.
 
-            Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
-
         alignment_threshold
             Together with ``alignment_interval``, this property ensures that
             any file object greater than or equal in size to the alignment
@@ -514,10 +516,6 @@ class File(Group):
             else:
                 raise ValueError(
                     "h5py was built without ROS3 support, can't use ros3 driver")
-
-        if locking is not None and hdf5_version < (1, 12, 1) and (
-                hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
-            raise ValueError("HDF5 version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking options.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
