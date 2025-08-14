@@ -1,5 +1,4 @@
 # cython: profile=False
-# cython: freethreading_compatible=True
 
 # This file is part of h5py, a Python interface to the HDF5 library.
 #

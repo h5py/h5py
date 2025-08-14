@@ -1,5 +1,4 @@
 # cython: language_level=3
-# cython: freethreading_compatible=True
 """Class to efficiently select and read data from an HDF5 dataset
 
 This is written in Cython to reduce overhead when reading small amounts of
