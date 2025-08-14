@@ -1,4 +1,3 @@
-# cython: language_level=3
 # cython: profile=False
 
 # This file is part of h5py, a Python interface to the HDF5 library.
