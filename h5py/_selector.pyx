@@ -1,4 +1,3 @@
-# cython: language_level=3
 """Class to efficiently select and read data from an HDF5 dataset
 
 This is written in Cython to reduce overhead when reading small amounts of
