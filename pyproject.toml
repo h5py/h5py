@@ -4,6 +4,7 @@
 requires = [
     "Cython >=3.0.0,<4",
     "numpy >=2.0.0, <3",
+    "packaging >=23.0",
     "pkgconfig",
     "setuptools >=77",
 ]
@@ -39,6 +40,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading :: 1 - Unstable",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering",
     "Topic :: Database",
@@ -119,10 +121,15 @@ wheels = [
     "tox>=4.26.0",
 ]
 
+# FIXME Temporarily disable cp313t/cp314t wheels due to instability concerns.
+ # See matching FIXMEs in azure-pipelines.yml and setup_build.py.
 [tool.cibuildwheel]
 skip = [
     "*musllinux*",
-    "cp314t-*",
+    "cp314t-*",  # _Do not_ build cp314t wheels
+]
+enable = [
+    # "cpython-freethreading",  # Build cp313t wheels
 ]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }

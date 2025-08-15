@@ -17,6 +17,7 @@ build/
 *.pyc
 *.pyd
 dist/
+wheelhouse/
 MANIFEST
 .DS_Store
 /docs/_build
