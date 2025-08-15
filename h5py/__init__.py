@@ -92,24 +92,31 @@ def run_tests(args=''):
     return run_tests(args)
 
 
+
+try:
+    # this name is only defined if running within ipython/jupyter
+    __IPYTHON__
+except NameError:
+    pass
+else:
+    from . import ipy_completer
+    ipy_completer.load_ipython_extension()
+    del ipy_completer
+
+
 def enable_ipython_completer():
     """ Call this from an interactive IPython session to enable tab-completion
     of group and attribute names.
-    """
-    import sys
-    if 'IPython' in sys.modules:
-        ip_running = False
-        try:
-            from IPython.core.interactiveshell import InteractiveShell
-            ip_running = InteractiveShell.initialized()
-        except ImportError:
-            # support <ipython-0.11
-            from IPython import ipapi as _ipapi
-            ip_running = _ipapi.get() is not None
-        except Exception:
-            pass
-        if ip_running:
-            from . import ipy_completer
-            return ipy_completer.load_ipython_extension()
 
-    raise RuntimeError('Completer must be enabled in active ipython session')
+    This function has no effect and is deprecated.
+    """
+    from warnings import warn
+
+    warn(
+        "h5py.enable_ipython_completer is deprecated since version 3.15 and "
+        "will be removed in a future version. Its effect is now automatically "
+        "achieved when h5py is imported within ipython, and calling it doesn't "
+        "have any effect other than this warning.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
