@@ -9,8 +9,6 @@
 
 from .api_types_ext cimport *
 
-include "config.pxi"
-
 cdef extern from "hdf5.h":
   # Basic types
   ctypedef long int hid_t
@@ -85,9 +83,10 @@ cdef extern from "hdf5.h":
                     hsize_t *point, void *operator_data) except -1
 
 
-  IF HDF5_VERSION >= (1, 12, 3) or (HDF5_VERSION >= (1, 10, 10) and HDF5_VERSION < (1, 10, 99)):
-    ctypedef int (*H5D_chunk_iter_op_t)(const hsize_t *offset, unsigned filter_mask,
-                                        haddr_t addr, hsize_t size, void *op_data) except -1
+  ### {{if HDF5_VERSION >= (1, 12, 3) or (HDF5_VERSION >= (1, 10, 10) and HDF5_VERSION < (1, 10, 99))}}
+  ctypedef int (*H5D_chunk_iter_op_t)(const hsize_t *offset, unsigned filter_mask,
+                                      haddr_t addr, hsize_t size, void *op_data) except -1
+  ### {{endif}}
 
 # === H5F - File API ==========================================================
 
@@ -134,32 +133,35 @@ cdef extern from "hdf5.h":
   int H5F_OBJ_LOCAL
   hsize_t H5F_UNLIMITED
 
-  IF HDF5_VERSION < (1,11,4):
-    ctypedef enum H5F_libver_t:
-      H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
-      H5F_LIBVER_V18 = 1,
-      H5F_LIBVER_V110 = 2,
-      H5F_LIBVER_NBOUNDS
-    int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+  ### {{if HDF5_VERSION < (1,11,4)}}
+  ctypedef enum H5F_libver_t:
+    H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+    H5F_LIBVER_V18 = 1,
+    H5F_LIBVER_V110 = 2,
+    H5F_LIBVER_NBOUNDS
+  int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+  ### {{endif}}
 
-  IF HDF5_VERSION >= (1, 11, 4) and HDF5_VERSION < (1, 14, 0):
-    ctypedef enum H5F_libver_t:
-      H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
-      H5F_LIBVER_V18 = 1,
-      H5F_LIBVER_V110 = 2,
-      H5F_LIBVER_V112 = 3,
-      H5F_LIBVER_NBOUNDS
-    int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+  ### {{if HDF5_VERSION >= (1, 11, 4) and HDF5_VERSION < (1, 14, 0)}}
+  ctypedef enum H5F_libver_t:
+    H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+    H5F_LIBVER_V18 = 1,
+    H5F_LIBVER_V110 = 2,
+    H5F_LIBVER_V112 = 3,
+    H5F_LIBVER_NBOUNDS
+  int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+  ### {{endif}}
 
-  IF HDF5_VERSION >= (1, 14, 0):
-    ctypedef enum H5F_libver_t:
-      H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
-      H5F_LIBVER_V18 = 1,
-      H5F_LIBVER_V110 = 2,
-      H5F_LIBVER_V112 = 3,
-      H5F_LIBVER_V114 = 4,
-      H5F_LIBVER_NBOUNDS
-    int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+  ### {{if HDF5_VERSION >= (1, 14, 0)}}
+  ctypedef enum H5F_libver_t:
+    H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+    H5F_LIBVER_V18 = 1,
+    H5F_LIBVER_V110 = 2,
+    H5F_LIBVER_V112 = 3,
+    H5F_LIBVER_V114 = 4,
+    H5F_LIBVER_NBOUNDS
+  int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+  ### {{endif}}
 
 # === H5FD - Low-level file descriptor API ====================================
 
@@ -185,8 +187,9 @@ cdef extern from "hdf5.h":
   hid_t H5FD_SEC2
   hid_t H5FD_DIRECT
   hid_t H5FD_STDIO
-  IF UNAME_SYSNAME == "Windows":
-    hid_t H5FD_WINDOWS
+  ### {{if PLATFORM_SYSTEM == "Windows"}}
+  hid_t H5FD_WINDOWS
+  ### {{endif}}
   hid_t H5FD_ROS3
 
   int H5FD_LOG_LOC_READ   # 0x0001
@@ -225,99 +228,101 @@ cdef extern from "hdf5.h":
     H5FD_MPIO_COLLECTIVE
 
   # File driver identifier type and values
-  IF HDF5_VERSION >= (1, 14, 0):
-    ctypedef int H5FD_class_value_t
+  ### {{if HDF5_VERSION >= (1, 14, 0)}}
+  ctypedef int H5FD_class_value_t
 
-    H5FD_class_value_t H5_VFD_INVALID      # -1
-    H5FD_class_value_t H5_VFD_SEC2         # 0
-    H5FD_class_value_t H5_VFD_CORE         # 1
-    H5FD_class_value_t H5_VFD_LOG          # 2
-    H5FD_class_value_t H5_VFD_FAMILY       # 3
-    H5FD_class_value_t H5_VFD_MULTI        # 4
-    H5FD_class_value_t H5_VFD_STDIO        # 5
-    H5FD_class_value_t H5_VFD_SPLITTER     # 6
-    H5FD_class_value_t H5_VFD_MPIO         # 7
-    H5FD_class_value_t H5_VFD_DIRECT       # 8
-    H5FD_class_value_t H5_VFD_MIRROR       # 9
-    H5FD_class_value_t H5_VFD_HDFS         # 10
-    H5FD_class_value_t H5_VFD_ROS3         # 11
-    H5FD_class_value_t H5_VFD_SUBFILING    # 12
-    H5FD_class_value_t H5_VFD_IOC          # 13
-    H5FD_class_value_t H5_VFD_ONION        # 14
+  H5FD_class_value_t H5_VFD_INVALID      # -1
+  H5FD_class_value_t H5_VFD_SEC2         # 0
+  H5FD_class_value_t H5_VFD_CORE         # 1
+  H5FD_class_value_t H5_VFD_LOG          # 2
+  H5FD_class_value_t H5_VFD_FAMILY       # 3
+  H5FD_class_value_t H5_VFD_MULTI        # 4
+  H5FD_class_value_t H5_VFD_STDIO        # 5
+  H5FD_class_value_t H5_VFD_SPLITTER     # 6
+  H5FD_class_value_t H5_VFD_MPIO         # 7
+  H5FD_class_value_t H5_VFD_DIRECT       # 8
+  H5FD_class_value_t H5_VFD_MIRROR       # 9
+  H5FD_class_value_t H5_VFD_HDFS         # 10
+  H5FD_class_value_t H5_VFD_ROS3         # 11
+  H5FD_class_value_t H5_VFD_SUBFILING    # 12
+  H5FD_class_value_t H5_VFD_IOC          # 13
+  H5FD_class_value_t H5_VFD_ONION        # 14
+  ### {{endif}}
 
   # Class information for each file driver
-  IF HDF5_VERSION < (1, 14, 0):
-    ctypedef struct H5FD_class_t:
-      const char *name
-      haddr_t maxaddr
-      H5F_close_degree_t fc_degree
-      herr_t  (*terminate)()
-      hsize_t (*sb_size)(H5FD_t *file)
-      herr_t  (*sb_encode)(H5FD_t *file, char *name, unsigned char *p)
-      herr_t  (*sb_decode)(H5FD_t *f, const char *name, const unsigned char *p)
-      size_t  fapl_size
-      void *  (*fapl_get)(H5FD_t *file) except *
-      void *  (*fapl_copy)(const void *fapl) except *
-      herr_t  (*fapl_free)(void *fapl) except -1
-      size_t  dxpl_size
-      void *  (*dxpl_copy)(const void *dxpl)
-      herr_t  (*dxpl_free)(void *dxpl)
-      H5FD_t *(*open)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr) except *
-      herr_t  (*close)(H5FD_t *file) except -1
-      int     (*cmp)(const H5FD_t *f1, const H5FD_t *f2)
-      herr_t  (*query)(const H5FD_t *f1, unsigned long *flags)
-      herr_t  (*get_type_map)(const H5FD_t *file, H5FD_mem_t *type_map)
-      haddr_t (*alloc)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
-      herr_t  (*free)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
-      haddr_t (*get_eoa)(const H5FD_t *file, H5FD_mem_t type) noexcept
-      herr_t  (*set_eoa)(H5FD_t *file, H5FD_mem_t type, haddr_t addr) noexcept
-      haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) except -1
-      herr_t  (*get_handle)(H5FD_t *file, hid_t fapl, void**file_handle)
-      herr_t  (*read)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buffer) except *
-      herr_t  (*write)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buffer) except *
-      herr_t  (*flush)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
-      herr_t  (*truncate)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
-      herr_t  (*lock)(H5FD_t *file, hbool_t rw)
-      herr_t  (*unlock)(H5FD_t *file)
-      H5FD_mem_t fl_map[<int>H5FD_MEM_NTYPES]
-  ELSE:
-    unsigned H5FD_CLASS_VERSION  # File driver struct version
+  ### {{if HDF5_VERSION < (1, 14, 0)}}
+  ctypedef struct H5FD_class_t:
+    const char *name
+    haddr_t maxaddr
+    H5F_close_degree_t fc_degree
+    herr_t  (*terminate)()
+    hsize_t (*sb_size)(H5FD_t *file)
+    herr_t  (*sb_encode)(H5FD_t *file, char *name, unsigned char *p)
+    herr_t  (*sb_decode)(H5FD_t *f, const char *name, const unsigned char *p)
+    size_t  fapl_size
+    void *  (*fapl_get)(H5FD_t *file) except *
+    void *  (*fapl_copy)(const void *fapl) except *
+    herr_t  (*fapl_free)(void *fapl) except -1
+    size_t  dxpl_size
+    void *  (*dxpl_copy)(const void *dxpl)
+    herr_t  (*dxpl_free)(void *dxpl)
+    H5FD_t *(*open)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr) except *
+    herr_t  (*close)(H5FD_t *file) except -1
+    int     (*cmp)(const H5FD_t *f1, const H5FD_t *f2)
+    herr_t  (*query)(const H5FD_t *f1, unsigned long *flags)
+    herr_t  (*get_type_map)(const H5FD_t *file, H5FD_mem_t *type_map)
+    haddr_t (*alloc)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
+    herr_t  (*free)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
+    haddr_t (*get_eoa)(const H5FD_t *file, H5FD_mem_t type) noexcept
+    herr_t  (*set_eoa)(H5FD_t *file, H5FD_mem_t type, haddr_t addr) noexcept
+    haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) except -1
+    herr_t  (*get_handle)(H5FD_t *file, hid_t fapl, void**file_handle)
+    herr_t  (*read)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buffer) except *
+    herr_t  (*write)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buffer) except *
+    herr_t  (*flush)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
+    herr_t  (*truncate)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
+    herr_t  (*lock)(H5FD_t *file, hbool_t rw)
+    herr_t  (*unlock)(H5FD_t *file)
+    H5FD_mem_t fl_map[<int>H5FD_MEM_NTYPES]
+  ### {{else}}
+  unsigned H5FD_CLASS_VERSION  # File driver struct version
 
-    ctypedef struct H5FD_class_t:
-      unsigned version  # File driver class struct version number
-      H5FD_class_value_t value
-      const char *name
-      haddr_t maxaddr
-      H5F_close_degree_t fc_degree
-      herr_t  (*terminate)()
-      hsize_t (*sb_size)(H5FD_t *file)
-      herr_t  (*sb_encode)(H5FD_t *file, char *name, unsigned char *p)
-      herr_t  (*sb_decode)(H5FD_t *f, const char *name, const unsigned char *p)
-      size_t  fapl_size
-      void *  (*fapl_get)(H5FD_t *file) except *
-      void *  (*fapl_copy)(const void *fapl) except *
-      herr_t  (*fapl_free)(void *fapl) except -1
-      size_t  dxpl_size
-      void *  (*dxpl_copy)(const void *dxpl)
-      herr_t  (*dxpl_free)(void *dxpl)
-      H5FD_t *(*open)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr) except *
-      herr_t  (*close)(H5FD_t *file) except -1
-      int     (*cmp)(const H5FD_t *f1, const H5FD_t *f2)
-      herr_t  (*query)(const H5FD_t *f1, unsigned long *flags)
-      herr_t  (*get_type_map)(const H5FD_t *file, H5FD_mem_t *type_map)
-      haddr_t (*alloc)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
-      herr_t  (*free)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
-      haddr_t (*get_eoa)(const H5FD_t *file, H5FD_mem_t type) noexcept
-      herr_t  (*set_eoa)(H5FD_t *file, H5FD_mem_t type, haddr_t addr) noexcept
-      haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) except -1
-      herr_t  (*get_handle)(H5FD_t *file, hid_t fapl, void**file_handle)
-      herr_t  (*read)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buffer) except *
-      herr_t  (*write)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buffer) except *
-      herr_t  (*flush)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
-      herr_t  (*truncate)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
-      herr_t  (*lock)(H5FD_t *file, hbool_t rw)
-      herr_t  (*unlock)(H5FD_t *file)
-      H5FD_mem_t fl_map[<int>H5FD_MEM_NTYPES]
+  ctypedef struct H5FD_class_t:
+    unsigned version  # File driver class struct version number
+    H5FD_class_value_t value
+    const char *name
+    haddr_t maxaddr
+    H5F_close_degree_t fc_degree
+    herr_t  (*terminate)()
+    hsize_t (*sb_size)(H5FD_t *file)
+    herr_t  (*sb_encode)(H5FD_t *file, char *name, unsigned char *p)
+    herr_t  (*sb_decode)(H5FD_t *f, const char *name, const unsigned char *p)
+    size_t  fapl_size
+    void *  (*fapl_get)(H5FD_t *file) except *
+    void *  (*fapl_copy)(const void *fapl) except *
+    herr_t  (*fapl_free)(void *fapl) except -1
+    size_t  dxpl_size
+    void *  (*dxpl_copy)(const void *dxpl)
+    herr_t  (*dxpl_free)(void *dxpl)
+    H5FD_t *(*open)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr) except *
+    herr_t  (*close)(H5FD_t *file) except -1
+    int     (*cmp)(const H5FD_t *f1, const H5FD_t *f2)
+    herr_t  (*query)(const H5FD_t *f1, unsigned long *flags)
+    herr_t  (*get_type_map)(const H5FD_t *file, H5FD_mem_t *type_map)
+    haddr_t (*alloc)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
+    herr_t  (*free)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
+    haddr_t (*get_eoa)(const H5FD_t *file, H5FD_mem_t type) noexcept
+    herr_t  (*set_eoa)(H5FD_t *file, H5FD_mem_t type, haddr_t addr) noexcept
+    haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) except -1
+    herr_t  (*get_handle)(H5FD_t *file, hid_t fapl, void**file_handle)
+    herr_t  (*read)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buffer) except *
+    herr_t  (*write)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buffer) except *
+    herr_t  (*flush)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
+    herr_t  (*truncate)(H5FD_t *file, hid_t dxpl_id, hbool_t closing) except -1
+    herr_t  (*lock)(H5FD_t *file, hbool_t rw)
+    herr_t  (*unlock)(H5FD_t *file)
+    H5FD_mem_t fl_map[<int>H5FD_MEM_NTYPES]
+  ### {{endif}}
 
   # The main datatype for each driver
   ctypedef struct H5FD_t:
@@ -343,8 +348,9 @@ cdef extern from "hdf5.h":
 
   unsigned int H5FD_CURR_ROS3_FAPL_T_VERSION # version of struct
 
-  IF HDF5_VERSION >= (1, 14, 2):
-    size_t H5FD_ROS3_MAX_SECRET_TOK_LEN
+  ### {{if HDF5_VERSION >= (1, 14, 2)}}
+  size_t H5FD_ROS3_MAX_SECRET_TOK_LEN
+  ### {{endif}}
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:
@@ -385,45 +391,46 @@ cdef extern from "hdf5.h":
 
   int H5I_INVALID_HID
 
-  IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-    ctypedef enum H5I_type_t:
-      H5I_UNINIT       = -2,  # uninitialized Group
-      H5I_BADID        = -1,  # invalid Group
-      H5I_FILE        = 1,    # type ID for File objects
-      H5I_GROUP,              # type ID for Group objects
-      H5I_DATATYPE,           # type ID for Datatype objects
-      H5I_DATASPACE,          # type ID for Dataspace objects
-      H5I_DATASET,            # type ID for Dataset objects
-      H5I_ATTR,               # type ID for Attribute objects
-      H5I_REFERENCE,          # type ID for Reference objects
-      H5I_VFL,                # type ID for virtual file layer
-      H5I_GENPROP_CLS,        # type ID for generic property list classes
-      H5I_GENPROP_LST,        # type ID for generic property lists
-      H5I_ERROR_CLASS,        # type ID for error classes
-      H5I_ERROR_MSG,          # type ID for error messages
-      H5I_ERROR_STACK,        # type ID for error stacks
-      H5I_NTYPES              # number of valid groups, MUST BE LAST!
+  ### {{if HDF5_VERSION < VOL_MIN_HDF5_VERSION}}
+  ctypedef enum H5I_type_t:
+    H5I_UNINIT       = -2,  # uninitialized Group
+    H5I_BADID        = -1,  # invalid Group
+    H5I_FILE        = 1,    # type ID for File objects
+    H5I_GROUP,              # type ID for Group objects
+    H5I_DATATYPE,           # type ID for Datatype objects
+    H5I_DATASPACE,          # type ID for Dataspace objects
+    H5I_DATASET,            # type ID for Dataset objects
+    H5I_ATTR,               # type ID for Attribute objects
+    H5I_REFERENCE,          # type ID for Reference objects
+    H5I_VFL,                # type ID for virtual file layer
+    H5I_GENPROP_CLS,        # type ID for generic property list classes
+    H5I_GENPROP_LST,        # type ID for generic property lists
+    H5I_ERROR_CLASS,        # type ID for error classes
+    H5I_ERROR_MSG,          # type ID for error messages
+    H5I_ERROR_STACK,        # type ID for error stacks
+    H5I_NTYPES              # number of valid groups, MUST BE LAST!
 
-  ELSE:
-    ctypedef enum H5I_type_t:
-      H5I_UNINIT      = -2,     # uninitialized type
-      H5I_BADID       = -1,     # invalid Type
-      H5I_FILE        = 1,      # type ID for File objects
-      H5I_GROUP,                # type ID for Group objects
-      H5I_DATATYPE,             # type ID for Datatype objects
-      H5I_DATASPACE,            # type ID for Dataspace object
-      H5I_DATASET,              # type ID for Dataset object
-      H5I_MAP,                  # type ID for Map object
-      H5I_ATTR,                 # type ID for Attribute objects
-      H5I_VFL,                  # type ID for virtual file layer
-      H5I_VOL,                  # type ID for virtual object layer
-      H5I_GENPROP_CLS,          # type ID for generic property list classes
-      H5I_GENPROP_LST,          # type ID for generic property lists
-      H5I_ERROR_CLASS,          # type ID for error classes
-      H5I_ERROR_MSG,            # type ID for error messages
-      H5I_ERROR_STACK,          # type ID for error stacks
-      H5I_SPACE_SEL_ITER,       # type ID for dataspace selection iterator
-      H5I_NTYPES                # number of library types, MUST BE LAST!
+  ### {{else}}
+  ctypedef enum H5I_type_t:
+    H5I_UNINIT      = -2,     # uninitialized type
+    H5I_BADID       = -1,     # invalid Type
+    H5I_FILE        = 1,      # type ID for File objects
+    H5I_GROUP,                # type ID for Group objects
+    H5I_DATATYPE,             # type ID for Datatype objects
+    H5I_DATASPACE,            # type ID for Dataspace object
+    H5I_DATASET,              # type ID for Dataset object
+    H5I_MAP,                  # type ID for Map object
+    H5I_ATTR,                 # type ID for Attribute objects
+    H5I_VFL,                  # type ID for virtual file layer
+    H5I_VOL,                  # type ID for virtual object layer
+    H5I_GENPROP_CLS,          # type ID for generic property list classes
+    H5I_GENPROP_LST,          # type ID for generic property lists
+    H5I_ERROR_CLASS,          # type ID for error classes
+    H5I_ERROR_MSG,            # type ID for error messages
+    H5I_ERROR_STACK,          # type ID for error stacks
+    H5I_SPACE_SEL_ITER,       # type ID for dataspace selection iterator
+    H5I_NTYPES                # number of library types, MUST BE LAST!
+  ### {{endif}}
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
@@ -673,8 +680,9 @@ cdef extern from "hdf5.h":
   cdef hid_t H5T_NATIVE_FLOAT
   cdef hid_t H5T_NATIVE_DOUBLE
   cdef hid_t H5T_NATIVE_LDOUBLE
-  IF HDF5_VERSION > (1, 14, 3):
-    cdef hid_t H5T_NATIVE_FLOAT16
+  ### {{if HDF5_VERSION > (1, 14, 3)}}
+  cdef hid_t H5T_NATIVE_FLOAT16
+  ### {{endif}}
 
   # "Standard" types
   cdef hid_t H5T_STD_I8LE
@@ -705,10 +713,10 @@ cdef extern from "hdf5.h":
   cdef hid_t H5T_STD_B64BE
   cdef hid_t H5T_IEEE_F32BE
   cdef hid_t H5T_IEEE_F64BE
-  IF HDF5_VERSION > (1, 14, 3):
-    cdef hid_t H5T_IEEE_F16BE
-    cdef hid_t H5T_IEEE_F16LE
-
+  ### {{if HDF5_VERSION > (1, 14, 3)}}
+  cdef hid_t H5T_IEEE_F16BE
+  cdef hid_t H5T_IEEE_F16LE
+  ### {{endif}}
 
   cdef hid_t H5T_NATIVE_INT8
   cdef hid_t H5T_NATIVE_UINT8
