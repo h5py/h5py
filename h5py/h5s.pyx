@@ -412,6 +412,15 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
+    def select_copy(self, SpaceID src_id):
+        """(SpaceID src_id)
+
+        Copies a selection from one dataspace to another.
+        """
+        H5Sselect_copy(self.id, src_id.id)
+
+
+    @with_phil
     def select_none(self):
         """()
 
@@ -581,6 +590,24 @@ cdef class SpaceID(ObjectID):
             efree(count_array)
             efree(stride_array)
             efree(block_array)
+
+    @with_phil
+    def combine_select(self, SpaceID space2, int op=H5S_SELECT_OR):
+        """(SpaceID space2, INT op=SELECT_OR) => SpaceID
+
+        Combine two hyperslab selections with an operation, returning a dataspace
+        with the resulting selection.
+        """
+        return SpaceID(H5Scombine_select(self.id, <H5S_seloper_t>op, space2.id))
+
+    @with_phil
+    def modify_select(self, SpaceID space2, int op=H5S_SELECT_OR):
+        """(SpaceID space2, INT op=SELECT_OR)
+
+        Refines a hyperslab selection with an operation, using a second hyperslab
+        to modify it.
+        """
+        H5Smodify_select(self.id, <H5S_seloper_t>op, space2.id)
 
     @with_phil
     def is_regular_hyperslab(self):
