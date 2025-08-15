@@ -121,17 +121,15 @@ wheels = [
     "tox>=4.26.0",
 ]
 
-# Temporarily disable cp313t/cp314t wheels due to instability concerns;
-# read discussion at
-# https://github.com/h5py/h5py/pull/2478
-# https://github.com/h5py/h5py/pull/2588
+# FIXME Temporarily disable cp313t/cp314t wheels due to instability concerns.
+ # See matching FIXMEs in azure-pipelines.yml and setup_build.py.
 [tool.cibuildwheel]
 skip = [
     "*musllinux*",
-    # "cp314t-*",  # DNM uncomment before merging
+    "cp314t-*",  # _Do not_ build cp314t wheels
 ]
 enable = [
-    "cpython-freethreading",  # build cp313t wheels  # DNM comment out before merging
+    # "cpython-freethreading",  # Build cp313t wheels
 ]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
