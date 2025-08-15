@@ -4,6 +4,7 @@
 requires = [
     "Cython >=3.0.0,<4",
     "numpy >=2.0.0, <3",
+    "packaging >=23.0",
     "pkgconfig",
     "setuptools >=77",
 ]
@@ -39,6 +40,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading :: 1 - Unstable",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering",
     "Topic :: Database",
@@ -119,10 +121,17 @@ wheels = [
     "tox>=4.26.0",
 ]
 
+# Temporarily disable cp313t/cp314t wheels due to instability concerns;
+# read discussion at
+# https://github.com/h5py/h5py/pull/2478
+# https://github.com/h5py/h5py/pull/2588
 [tool.cibuildwheel]
 skip = [
     "*musllinux*",
-    "cp314t-*",
+    # "cp314t-*",  # DNM uncomment before merging
+]
+enable = [
+    "cpython-freethreading",  # build cp313t wheels  # DNM comment out before merging
 ]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }

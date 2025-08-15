@@ -59,6 +59,7 @@ Advanced topics
     strings
     refs
     mpi
+    threads
     swmr
     vds
     related_projects

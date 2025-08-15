@@ -19,8 +19,8 @@ steps:
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '$(python.version)'
-    architecture: 'x64'
-  displayName: 'Use Python $(python.version)'
+    architecture: '$(python.architecture)'
+  displayName: 'Use Python $(python.version) $(python.architecture)'
   condition: and(succeeded(), ne(variables['python.version'], 'Pre'))
 
   #- task: stevedower.python.InstallPython.InstallPython@1
