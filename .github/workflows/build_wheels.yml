@@ -81,7 +81,7 @@ jobs:
         if: runner.os == 'Windows'
       - run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
         env:
-          ARCH: ${{ runner.arch }}
+          ARCH: ${{ matrix.arch }}
         if: runner.os == 'Windows'
 
       # macOS HDF5
