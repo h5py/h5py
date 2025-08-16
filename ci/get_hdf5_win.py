@@ -38,7 +38,7 @@ if ZLIB_ROOT:
             f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib\\zlib.lib",
             f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\debug\\lib\\zlibd.lib",
         ]
-    else:
+    elif arch in ("amd64", "x86_64"):
         ## ZLIB includes based on nuget layout
         CMAKE_CONFIGURE_CMD += [
             "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
