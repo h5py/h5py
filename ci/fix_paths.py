@@ -1,9 +1,10 @@
 import os
 import sysconfig
+import platform
 from glob import glob
 from os.path import join as pjoin, basename
 from shutil import copy
-from sys import platform
+from sys import platform as sys_platform
 
 def main():
     """
@@ -17,15 +18,21 @@ def main():
 
     # HDF5_DIR is not set when we're testing wheels; these should already have
     # the necessary libraries bundled in.
-    if platform.startswith('win') and hdf5_path is not None:
+    if sys_platform.startswith('win') and hdf5_path is not None:
         for f in glob(pjoin(hdf5_path, 'lib/*.dll')):
             copy(f, pjoin(sitepackagesdir, 'h5py', basename(f)))
             print("Copied", f)
 
         zlib_root = os.environ.get("ZLIB_ROOT")
         if zlib_root:
-            f = pjoin(zlib_root, 'bin_release', 'zlib.dll')
-            copy(f, pjoin(sitepackagesdir, 'h5py', 'zlib.dll'))
+            arch = platform.machine().lower()
+            if arch in ("arm64", "aarch64"):
+                f = pjoin(zlib_root, 'bin', 'zlib1.dll')
+            elif arch in ("amd64", "x86_64"):
+                f = pjoin(zlib_root, 'bin_release', 'zlib.dll')
+            else:
+                raise RuntimeError(f"Unexpected architecture detected: {platform.machine()=}")
+            copy(f, pjoin(sitepackagesdir, 'h5py', basename(f)))
             print("Copied", f)
 
         print("In installed h5py:", sorted(os.listdir(pjoin(sitepackagesdir, 'h5py'))))
