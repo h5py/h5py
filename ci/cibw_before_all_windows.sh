@@ -9,7 +9,7 @@ fi
 PROJECT_PATH="$1"
 
 if [[ "$ARCH" == "ARM64" ]]; then
-    # vcpkg for Windows ARM64
+    #Use vcpkg for Windows ARM64, since Nuget\Chocolatey doesn't provide zlib package for Windows ARM64
     VCPKG_ROOT="$PROJECT_PATH/vcpkg"
     VCPKG_SHA="dd3097e305afa53f7b4312371f62058d2e665320"  # 2025.07.25
     git clone https://github.com/microsoft/vcpkg@"$VCPKG_SHA" "$VCPKG_ROOT"
