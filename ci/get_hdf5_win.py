@@ -47,7 +47,7 @@ if ZLIB_ROOT:
             f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\lib_debug\\zlibd.lib",
         ]
     else:
-        raise RuntimeError(f"Unexpected architecture detected: {arch}")
+        raise RuntimeError(f"Unexpected architecture detected: {platform.machine()=}")
 
 CMAKE_BUILD_CMD = ["cmake", "--build"]
 CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
