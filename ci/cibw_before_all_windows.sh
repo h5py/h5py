@@ -22,7 +22,7 @@ if [[ "$ARCH" == "ARM64" ]]; then
     export CL="/I$ZLIB_ROOT/include"
     export LINK="/LIBPATH:$ZLIB_ROOT/lib"
     export HDF5_VSVERSION="17-arm64"
-elif [[ "$ARCH" == "x86_64" ]]; then
+elif [[ "$ARCH" == "AMD64" ]]; then
     # NuGet for Windows x64
     nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
     ZLIB_ROOT="$PROJECT_PATH/zlib-msvc-x64/build/native"
