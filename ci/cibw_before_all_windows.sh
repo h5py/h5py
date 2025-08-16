@@ -30,7 +30,7 @@ elif [[ "$ARCH" == "x86_64" ]]; then
     export LINK="/LIBPATH:$ZLIB_ROOT/lib_release"
     export HDF5_VSVERSION="17-64"
 else
-    echo "Got unexpected arch $ARCH"
+    echo "Got unexpected arch '$ARCH'"
     exit 1
 fi
 
