@@ -11,7 +11,8 @@ PROJECT_PATH="$1"
 if [[ "$ARCH" == "ARM64" ]]; then
     # vcpkg for Windows ARM64
     VCPKG_ROOT="$PROJECT_PATH/vcpkg"
-    git clone https://github.com/microsoft/vcpkg "$VCPKG_ROOT"
+    VCPKG_SHA="dd3097e305afa53f7b4312371f62058d2e665320"  # 2025.07.25
+    git clone https://github.com/microsoft/vcpkg@"$VCPKG_SHA" "$VCPKG_ROOT"
     $VCPKG_ROOT/bootstrap-vcpkg.bat -disableMetrics
     VCPKG_TRIPLET="arm64-windows"
     $VCPKG_ROOT/vcpkg.exe install zlib:$VCPKG_TRIPLET
