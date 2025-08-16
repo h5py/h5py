@@ -11,6 +11,7 @@ import os
 import os.path as osp
 import shutil
 import sys
+import platform
 import tempfile
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -21,7 +22,11 @@ def find_dlls():
     zlib_root = os.environ.get("ZLIB_ROOT")
     if zlib_root:
         print("ZLIB_ROOT", zlib_root)
-        yield os.path.join(zlib_root, 'bin_release', 'zlib.dll')
+        arch = platform.machine().lower()
+        if arch in ("arm64", "aarch64"):
+            yield os.path.join(zlib_root, 'bin', 'zlib1.dll')
+        elif arch in ("amd64", "x86_64"):
+            yield os.path.join(zlib_root, 'bin_release', 'zlib.dll')
 
 def file_sha256(path):
     h = hashlib.sha256()
