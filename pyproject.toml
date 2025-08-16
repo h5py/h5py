@@ -123,6 +123,9 @@ wheels = [
 skip = [
     "*musllinux*",
     "cp314t-*",
+    "cp38-win_arm64", 
+    "cp39-win_arm64",
+    "cp310-win_arm64",
 ]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
