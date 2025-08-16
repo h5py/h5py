@@ -16,9 +16,11 @@ from glob import glob
 from subprocess import run
 from zipfile import ZipFile
 import requests
+import platform
 
 HDF5_URL = "https://github.com/HDFGroup/hdf5/archive/refs/tags/{zip_file}"
 ZLIB_ROOT = environ.get('ZLIB_ROOT')
+arch = platform.machine().lower()
 
 CI_DIR = dirname(abspath(__file__))
 
@@ -28,12 +30,22 @@ CMAKE_CONFIGURE_CMD = [
     "-DHDF5_BUILD_TOOLS:BOOL=OFF", "-DBUILD_TESTING:BOOL=OFF",
 ]
 if ZLIB_ROOT:
-    CMAKE_CONFIGURE_CMD += [
-        "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
-        f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
-        f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib_release\\zlib.lib",
-        f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\lib_debug\\zlibd.lib",
-    ]
+    if arch in ("arm64", "aarch64"):
+        # ZLIB includes based on vcpkg layout
+        CMAKE_CONFIGURE_CMD += [
+            "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
+            f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
+            f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib\\zlib.lib",
+            f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\debug\\lib\\zlibd.lib",
+        ]
+    else:
+        ## ZLIB includes based on nuget layout
+        CMAKE_CONFIGURE_CMD += [
+            "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
+            f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
+            f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib_release\\zlib.lib",
+            f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\lib_debug\\zlibd.lib",
+        ]
 CMAKE_BUILD_CMD = ["cmake", "--build"]
 CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
 CMAKE_INSTALL_PATH_ARG = "-DCMAKE_INSTALL_PREFIX={install_path}"
@@ -52,6 +64,7 @@ VSVERSION_TO_GENERATOR = {
     "15-64": "Visual Studio 15 2017 Win64",
     "16-64": "Visual Studio 16 2019",
     "17-64": "Visual Studio 17 2022",
+    "17-arm64": "Visual Studio 17 2022",
 }
 
 
