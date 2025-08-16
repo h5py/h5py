@@ -28,7 +28,7 @@ def find_dlls():
         elif arch in ("amd64", "x86_64"):
             yield os.path.join(zlib_root, 'bin_release', 'zlib.dll')
         else:
-            raise RuntimeError(f"Unexpected architecture detected: {arch}")
+            raise RuntimeError(f"Unexpected architecture detected: {platform.machine()=}")
 
 def file_sha256(path):
     h = hashlib.sha256()
