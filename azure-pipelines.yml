@@ -89,7 +89,7 @@ jobs:
         # FIXME it was decided to not mark the module as freethreading-compatible
         # for the time being due to instability concerns.
         # See matching FIXMEs in pyproject.toml and setup_build.py.
-        # PYTHON_GIL: 0  # DNM
+        PYTHON_GIL: 0
 
         TOXENV: py313t-test-deps
         HDF5_VERSION: 1.14.6
