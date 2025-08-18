@@ -1,22 +1,22 @@
-from .common import TestCase
+from .common import TestCase, name
 
 
 class TestCompletions(TestCase):
 
     def test_group_completions(self):
         # Test completions on top-level file.
-        g = self.f.create_group('g')
-        self.f.create_group('h')
-        self.f.create_dataset('data', [1, 2, 3])
+        g = self.f.create_group(name("g"))
+        self.f.create_group(name("h"))
+        self.f.create_dataset(name("data"), [1, 2, 3])
         self.assertEqual(
             self.f._ipython_key_completions_(),
-            ['data', 'g', 'h'],
+            [name("data"), name("g"), name("h")],
         )
 
-        self.f.create_group('data2', [1, 2, 3])
+        self.f.create_group(name('data2'), [1, 2, 3])
         self.assertEqual(
             self.f._ipython_key_completions_(),
-            ['data', 'data2', 'g', 'h'],
+            [name("data"), name("data2"), name("g"), name("h")],
         )
 
         # Test on subgroup.
@@ -38,15 +38,15 @@ class TestCompletions(TestCase):
 
         # Write out of alphabetical order to test that completions come back in
         # alphabetical order, as opposed to, say, insertion order.
-        attrs['b'] = 1
-        attrs['a'] = 2
+        attrs[name('b')] = 1
+        attrs[name('a')] = 2
         self.assertEqual(
             attrs._ipython_key_completions_(),
-            ['a', 'b']
+            [name('a'), name('b')]
         )
 
-        attrs['c'] = 3
+        attrs[name('c')] = 3
         self.assertEqual(
             attrs._ipython_key_completions_(),
-            ['a', 'b', 'c']
+            [name('a'), name('b'), name('c')]
         )

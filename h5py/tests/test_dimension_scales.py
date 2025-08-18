@@ -11,7 +11,7 @@ import sys
 
 import numpy as np
 
-from .common import ut, TestCase
+from .common import ut, TestCase, name
 from h5py import File, Group, Dataset
 import h5py
 
@@ -126,7 +126,7 @@ class TestDimensionManager(BaseDataset):
             )
 
     def test_repr(self):
-        ds = self.f.create_dataset('x', (2,3))
+        ds = self.f.create_dataset(name(), (2,3))
         self.assertIsInstance(repr(ds.dims), str)
         self.f.close()
         self.assertIsInstance(repr(ds.dims), str)
