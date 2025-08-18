@@ -125,16 +125,18 @@ wheels = [
  # See matching FIXMEs in azure-pipelines.yml and setup_build.py.
 [tool.cibuildwheel]
 skip = [
-    "*musllinux*",
-    "cp314t-*",  # _Do not_ build cp314t wheels
+    "cp310-win_arm64", #Skipped due to unavailability of Python binary and NumPy for Win-ARM64
+    "cp314t-*",  # Comment out to build cp314t wheels
 ]
 enable = [
-    # "cpython-freethreading",  # Build cp313t wheels
+    # "cpython-freethreading",  # Uncomment to build cp313t wheels
 ]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
 manylinux-x86_64-image = "ghcr.io/h5py/manylinux_2_28_x86_64-hdf5"
 manylinux-aarch64-image = "ghcr.io/h5py/manylinux_2_28_aarch64-hdf5"
+musllinux-x86_64-image = "ghcr.io/h5py/musllinux_1_2_x86_64-hdf5"
+musllinux-aarch64-image = "ghcr.io/h5py/musllinux_1_2_aarch64-hdf5"
 test-groups = ["wheels"]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 
