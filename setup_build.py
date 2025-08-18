@@ -188,8 +188,9 @@ DEF CYTHON_BUILD_VERSION = '{cython_version}'
         # FIXME Temporarily force users to set PYTHON_GIL=0 in free-threading
         # interpreters due to instability concerns.
         # See matching FIXMEs in azure-pipelines.yml and pyproject.toml.
-        # if Version(cython_version) >= Version("3.1.0b1"):
-        #     compiler_directives["freethreading_compatible"] = True
+        # DNM
+        if Version(cython_version) >= Version("3.1.0b1"):
+            compiler_directives["freethreading_compatible"] = True
 
         # Run Cython
         print("Executing cythonize()")
