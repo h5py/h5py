@@ -9,8 +9,9 @@ import os.path as osp
 import shutil
 import tempfile
 
+
 import h5py as h5
-from ..common import ut
+from ..common import ut, name
 from ..._hl.vds import vds_support
 
 
@@ -316,7 +317,7 @@ class IndexingTestCase(ut.TestCase):
         vsource = h5.VirtualSource(filename, 'data', shape=(10,))
         layout[inds] = vsource
 
-        outfile = osp.join(self.tmpdir, 'VDS.h5')
+        outfile = osp.join(self.tmpdir, f'{name("VDS")}.h5')
 
         # Assembly virtual dataset (indexing source)
         layout2 = h5.VirtualLayout((6,), 'i4')
