@@ -20,7 +20,7 @@ from functools import wraps
 import numpy as np
 from numpy.lib.recfunctions import repack_fields
 import h5py
-
+from h5py._objects import phil
 import unittest as ut
 
 
@@ -168,16 +168,17 @@ class TestCase(ut.TestCase):
             self.assertArrayEqual(dset[s], arr_result)
 
             if not skip_fast_reader:
-                self.assertArrayEqual(
-                    dset._fast_reader.read(s_fast),
-                    arr_result,
-                )
+                with phil:
+                    self.assertArrayEqual(
+                        dset._fast_reader.read(s_fast),
+                        arr_result,
+                    )
         else:
             with self.assertRaises(exc):
                 dset[s]
 
             if not skip_fast_reader:
-                with self.assertRaises(exc):
+                with self.assertRaises(exc), phil:
                     dset._fast_reader.read(s_fast)
 
 NUMPY_RELEASE_VERSION = tuple([int(i) for i in np.__version__.split(".")[0:2]])
