@@ -248,7 +248,7 @@ def name(prefix: str = "foo") -> str:
     When running on a free-threading interpreter, append a thread ID to the name.
     This allows running tests with pytest-run-parallel on shared resources, e.g. two
     threads can attempt to write to separate datasets on the same File at the same
-    time (even though the actually writes will be serialized).
+    time (even though the actual writes will be serialized by the `phil` lock).
 
     Calling this functionn twice from the same thread will return the same name.
     """
