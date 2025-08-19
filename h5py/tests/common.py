@@ -239,21 +239,18 @@ def subproc_env(d):
     return decorator
 
 
-GIL_ENABLED = sys.version_info < (3, 13) or sys._is_gil_enabled()
+MAIN_THREAD = threading.get_ident()
 
 
 def name(prefix: str = "foo") -> str:
     """Return a static name, to be used e.g. as dataset name.
 
-    When running on a free-threading interpreter, append a thread ID to the name.
-    This allows running tests with pytest-run-parallel on shared resources, e.g. two
-    threads can attempt to write to separate datasets on the same File at the same
-    time (even though the actual writes will be serialized by the `phil` lock).
+    When running in pytest-run-parallel, append a thread ID to the name.
+    This allows running tests on shared resources, e.g. two threads can attempt to write
+    to separate datasets on the same File at the same time (even though the actual
+    writes will be serialized by the `phil` lock).
 
-    Calling this functionn twice from the same thread will return the same name.
+    Calling this function twice from the same thread will return the same name.
     """
-    if GIL_ENABLED:
-        return prefix
-    else:
-        tid = threading.get_ident()
-        return f"{prefix}-{tid}"
+    tid = threading.get_ident()
+    return prefix if tid == MAIN_THREAD else f"{prefix}-{tid}"

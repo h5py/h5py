@@ -33,7 +33,7 @@ from h5py.h5py_warnings import H5pyDeprecationWarning
 from h5py import version
 import h5py
 import h5py._hl.selections as sel
-from h5py.tests.common import NUMPY_RELEASE_VERSION
+from h5py.tests.common import NUMPY_RELEASE_VERSION, name
 
 class BaseDataset(TestCase):
     def setUp(self):
@@ -128,10 +128,10 @@ class TestCreateShape(BaseDataset):
         self.assertEqual(dset.dtype, np.dtype('complex256'))
 
     def test_name_bytes(self):
-        dset = self.f.create_dataset(b'foo', (1,))
+        dset = self.f.create_dataset(name("foo").encode('utf-8'), (1,))
         self.assertEqual(dset.shape, (1,))
 
-        dset2 = self.f.create_dataset(b'bar/baz', (2,))
+        dset2 = self.f.create_dataset((name("bar") + "/baz").encode('utf-8'), (2,))
         self.assertEqual(dset2.shape, (2,))
 
 class TestCreateData(BaseDataset):
