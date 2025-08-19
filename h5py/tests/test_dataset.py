@@ -33,7 +33,7 @@ from h5py.h5py_warnings import H5pyDeprecationWarning
 from h5py import version
 import h5py
 import h5py._hl.selections as sel
-from h5py.tests.common import NUMPY_RELEASE_VERSION, name
+from h5py.tests.common import NUMPY_RELEASE_VERSION, is_parallel_test, name
 
 class BaseDataset(TestCase):
     def setUp(self):
@@ -53,6 +53,7 @@ class TestRepr(BaseDataset):
         ds = self.f.create_dataset(name(), (4,), dtype='int32')
         assert repr(ds) == f'<HDF5 dataset "{name()}": shape (4,), type "<i4">'
 
+    @pytest.mark.thread_unsafe
     def test_repr_closed(self):
         """ repr() works on live and dead datasets """
         ds = self.f.create_dataset(name(), (4,))
@@ -643,6 +644,7 @@ class TestCreateGzip(BaseDataset):
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 4)
 
+    @pytest.mark.thread_unsafe(reason="monkey-patch")
     def test_gzip_number(self):
         """ Create with gzip level by specifying integer """
         dset = self.f.create_dataset(name(), (20, 30), compression=7)
@@ -674,7 +676,7 @@ class TestCreateCompressionNumber(BaseDataset):
     """
         Feature: Datasets created with a compression code
     """
-
+    @pytest.mark.thread_unsafe(reason="monkey-patch")
     def test_compression_number(self):
         """ Create with compression number of gzip (h5py.h5z.FILTER_DEFLATE) and a compression level of 7"""
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
@@ -687,6 +689,7 @@ class TestCreateCompressionNumber(BaseDataset):
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 7)
 
+    @pytest.mark.thread_unsafe(reason="monkey-patch")
     def test_compression_number_invalid(self):
         """ Create with invalid compression numbers  """
         with self.assertRaises(ValueError) as e:
@@ -783,6 +786,13 @@ class TestCreateScaleOffset(BaseDataset):
     """
         Feature: Datasets can use the scale/offset filter
     """
+    def reopen(self):
+        if is_parallel_test():
+            self.f.flush()
+        else:
+            filename = self.f.filename
+            self.f.close()
+            self.f = h5py.File(filename, 'r')
 
     def test_float_fails_without_options(self):
         """ Ensure that a scale factor is required for scaleoffset compression of floating point data """
@@ -817,9 +827,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         # Dataset round-trips
         dset[...] = testdata
-        filename = self.f.filename
-        self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.reopen()
         readdata = self.f[name()][...]
 
         # Test that data round-trips to requested precision
@@ -843,9 +851,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         # Data round-trips correctly and identically
         dset[...] = testdata
-        filename = self.f.filename
-        self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.reopen()
         readdata = self.f[name()][...]
         self.assertArrayEqual(readdata, testdata)
 
@@ -863,9 +869,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         # Data round-trips correctly
         dset[...] = testdata
-        filename = self.f.filename
-        self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.reopen()
         readdata = self.f[name()][...]
         self.assertArrayEqual(readdata, testdata)
 
@@ -883,9 +887,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         # Data can be written and read
         dset[...] = testdata
-        filename = self.f.filename
-        self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.reopen()
         readdata = self.f[name()][...]
 
         # Compression is lossy
@@ -1786,9 +1788,13 @@ class TestVlen(BaseDataset):
     def test_reuse_struct_from_other(self):
         dt = [('a', int), ('b', h5py.vlen_dtype(int))]
         self.f.create_dataset(name("x"), (1,), dtype=dt)
-        fname = self.f.filename
-        self.f.close()
-        self.f = h5py.File(fname, 'a')
+
+        self.f.flush()
+        if not is_parallel_test():
+            fname = self.f.filename
+            self.f.close()
+            self.f = h5py.File(fname, 'a')
+
         self.f.create_dataset(name("y"), (1,), self.f[name("x")]['b'][()].dtype)
 
     def test_convert(self):
@@ -1862,7 +1868,8 @@ class TestVlen(BaseDataset):
 
         # Make sure we can close the file.
         self.f.flush()
-        self.f.close()
+        if not is_parallel_test():
+            self.f.close()
 
     def test_numpy_float16(self):
         np_dt = np.dtype('float16')

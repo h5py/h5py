@@ -255,3 +255,11 @@ def name(prefix: str = "foo") -> str:
     """
     tid = threading.get_ident()
     return prefix if tid == MAIN_THREAD else f"{prefix}-{tid}"
+
+
+def is_parallel_test() -> bool:
+    """Return True if the test calling this function is likely being executed
+    in a thread pool by pytest-run-parallel; false otherwise.
+    """
+    tid = threading.get_ident()
+    return tid != MAIN_THREAD
