@@ -1065,6 +1065,11 @@ class TestChunkIterator(BaseDataset):
         with self.assertRaises(TypeError):
             dset.iter_chunks()
 
+    def test_rank_mismatch(self):
+        dset = self.f.create_dataset("foo", shape=(100,), chunks=(32,))
+        with self.assertRaises(ValueError):
+            dset.iter_chunks((slice(19,67), 9))
+
     def test_1d(self):
         dset = self.f.create_dataset("foo", (100,), chunks=(32,))
         expected = ((slice(0,32,1),), (slice(32,64,1),), (slice(64,96,1),),
