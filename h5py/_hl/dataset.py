@@ -367,16 +367,26 @@ class ChunkIterator:
         if source_sel is None:
             # select over entire dataset
             self._sel = tuple(
-                slice(0, self._shape[dim])
-                for dim in range(rank)
+                slice(0, self._shape[dim]) for dim in range(rank)
             )
         else:
-            if isinstance(source_sel, slice):
+            if isinstance(source_sel, (slice, int)):
                 self._sel = (source_sel,)
             else:
                 self._sel = source_sel
-        if len(self._sel) != rank:
-            raise ValueError("Invalid selection - selection region must have same rank as dataset")
+            if len(self._sel) != rank:
+                raise ValueError("Invalid selection - selection region must have same rank as dataset")
+            sel = list()
+            for dim in range(rank):
+                s = self._sel[dim]
+                if isinstance(s, int):
+                    sel.append(slice(s, s + 1))
+                else:
+                    sel.append(slice(s.start or 0,
+                                     s.stop or self._shape[dim],
+                                     s.step))
+            self._sel = tuple(sel)
+
         self._chunk_index = []
         for dim in range(rank):
             s = self._sel[dim]
