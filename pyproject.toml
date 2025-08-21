@@ -122,7 +122,7 @@ wheels = [
 ]
 
 # FIXME Temporarily disable cp313t/cp314t wheels due to instability concerns.
- # See matching FIXMEs in azure-pipelines.yml and setup_build.py.
+# See matching FIXMEs in azure-pipelines.yml and setup_build.py.
 [tool.cibuildwheel]
 skip = [
     "cp310-win_arm64", #Skipped due to unavailability of Python binary and NumPy for Win-ARM64

@@ -26,10 +26,10 @@ on different datasets or different files.
 
 free-threading
 --------------
-h5py can be compiled for free-threading Python interpreters (e.g. 3.13t), where the
+h5py can be compiled for free-threading Python interpreters (e.g. 3.14t), where the
 GIL has been disabled. This does not disable the ``phil`` global lock, though, as
 such lock protects against race conditions in libhdf5 and not in the Python interpreter.
 
-Free-threading stability is, at the moment, largely untested. For this reason,
-free-threading wheels (e.g. cp313t) are not published on PyPI and the functionality is
+Free-threading stability is, as of h5py 3.15.0, largely untested. For this reason,
+free-threading wheels (e.g. ``cp314t``) are not published on PyPI and the functionality is
 only intended for experimental use.
