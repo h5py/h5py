@@ -28,6 +28,7 @@ from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
 # Python imports
 import codecs
 import platform
+import re
 import sys
 from collections import namedtuple
 import numpy as np
@@ -44,7 +45,7 @@ _IS_PPC64LE = _UNAME_MACHINE == "ppc64le"
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 cdef char* H5PY_NUMPY_STRING_TAG = "NUMPY:STRING"
 
-NUMPY_RUNTIME_VERSION_TUPLE = tuple(int(x) for x in np.__version__.split('.')[:3])
+NUMPY_RUNTIME_VERSION_TUPLE = tuple(int(x) for x in re.findall(r'\d+', np.__version__)[:3])
 
 # === Custom C API ============================================================
 
