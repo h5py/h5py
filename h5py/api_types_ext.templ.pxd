@@ -9,10 +9,9 @@
 
 # === Standard C library types and functions ==================================
 
-include 'config.pxi'
-
-IF MPI:
-    from mpi4py.libmpi cimport MPI_Comm, MPI_Info
+### {{if MPI}}
+from mpi4py.libmpi cimport MPI_Comm, MPI_Info
+### {{endif}}
 
 from libc.stdlib cimport malloc, free
 from libc.string cimport strlen, strchr, strcpy, strncpy, strcmp,\
@@ -51,10 +50,11 @@ cdef extern from "api_compat.h":
     size_t h5py_offset_n128_real
     size_t h5py_offset_n128_imag
 
-    IF COMPLEX256_SUPPORT:
-        size_t h5py_size_n256
-        size_t h5py_offset_n256_real
-        size_t h5py_offset_n256_imag
+    ### {{if COMPLEX256_SUPPORT}}
+    size_t h5py_size_n256
+    size_t h5py_offset_n256_real
+    size_t h5py_offset_n256_imag
+    ### {{endif}}
 
 cdef extern from "lzf_filter.h":
 

@@ -13,10 +13,8 @@
     Proxy functions for read/write, to work around the HDF5 bogus type issue.
 """
 
-include "config.pxi"
-
-from .h5t import NUMPY_GE2
-if NUMPY_GE2:
+from .h5t import NUMPY_RUNTIME_VERSION_TUPLE
+if NUMPY_RUNTIME_VERSION_TUPLE >= (2, 0, 0):
     # Numpy native variable-width strings
     # This fails to import on NumPy < 2.0
     from ._npystrings import npystrings_pack, npystrings_unpack
@@ -185,7 +183,7 @@ cdef herr_t dset_rw_vlen_strings(
     cdef char* zero_terminated_buf = NULL
     cdef hsize_t npoints
 
-    assert NUMPY_GE2
+    assert NUMPY_RUNTIME_VERSION_TUPLE >= (2, 0, 0)
 
     h5_vlen_string = H5Tcopy(H5T_C_S1)
     H5Tset_size(h5_vlen_string, H5T_VARIABLE)

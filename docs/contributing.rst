@@ -348,23 +348,23 @@ communicate this::
 You can specify either, both or none of "MPI" or a version number in "X.Y.Z"
 format.
 
-In the Cython code, these show up as "preprocessor" defines ``MPI`` and
-``HDF5_VERSION``.  So the low-level implementation (as a method on
+In the Cython code, these show up as ``tempita`` template comments.
+So the low-level implementation (as a method on
 ``h5py.h5f.FileID``) looks like this::
 
-    IF MPI and HDF5_VERSION >= (1, 8, 9):
+    ### {{if MPI and HDF5_VERSION >= (1, 8, 9)}}
+    def set_mpi_atomicity(self, bint atomicity):
+        """ (BOOL atomicity)
 
-        def set_mpi_atomicity(self, bint atomicity):
-            """ (BOOL atomicity)
+        For MPI-IO driver, set to atomic (True), which guarantees sequential
+        I/O semantics, or non-atomic (False), which improves  performance.
 
-            For MPI-IO driver, set to atomic (True), which guarantees sequential
-            I/O semantics, or non-atomic (False), which improves  performance.
+        Default is False.
 
-            Default is False.
-
-            Feature requires: 1.8.9 and Parallel HDF5
-            """
-            H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
+        Feature requires: 1.8.9 and Parallel HDF5
+        """
+        H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
+    ### {{endif}}
 
 High-level code can check the version of the HDF5 library, or check to see if
 the method is present on ``FileID`` objects.
