@@ -54,7 +54,7 @@ class TestCase(ut.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.tempdir)
 
-    def mktemp(self, suffix='.hdf5', prefix='', dir=None):
+    def mktemp(self, suffix='.hdf5', prefix='tmp', dir=None):
         if dir is None:
             dir = self.tempdir
         return tempfile.mktemp(suffix, name(prefix), dir=dir)
