@@ -127,12 +127,12 @@ class h5py_build_ext(build_ext):
                     continue
 
                 if (target := raw_path.with_suffix(ext)).exists():
-                    current_text = target.read_text()
+                    current_text = target.read_text('utf-8')
                 else:
                     current_text = ""
                 new_text = tempita.sub(templ.read_text(), **templ_config)
                 if new_text != current_text:
-                    target.write_text(new_text)
+                    target.write_text(new_text, 'utf-8')
 
         return [cls._make_extension(m, settings) for m in MODULES]
 
