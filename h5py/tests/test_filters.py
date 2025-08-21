@@ -15,7 +15,7 @@ import os
 import numpy as np
 import h5py
 
-from .common import ut, TestCase, name
+from .common import ut, TestCase, is_parallel_test, name
 
 
 class TestFilters(TestCase):
@@ -42,12 +42,16 @@ class TestFilters(TestCase):
                               fletcher32=True,
                               compression="szip",
                               )
-        self.f.close()
+
+        self.f.flush()
+        if not is_parallel_test():
+            self.f.close()
+            self.f = h5py.File(self.path, 'r')
 
         with h5py.File(self.path, "r") as h5:
             # Access the data which will compute the fletcher32
             # checksum and raise an OSError if something is wrong.
-            h5[name()][0]
+            self.f[name()][0]
 
     def test_wr_scaleoffset_fletcher32(self):
         """ make sure that scaleoffset + fletcher32 is prevented
@@ -73,7 +77,7 @@ def test_filter_ref_obj(writable_file):
 
     # Pass object as compression argument (new in h5py 3.0)
     ds = writable_file.create_dataset(
-        'x', shape=(100,), dtype=np.uint32, compression=gzip8
+        name(), shape=(100,), dtype=np.uint32, compression=gzip8
     )
     assert ds.compression == 'gzip'
     assert ds.compression_opts == 8

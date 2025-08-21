@@ -11,7 +11,7 @@ import sys
 
 import numpy as np
 
-from .common import ut, TestCase, name
+from .common import ut, TestCase, is_parallel_test, name
 from h5py import File, Group, Dataset
 import h5py
 
@@ -75,14 +75,15 @@ class TestH5DSBindings(BaseDataset):
         self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 2), 2)
 
     def test_detach_dimensionscale(self):
-        self.assertTrue(
-            h5py.h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
-            )
-        h5py.h5ds.detach_scale(self.f['data'].id, self.f['x1'].id, 2)
-        self.assertFalse(
-            h5py.h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
-            )
-        self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 2), 1)
+        self.f[name()] = np.ones((4, 3, 2), 'f')
+        ds = self.f[name()]
+        h5py.h5ds.attach_scale(ds.id, self.f['x1'].id, 2)
+        h5py.h5ds.attach_scale(ds.id, self.f['x2'].id, 2)
+        self.assertTrue(h5py.h5ds.is_attached(ds.id, self.f['x1'].id, 2))
+        self.assertEqual(h5py.h5ds.get_num_scales(ds.id, 2), 2)
+        h5py.h5ds.detach_scale(ds.id, self.f['x1'].id, 2)
+        self.assertFalse(h5py.h5ds.is_attached(ds.id, self.f['x1'].id, 2))
+        self.assertEqual(h5py.h5ds.get_num_scales(ds.id, 2), 1)
 
     def test_label_dimensionscale(self):
         self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 0), b'z')
@@ -128,8 +129,10 @@ class TestDimensionManager(BaseDataset):
     def test_repr(self):
         ds = self.f.create_dataset(name(), (2,3))
         self.assertIsInstance(repr(ds.dims), str)
-        self.f.close()
-        self.assertIsInstance(repr(ds.dims), str)
+
+        if not is_parallel_test():
+            self.f.close()
+            self.assertIsInstance(repr(ds.dims), str)
 
 
 class TestDimensionsHighLevel(BaseDataset):
@@ -156,18 +159,21 @@ class TestDimensionsHighLevel(BaseDataset):
         self.assertEqual(self.f['data'].dims[1].label, '')
         self.assertEqual(self.f['data'].dims[0].label, 'foo')
 
-    def test_detach_scale(self):
-        self.f['data'].dims[2].detach_scale(self.f['x1'])
-        self.assertEqual(len(self.f['data'].dims[2]), 1)
-        self.assertEqual(self.f['data'].dims[2][0], self.f['x2'])
-        self.f['data'].dims[2].detach_scale(self.f['x2'])
-        self.assertEqual(len(self.f['data'].dims[2]), 0)
+    def test_attach_detach_scale(self):
+        self.f[name('data3')] = self.f['data'][...]
+        ds = self.f[name('data3')]
 
-    def test_attach_scale(self):
-        self.f['x3'] = self.f['x2'][...]
-        self.f['data'].dims[2].attach_scale(self.f['x3'])
-        self.assertEqual(len(self.f['data'].dims[2]), 3)
-        self.assertEqual(self.f['data'].dims[2][2], self.f['x3'])
+        ds.dims[2].attach_scale(self.f["x1"])
+        ds.dims[2].attach_scale(self.f["x2"])
+        self.assertEqual(len(ds.dims[2]), 2)
+        self.assertEqual(ds.dims[2][0], self.f["x1"])
+        self.assertEqual(ds.dims[2][1], self.f["x2"])
+
+        ds.dims[2].detach_scale(self.f["x1"])
+        self.assertEqual(len(ds.dims[2]), 1)
+        self.assertEqual(ds.dims[2][0], self.f["x2"])
+        ds.dims[2].detach_scale(self.f["x2"])
+        self.assertEqual(len(ds.dims[2]), 0)
 
     def test_get_dimension_scale(self):
         self.assertEqual(self.f['data'].dims[2][0], self.f['x1'])
@@ -197,8 +203,10 @@ class TestDimensionsHighLevel(BaseDataset):
     def test_repr(self):
         ds = self.f["data"]
         self.assertEqual(repr(ds.dims[2])[1:16], '"x" dimension 2')
-        self.f.close()
-        self.assertIsInstance(repr(ds.dims), str)
+
+        if not is_parallel_test():
+            self.f.close()
+            self.assertIsInstance(repr(ds.dims), str)
 
     def test_attributes(self):
         self.f["data2"].attrs["DIMENSION_LIST"] = self.f["data"].attrs[

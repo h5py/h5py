@@ -1,3 +1,4 @@
+import threading
 from ctypes import (
     addressof,
     c_char_p,
@@ -13,7 +14,7 @@ import pytest
 import h5py
 from h5py import h5z
 
-from .common import insubprocess
+from .common import insubprocess, is_parallel_test
 
 
 # Type of filter callback function of H5Z_class2_t
@@ -44,6 +45,7 @@ class H5ZClass2T(Structure):
     ]
 
 
+@pytest.mark.thread_unsafe(reason="fixed filter_id")
 def test_register_filter():
     filter_id = 256  # Test ID
 

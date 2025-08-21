@@ -35,8 +35,8 @@ class TestVlen(TestCase):
         fields.append(('field_1', h5py.string_dtype()))
         fields.append(('field_2', np.int32))
         dt = np.dtype(fields)
-        self.f['mytype'] = np.dtype(dt)
-        dt_out = self.f['mytype'].dtype.fields['field_1'][0]
+        self.f[name()] = np.dtype(dt)
+        dt_out = self.f[name()].dtype.fields['field_1'][0]
         string_inf = h5py.check_string_dtype(dt_out)
         self.assertEqual(string_inf.encoding, 'utf-8')
 
