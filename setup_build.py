@@ -16,8 +16,6 @@ import os
 import os.path as op
 from pathlib import Path
 
-from packaging.version import Version
-
 import api_gen
 from setup_configure import BuildConfig
 
@@ -184,18 +182,10 @@ DEF CYTHON_BUILD_VERSION = '{cython_version}'
 """
         write_if_changed(config_file, s)
 
-        compiler_directives = {}
-        # FIXME Temporarily force users to set PYTHON_GIL=0 in free-threading
-        # interpreters due to instability concerns.
-        # See matching FIXMEs in azure-pipelines.yml and pyproject.toml.
-        # if Version(cython_version) >= Version("3.1.0b1"):
-        #     compiler_directives["freethreading_compatible"] = True
-
         # Run Cython
         print("Executing cythonize()")
         self.extensions = cythonize(self._make_extensions(config),
                                     force=config.changed() or self.force,
-                                    compiler_directives=compiler_directives,
                                     language_level=3)
 
         # Perform the build

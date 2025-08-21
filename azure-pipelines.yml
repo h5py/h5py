@@ -88,7 +88,7 @@ jobs:
 
         # FIXME it was decided to not mark the module as freethreading-compatible
         # for the time being due to instability concerns.
-        # See matching FIXMEs in pyproject.toml and setup_build.py.
+        # See https://github.com/h5py/h5py/pull/2650
         PYTHON_GIL: 0
 
         TOXENV: py313t-test-deps
