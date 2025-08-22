@@ -2200,7 +2200,7 @@ def test_view_properties(view_getter, make_ds, writable_file):
 
 
 def test_concurrent_dataset_creation(writable_file):
-    N_THREADS = 5
+    N_THREADS = 25
     # Defines a thread barrier that will be spawned before parallel execution
     # this increases the probability of concurrent access clashes.
     barrier = threading.Barrier(N_THREADS)
@@ -2208,10 +2208,11 @@ def test_concurrent_dataset_creation(writable_file):
     def closure(ithread):
         # Ensure that all threads reach this point before concurrent execution.
         barrier.wait()
-        return writable_file.create_dataset(f'concurrent_{ithread}', (1000,), dtype='i4')
+        for j in range(25):
+            writable_file.create_dataset(f'concurrent_{ithread:02d}_{j:02d}', (1000,), dtype='i4')
 
     with ThreadPoolExecutor(max_workers=N_THREADS) as executor:
         futures = [executor.submit(closure, ithread) for ithread in range(N_THREADS)]
 
-    results = sorted([f.result() for f in futures], key=lambda ds: ds.name)
-    assert [ds.name for ds in results] == [f'/concurrent_{i}' for i in range(N_THREADS)]
+    [f.result() for f in futures]
+    assert set(writable_file) == set(f'concurrent_{i:02d}_{j:02d}' for i in range(N_THREADS) for j in range(25))
