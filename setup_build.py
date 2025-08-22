@@ -12,6 +12,7 @@ except ImportError:
 from distutils.command.build_ext import build_ext
 import copy
 import sys
+import sysconfig
 import os
 import os.path as op
 import platform
