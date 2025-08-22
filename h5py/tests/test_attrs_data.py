@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import TestCase, ut
+from .common import TestCase, name
 
 import h5py
 from h5py import h5a, h5s, h5t
@@ -41,16 +41,16 @@ class TestScalar(BaseAttrs):
 
     def test_int(self):
         """ Integers are read as correct NumPy type """
-        self.f.attrs['x'] = np.array(1, dtype=np.int8)
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = np.array(1, dtype=np.int8)
+        out = self.f.attrs[name()]
         self.assertIsInstance(out, np.int8)
 
     def test_compound(self):
         """ Compound scalars are read as numpy.void """
         dt = np.dtype([('a', 'i'), ('b', 'f')])
         data = np.array((1, 4.2), dtype=dt)
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
         self.assertIsInstance(out, np.void)
         self.assertEqual(out, data)
         self.assertEqual(out['b'], data['b'])
@@ -63,8 +63,8 @@ class TestScalar(BaseAttrs):
         data = np.array((np.array(list(range(1, 5)), dtype=np.int32),
                         np.array(list(range(8, 10)), dtype=np.int32)), dtype=dt)[()]
 
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
 
         # Specifying check_alignment=False because vlen fields have 8 bytes of padding
         # because the vlen datatype in hdf5 occupies 16 bytes
@@ -88,8 +88,8 @@ class TestScalar(BaseAttrs):
                          2),
                         dtype=dt)[()]
 
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
         self.assertArrayEqual(out, data, check_alignment=False)
 
     def test_vlen_compound_with_vlen_string(self):
@@ -100,8 +100,8 @@ class TestScalar(BaseAttrs):
         dt = np.dtype([('f', h5py.vlen_dtype(dt_inner))])
 
         data = np.array((np.array([(b"apples", b"bananas"), (b"peaches", b"oranges")], dtype=dt_inner),),dtype=dt)[()]
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
         self.assertArrayEqual(out, data, check_alignment=False)
 
 
@@ -114,8 +114,8 @@ class TestArray(BaseAttrs):
     def test_single(self):
         """ Single-element arrays are correctly recovered """
         data = np.ndarray((1,), dtype='f')
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
         self.assertIsInstance(out, np.ndarray)
         self.assertEqual(out.shape, (1,))
 
@@ -124,8 +124,8 @@ class TestArray(BaseAttrs):
         data = np.ndarray((42,), dtype='f')
         data[:] = 42.0
         data[10:35] = -47.0
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
         self.assertIsInstance(out, np.ndarray)
         self.assertEqual(out.shape, (42,))
         self.assertArrayEqual(out, data)
@@ -144,8 +144,8 @@ class TestTypes(BaseAttrs):
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 42
-            self.f.attrs['x'] = data
-            out = self.f.attrs['x']
+            self.f.attrs[name()] = data
+            out = self.f.attrs[name()]
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
@@ -156,8 +156,8 @@ class TestTypes(BaseAttrs):
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 42.3
-            self.f.attrs['x'] = data
-            out = self.f.attrs['x']
+            self.f.attrs[name()] = data
+            out = self.f.attrs[name()]
             # TODO: Clean up after issue addressed !
             print("dtype: ", out.dtype, dt)
             print("value: ", out, data)
@@ -171,8 +171,8 @@ class TestTypes(BaseAttrs):
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = -4.2j + 35.9
-            self.f.attrs['x'] = data
-            out = self.f.attrs['x']
+            self.f.attrs[name()] = data
+            out = self.f.attrs[name()]
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
@@ -183,8 +183,8 @@ class TestTypes(BaseAttrs):
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 'h'
-            self.f.attrs['x'] = data
-            out = self.f.attrs['x']
+            self.f.attrs[name()] = data
+            out = self.f.attrs[name()]
             self.assertEqual(out.dtype, dt)
             self.assertEqual(out[0], data[0])
 
@@ -193,8 +193,8 @@ class TestTypes(BaseAttrs):
 
         data = np.ndarray((2,), dtype=np.bool_)
         data[...] = True, False
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
         self.assertEqual(out.dtype, data.dtype)
         self.assertEqual(out[0], data[0])
         self.assertEqual(out[1], data[1])
@@ -206,8 +206,8 @@ class TestTypes(BaseAttrs):
         data = np.ndarray((2,), dtype=dt)
         data[...] = "Hello", "Hi there!  This is HDF5!"
 
-        self.f.attrs['x'] = data
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = data
+        out = self.f.attrs[name()]
         self.assertEqual(out.dtype, dt)
         self.assertEqual(out[0], data[0])
         self.assertEqual(out[1], data[1])
@@ -215,13 +215,13 @@ class TestTypes(BaseAttrs):
     def test_string_scalar(self):
         """ Storage of variable-length byte string scalars (auto-creation) """
 
-        self.f.attrs['x'] = b'Hello'
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = b'Hello'
+        out = self.f.attrs[name()]
 
         self.assertEqual(out, 'Hello')
         self.assertEqual(type(out), str)
 
-        aid = h5py.h5a.open(self.f.id, b"x")
+        aid = h5py.h5a.open(self.f.id, name().encode('utf-8'))
         tid = aid.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
@@ -230,12 +230,12 @@ class TestTypes(BaseAttrs):
     def test_unicode_scalar(self):
         """ Storage of variable-length unicode strings (auto-creation) """
 
-        self.f.attrs['x'] = u"Hello" + chr(0x2340) + u"!!"
-        out = self.f.attrs['x']
+        self.f.attrs[name()] = u"Hello" + chr(0x2340) + u"!!"
+        out = self.f.attrs[name()]
         self.assertEqual(out, u"Hello" + chr(0x2340) + u"!!")
         self.assertEqual(type(out), str)
 
-        aid = h5py.h5a.open(self.f.id, b"x")
+        aid = h5py.h5a.open(self.f.id, name().encode('utf-8'))
         tid = aid.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
@@ -258,8 +258,10 @@ class TestEmpty(BaseAttrs):
         )
 
     def test_write(self):
-        self.f.attrs["y"] = self.empty_obj
-        self.assertTrue(is_empty_dataspace(h5a.open(self.f.id, b'y')))
+        self.f.attrs[name()] = self.empty_obj
+        self.assertTrue(
+            is_empty_dataspace(h5a.open(self.f.id, name().encode("utf-8")))
+        )
 
     def test_modify(self):
         with self.assertRaises(OSError):
@@ -302,10 +304,7 @@ class TestWriteException(BaseAttrs):
 
         s = b"Hello\x00Hello"
 
-        try:
-            self.f.attrs['x'] = s
-        except ValueError:
-            pass
-
+        with self.assertRaises(ValueError):
+            self.f.attrs["x"] = s
         with self.assertRaises(KeyError):
-            self.f.attrs['x']
+            self.f.attrs["x"]

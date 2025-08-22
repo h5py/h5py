@@ -14,13 +14,12 @@ import numpy as np
 from h5py import File, special_dtype
 from h5py._hl.files import direct_vfd
 
-from .common import ut, TestCase
-from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
+from .common import ut, TestCase, name
 
 
 class TestFileID(TestCase):
     def test_descriptor_core(self):
-        with File('TestFileID.test_descriptor_core', driver='core',
+        with File(self.mktemp(), driver='core',
                   backing_store=False, mode='x') as f:
             assert isinstance(f.id.get_vfd_handle(), int)
 

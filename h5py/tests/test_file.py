@@ -24,7 +24,7 @@ from hashlib import sha256
 
 import pytest
 
-from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
+from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile, name
 from h5py._hl.files import direct_vfd
 from h5py import File
 import h5py
@@ -178,11 +178,11 @@ class TestSpaceStrategy(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'w', fs_strategy="invalid")
 
-        dset = fid.create_dataset('foo', (100,), dtype='uint8')
+        dset = fid.create_dataset(name("x"), (100,), dtype='uint8')
         dset[...] = 1
-        dset = fid.create_dataset('bar', (100,), dtype='uint8')
+        dset = fid.create_dataset(name("y"), (100,), dtype='uint8')
         dset[...] = 1
-        del fid['foo']
+        del fid[name("x")]
         fid.close()
 
         fid = File(fname, 'a')
@@ -192,7 +192,7 @@ class TestSpaceStrategy(TestCase):
         assert(fs_strat[1] == True)
         assert(fs_strat[2] == 100)
 
-        dset = fid.create_dataset('foo2', (100,), dtype='uint8')
+        dset = fid.create_dataset(name("z"), (100,), dtype='uint8')
         dset[...] = 1
         fid.close()
 
@@ -914,7 +914,7 @@ class TestMPI:
         from mpi4py import MPI
 
         f = File(mpi_file_name, 'w', driver='mpio', comm=MPI.COMM_WORLD)
-        f.create_group("test")
+        f.create_group(name())
         f.close()
         f.close()
 
@@ -1074,8 +1074,8 @@ def test_close_gc(writable_file):
 def test_reproducible_file(tmp_path):
     def write(path):
         with File(path, 'w', track_order=True) as hf:
-            g = hf.create_group("group", track_order=True)
-            g.create_dataset("dset", shape=10, dtype='f4')
+            g = hf.create_group(name("x"), track_order=True)
+            g.create_dataset(name("y"), shape=10, dtype='f4')
 
     f1 = tmp_path / "f1.h5"
     write(f1)

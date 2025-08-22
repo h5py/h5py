@@ -15,7 +15,7 @@ import h5py
 from h5py._hl.files import _drivers
 from h5py import File
 
-from .common import ut, TestCase
+from .common import ut, TestCase, name
 
 import pytest
 import io
@@ -249,7 +249,7 @@ class TestFileObj(TestCase):
     def test_exception_writeonly(self):
         # HDF5 expects read & write access to a file it's writing;
         # check that we get the correct exception on a write-only file object.
-        fileobj = open(os.path.join(self.tempdir, 'a.h5'), 'wb')
+        fileobj = open(os.path.join(self.tempdir, name() + '.h5'), 'wb')
         f = h5py.File(fileobj, 'w')
         group = f.create_group("group")
         with self.assertRaises(io.UnsupportedOperation):
