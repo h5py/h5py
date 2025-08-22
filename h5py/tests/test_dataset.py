@@ -22,7 +22,8 @@ import sys
 import numpy as np
 import platform
 import pytest
-import warnings
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from .common import ut, TestCase
 from .data_files import get_data_file_path
@@ -2196,3 +2197,24 @@ def test_view_properties(view_getter, make_ds, writable_file):
     assert view.shape == (5, 6)
     assert view.size == 30
     assert len(view) == 5
+
+
+def test_concurrent_dataset_creation(writable_file):
+    N_THREADS = 25
+    N_DATASETS_PER_THREAD = 5
+    # Defines a thread barrier that will be spawned before parallel execution
+    # this increases the probability of concurrent access clashes.
+    barrier = threading.Barrier(N_THREADS)
+
+    def closure(ithread):
+        # Ensure that all threads reach this point before concurrent execution.
+        barrier.wait()
+        for j in range(N_DATASETS_PER_THREAD):
+            writable_file.create_dataset(f'concurrent_{ithread:02d}_{j:02d}', (1000,), dtype='i4')
+
+    with ThreadPoolExecutor(max_workers=N_THREADS) as executor:
+        futures = [executor.submit(closure, ithread) for ithread in range(N_THREADS)]
+
+    [f.result() for f in futures]
+    expected = set(f'concurrent_{i:02d}_{j:02d}' for i in range(N_THREADS) for j in range(N_DATASETS_PER_THREAD))
+    assert set(writable_file) == expected

@@ -12,6 +12,7 @@ except ImportError:
 from distutils.command.build_ext import build_ext
 import copy
 import sys
+import sysconfig
 import os
 import os.path as op
 import platform
@@ -195,6 +196,7 @@ class h5py_build_ext(build_ext):
             "PLATFORM_SYSTEM": platform.system(),
             "OBJECTS_USE_LOCKING": True,
             "OBJECTS_DEBUG_ID": False,
+            "FREE_THREADING": sysconfig.get_config_var("Py_GIL_DISABLED") == 1,
         }
         # Run Cython
         print("Executing cythonize()")
