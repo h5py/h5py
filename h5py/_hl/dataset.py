@@ -371,21 +371,29 @@ class ChunkIterator:
             )
         else:
             if isinstance(source_sel, (slice, int)):
-                self._sel = (source_sel,)
+                sel = [source_sel]
             else:
-                self._sel = source_sel
-            if len(self._sel) != rank:
+                sel = list(source_sel)
+            if len(sel) != rank:
                 raise ValueError("Invalid selection - selection region must have same rank as dataset")
-            sel = list()
-            for dim in range(rank):
-                s = self._sel[dim]
-                if isinstance(s, int):
-                    sel.append(slice(s, s + 1))
-                else:
-                    sel.append(slice(s.start or 0,
-                                     s.stop or self._shape[dim],
-                                     s.step))
-            self._sel = tuple(sel)
+            for dim, s in enumerate(sel):
+                start: int | None
+                stop: int | None
+                step: int | None
+                match s:
+                    case int():
+                        start = s
+                        stop = s + 1
+                        step = None
+                    case slice():
+                        start = s.start or 0
+                        stop = s.stop or self._shape[dim]
+                        step = s.step
+                    case _:
+                        # TODO: use typing.assert_never when Python 3.10 is dropped
+                        raise TypeError(f'{s}: Selection object must be a slice or integer')
+                sel[dim] = slice(start, stop, step)
+                self._sel = tuple(sel)
 
         self._chunk_index = []
         for dim in range(rank):
