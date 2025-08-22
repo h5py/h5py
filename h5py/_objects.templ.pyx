@@ -37,7 +37,8 @@ import os
 # but not both at the same time.
 
 ### {{if OBJECTS_USE_LOCKING}}
-cdef FastRLock _phil = FastRLock()
+from threading import RLock
+_phil = RLock()
 ### {{else}}
 cdef BogoLock _phil = BogoLock()
 ### {{endif}}
