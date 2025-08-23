@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import TestCase, ut
+from .common import TestCase
 
 import h5py
 from h5py import h5a, h5s, h5t

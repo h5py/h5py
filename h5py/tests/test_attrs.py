@@ -19,7 +19,7 @@ import numpy as np
 
 from collections.abc import MutableMapping
 
-from .common import TestCase, ut
+from .common import TestCase
 
 import h5py
 from h5py import File

@@ -7,12 +7,11 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-import sys
 
 import numpy as np
 
-from .common import ut, TestCase
-from h5py import File, Group, Dataset
+from .common import TestCase
+from h5py import File
 import h5py
 
 
