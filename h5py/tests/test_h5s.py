@@ -1,6 +1,5 @@
-import pytest
 
-from h5py import h5s, version
+from h5py import h5s
 from h5py._selector import Selector
 
 class Helper:

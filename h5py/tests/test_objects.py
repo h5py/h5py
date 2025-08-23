@@ -7,15 +7,11 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 import os
-import signal
-import tempfile
 import threading
 from unittest import SkipTest
 
-import numpy as np
 import time
 
-import h5py
 from h5py import _objects as o
 from .common import TestCase
 

@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 from h5py import h5f, h5p
 
-from .common import ut, TestCase
+from .common import TestCase
 
 class TestFileImage(TestCase):
     def test_load_from_image(self):
