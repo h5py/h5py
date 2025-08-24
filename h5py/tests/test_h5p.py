@@ -50,6 +50,25 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_V18, h5f.LIBVER_V112),
                          plist.get_libver_bounds())
 
+    @ut.skipIf(version.hdf5_version_tuple < (1, 14, 0),
+               'Requires HDF5 1.14 or later')
+    def test_libver_v114(self):
+        """ Test libver bounds set/get for H5F_LIBVER_V114"""
+        plist = h5p.create(h5p.FILE_ACCESS)
+        plist.set_libver_bounds(h5f.LIBVER_V18, h5f.LIBVER_V114)
+        self.assertEqual((h5f.LIBVER_V18, h5f.LIBVER_V114),
+                         plist.get_libver_bounds())
+
+    @ut.skipIf(version.hdf5_version_tuple < (2, 0, 0),
+               'Requires HDF5 2.0 or later')
+    def test_libver_v200(self):
+        """ Test libver bounds set/get for H5F_LIBVER_V200"""
+        plist = h5p.create(h5p.FILE_ACCESS)
+        plist.set_libver_bounds(h5f.LIBVER_V18, h5f.LIBVER_V200)
+        self.assertEqual((h5f.LIBVER_V18, h5f.LIBVER_V200),
+                         plist.get_libver_bounds())
+
+
 class TestDA(TestCase):
     '''
     Feature: setting/getting chunk cache size on a dataset access property list
