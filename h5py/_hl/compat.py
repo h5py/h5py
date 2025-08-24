@@ -14,7 +14,7 @@ else:
     WINDOWS_ENCODING = "utf-8"
 
 
-def filename_encode(filename):
+def filename_encode(filename: os.PathLike[str | bytes]) -> bytes:
     """
     Encode filename for use in the HDF5 library.
 
@@ -29,7 +29,7 @@ def filename_encode(filename):
         return os.fsencode(filename)
 
 
-def filename_decode(filename):
+def filename_decode(filename: str | bytes) -> os.PathLike[str]:
     """
     Decode filename used by HDF5 library.
 
