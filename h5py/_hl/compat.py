@@ -1,8 +1,8 @@
 """
 Compatibility module for high-level h5py
 """
+import os
 import sys
-from os import fspath, fsencode, fsdecode
 from ..version import hdf5_built_version_tuple
 
 # HDF5 supported passing paths as UTF-8 for Windows from 1.10.6, but this
@@ -14,7 +14,7 @@ else:
     WINDOWS_ENCODING = "utf-8"
 
 
-def filename_encode(filename):
+def filename_encode(filename: os.PathLike[str | bytes]) -> bytes:
     """
     Encode filename for use in the HDF5 library.
 
@@ -22,15 +22,15 @@ def filename_encode(filename):
     called on any filenames passed to the HDF5 library. See the documentation on
     filenames in h5py for more information.
     """
-    filename = fspath(filename)
+    filename = os.fspath(filename)
     if sys.platform == "win32":
         if isinstance(filename, str):
             return filename.encode(WINDOWS_ENCODING, "strict")
         return filename
-    return fsencode(filename)
+    return os.fsencode(filename)
 
 
-def filename_decode(filename):
+def filename_decode(filename: str | bytes) -> os.PathLike[str]:
     """
     Decode filename used by HDF5 library.
 
@@ -45,4 +45,4 @@ def filename_decode(filename):
             return filename
         else:
             raise TypeError("expect bytes or str, not %s" % type(filename).__name__)
-    return fsdecode(filename)
+    return os.fsdecode(filename)
