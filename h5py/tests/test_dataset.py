@@ -1065,6 +1065,11 @@ class TestChunkIterator(BaseDataset):
         with self.assertRaises(TypeError):
             dset.iter_chunks()
 
+    def test_rank_mismatch(self):
+        dset = self.f.create_dataset("foo", shape=(100,), chunks=(32,))
+        with self.assertRaises(ValueError):
+            dset.iter_chunks((slice(19,67), 9))
+
     def test_1d(self):
         dset = self.f.create_dataset("foo", (100,), chunks=(32,))
         expected = ((slice(0,32,1),), (slice(32,64,1),), (slice(64,96,1),),
@@ -1072,19 +1077,38 @@ class TestChunkIterator(BaseDataset):
         self.assertEqual(list(dset.iter_chunks()), list(expected))
         expected = ((slice(50,64,1),), (slice(64,96,1),), (slice(96,97,1),))
         self.assertEqual(list(dset.iter_chunks(np.s_[50:97])), list(expected))
+        expected = ((slice(0,32,1),), (slice(32,50,1),))
+        self.assertEqual(list(dset.iter_chunks(np.s_[:50])), list(expected))
+        expected = ((slice(96,97,1),),)
+        self.assertEqual(list(dset.iter_chunks(np.s_[96])), list(expected))
 
     def test_2d(self):
         dset = self.f.create_dataset("foo", (100,100), chunks=(32,64))
-        expected = ((slice(0, 32, 1), slice(0, 64, 1)), (slice(0, 32, 1),
-        slice(64, 100, 1)), (slice(32, 64, 1), slice(0, 64, 1)),
-        (slice(32, 64, 1), slice(64, 100, 1)), (slice(64, 96, 1),
-        slice(0, 64, 1)), (slice(64, 96, 1), slice(64, 100, 1)),
-        (slice(96, 100, 1), slice(0, 64, 1)), (slice(96, 100, 1),
-        slice(64, 100, 1)))
+        expected = (
+            (slice(0, 32, 1), slice(0, 64, 1)),
+            (slice(0, 32, 1), slice(64, 100, 1)),
+            (slice(32, 64, 1), slice(0, 64, 1)),
+            (slice(32, 64, 1), slice(64, 100, 1)),
+            (slice(64, 96, 1), slice(0, 64, 1)),
+            (slice(64, 96, 1), slice(64, 100, 1)),
+            (slice(96, 100, 1), slice(0, 64, 1)),
+            (slice(96, 100, 1), slice(64, 100, 1)),
+        )
         self.assertEqual(list(dset.iter_chunks()), list(expected))
-
         expected = ((slice(48, 52, 1), slice(40, 50, 1)),)
         self.assertEqual(list(dset.iter_chunks(np.s_[48:52,40:50])), list(expected))
+        expected = (
+            (slice(0, 32, 1), slice(40, 64, 1)),
+            (slice(0, 32, 1), slice(64, 100, 1)),
+            (slice(32, 52, 1), slice(40, 64, 1)),
+            (slice(32, 52, 1), slice(64, 100, 1)),
+        )
+        self.assertEqual(list(dset.iter_chunks(np.s_[:52,40:])), list(expected))
+        expected = (
+            (slice(96, 97, 1), slice(19, 64, 1)),
+            (slice(96, 97, 1), slice(64, 67, 1)),
+        )
+        self.assertEqual(list(dset.iter_chunks(np.s_[96,19:67])), list(expected))
 
     def test_2d_partial_slice(self):
         dset = self.f.create_dataset("foo", (5,5), chunks=(2,2))
