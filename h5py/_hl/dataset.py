@@ -391,7 +391,7 @@ class ChunkIterator:
                         step = s.step
                     case _:
                         # TODO: use typing.assert_never when Python 3.10 is dropped
-                        raise TypeError(f'{s}: Selection object must be a slice or integer')
+                        raise AssertionError(f'{s}: Selection object must be a slice or integer')
                 sel[dim] = slice(start, stop, step)
                 self._sel = tuple(sel)
 
