@@ -110,8 +110,8 @@ of supported drivers and their options:
           described in the `AWS documentation
           <https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html>`_
           for keyword information. Use keywords only if their values differ from
-          those found, for example, temporary credentials or different S3 bucket's
-          AWS region.
+          those found, for example, if using temporary credentials or different
+          S3 bucket AWS region.
 
         Keywords:
 
@@ -390,7 +390,8 @@ The parameters controlling this behavior are prefixed by ``rdcc``, for *raw data
 chunk cache*. They apply to all datasets unless specifically changed for each one.
 
 * ``rdcc_nbytes`` sets the total size (measured in bytes) of the raw data chunk
-  cache for each dataset.  The default size is 1 MiB.
+  cache for each dataset. The default size is 1 MiB for HDF5 before 2.0 and 8
+  MiB for HDF5 2.0 and later.
   This should be set to the size of each chunk times the number of
   chunks that are likely to be needed in cache.
 * ``rdcc_w0`` sets the policy for chunks to be
@@ -458,7 +459,7 @@ number of regions. Setting a small value can reduce the overall file size,
 especially in combination with the ``libver`` option. This controls how the
 overall data and metadata are laid out within the file.
 
-For more information, see the official HDF5 documentation `H5P_SET_META_BLOCK_SIZE
+For more information, see the official HDF5 documentation `H5Pset_meta_block_size
 <https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga8822e3dedc8e1414f20871a87d533cb1>`_.
 
 Reference
