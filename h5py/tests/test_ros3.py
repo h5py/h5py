@@ -24,51 +24,69 @@ pytestmark = [
 
 
 @pytest.mark.network
-@pytest.mark.skipif(h5py.version.hdf5_version_tuple >= (2, 0, 0),
-                    reason='Requires HDF5 < 2.0')
-def test_ros3():
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        pytest.param(
+            {},
+            id="v1",
+            marks=pytest.mark.skipif(
+                h5py.version.hdf5_version_tuple >= (2, 0, 0),
+                reason="Requires HDF5 < 2.0",
+            ),
+        ),
+        pytest.param(
+            {"aws_region": b"us-east-2"},
+            id="v2",
+            marks=pytest.mark.skipif(
+                h5py.version.hdf5_version_tuple < (2, 0, 0),
+                reason="Requires HDF5 >= 2.0",
+            ),
+        ),
+    ],
+)
+def test_ros3(kwargs):
     """ ROS3 driver and options """
 
     with h5py.File("https://dandiarchive.s3.amazonaws.com/ros3test.hdf5", 'r',
-                   driver='ros3') as f:
+                   driver='ros3', **kwargs) as f:
         assert f
         assert 'mydataset' in f.keys()
         assert f["mydataset"].shape == (100,)
 
 
-@pytest.mark.network
-@pytest.mark.skipif(h5py.version.hdf5_version_tuple < (2, 0, 0),
-                    reason='Requires HDF5 >= 2.0')
-def test_ros3_v2():
-    """ ROS3 driver and options """
-
-    with h5py.File("https://dandiarchive.s3.amazonaws.com/ros3test.hdf5", 'r',
-                   driver='ros3', aws_region=b'us-east-2') as f:
-        assert f
-        assert 'mydataset' in f.keys()
-        assert f["mydataset"].shape == (100,)
-
-
-@pytest.mark.skipif(h5py.version.hdf5_version_tuple >= (2, 0, 0),
-                    reason='Requires HDF5 < 2.0')
-def test_ros3_s3_fails():
+@pytest.mark.parametrize(
+    "exc,match_exc",
+    [
+        pytest.param(
+            ValueError,
+            [
+                "AWS region required for s3:// location",
+                r"^foo://wrong/scheme: S3 location must begin with",
+            ],
+            id="v1",
+            marks=pytest.mark.skipif(
+                h5py.version.hdf5_version_tuple >= (2, 0, 0),
+                reason="Requires HDF5 < 2.0",
+            ),
+        ),
+        pytest.param(
+            OSError,
+            [None, "can't parse object key from path"],
+            id="v2",
+            marks=pytest.mark.skipif(
+                h5py.version.hdf5_version_tuple < (2, 0, 0),
+                reason="Requires HDF5 >= 2.0",
+            ),
+        ),
+    ],
+)
+def test_ros3_s3_fails(exc, match_exc):
     """ROS3 exceptions for s3:// location"""
-    with pytest.raises(ValueError, match='AWS region required for s3:// location'):
+    with pytest.raises(exc, match=match_exc[0]):
         h5py.File('s3://fakebucket/fakekey', 'r', driver='ros3')
 
-    with pytest.raises(ValueError, match=r'^foo://wrong/scheme: S3 location must begin with'):
-        h5py.File('foo://wrong/scheme', 'r', driver='ros3')
-
-
-@pytest.mark.network
-@pytest.mark.skipif(h5py.version.hdf5_version_tuple < (2, 0, 0),
-                    reason='Requires HDF5 >= 2.0')
-def test_ros3_s3_fails_v2():
-    """ROS3 exceptions for s3:// location"""
-    with pytest.raises(OSError):
-        h5py.File('s3://fakebucket/fakekey', 'r', driver='ros3')
-
-    with pytest.raises(OSError, match="can't parse object key from path"):
+    with pytest.raises(exc, match=match_exc[1]):
         h5py.File('foo://wrong/scheme', 'r', driver='ros3')
 
 
