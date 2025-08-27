@@ -85,6 +85,12 @@ jobs:
       py313t-deps-hdf51146:
         python.version: '3.13'
         python.architecture: 'x64-freethreaded'
+
+        # FIXME it was decided to not mark the module as freethreading-compatible
+        # for the time being due to instability concerns.
+        # See https://github.com/h5py/h5py/pull/2650
+        PYTHON_GIL: 0
+
         TOXENV: py313t-test-deps
         HDF5_VERSION: 1.14.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
