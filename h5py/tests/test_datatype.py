@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import ut, TestCase, is_parallel_test, name
+from .common import TestCase, is_parallel_test, name
 
 from h5py import Datatype
 

@@ -14,7 +14,7 @@ import numpy as np
 from h5py import File, special_dtype
 from h5py._hl.files import direct_vfd
 
-from .common import ut, TestCase, name
+from .common import ut, TestCase
 
 
 class TestFileID(TestCase):

@@ -18,10 +18,9 @@
 
 import numpy as np
 
-from .common import ut, TestCase, name
+from .common import TestCase, name
 
 import h5py
-from h5py import h5s, h5t, h5d
 from h5py import File, MultiBlockSlice
 
 class BaseSlicing(TestCase):

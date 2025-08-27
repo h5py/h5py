@@ -6,18 +6,16 @@
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
-
+import sys
+import shlex
+from importlib.util import find_spec
+from subprocess import call
 
 def run_tests(args=''):
-    try:
-        from pytest import main
-    except ImportError:
+    if find_spec("pytest") is None:
         print("Tests require pytest, pytest not installed")
         return 1
-    else:
-        from shlex import split
-        from subprocess import call
-        from sys import executable
-        cli = [executable, "-m", "pytest", "--pyargs", "h5py"]
-        cli.extend(split(args))
-        return call(cli)
+
+    cli = [sys.executable, "-m", "pytest", "--pyargs", "h5py"]
+    cli.extend(shlex.split(args))
+    return call(cli)

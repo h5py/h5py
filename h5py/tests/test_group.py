@@ -20,7 +20,6 @@
 import numpy as np
 import os
 import os.path
-import sys
 from tempfile import mkdtemp
 
 from collections.abc import MutableMapping

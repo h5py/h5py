@@ -15,7 +15,7 @@
     The majority of the H5T API is presented as methods on these identifiers.
 """
 # C-level imports
-include "config.pxi"
+
 from ._objects cimport pdefault
 cimport numpy as cnp
 from .h5r cimport Reference, RegionReference
@@ -28,6 +28,7 @@ from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
 # Python imports
 import codecs
 import platform
+import re
 import sys
 from collections import namedtuple
 import numpy as np
@@ -44,7 +45,7 @@ _IS_PPC64LE = _UNAME_MACHINE == "ppc64le"
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 cdef char* H5PY_NUMPY_STRING_TAG = "NUMPY:STRING"
 
-NUMPY_GE2 = int(np.__version__.split('.')[0]) >= 2
+NUMPY_RUNTIME_VERSION_TUPLE = tuple(int(x) for x in re.findall(r'\d+', np.__version__)[:3])
 
 # === Custom C API ============================================================
 
@@ -152,19 +153,25 @@ IEEE_F32LE = lockid(H5T_IEEE_F32LE)
 IEEE_F32BE = lockid(H5T_IEEE_F32BE)
 IEEE_F64LE = lockid(H5T_IEEE_F64LE)
 IEEE_F64BE = lockid(H5T_IEEE_F64BE)
-IF HDF5_VERSION < (1, 14, 4):
-    IEEE_F16BE = IEEE_F32BE.copy()
-    IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
-    IEEE_F16BE.set_size(2)
-    IEEE_F16BE.set_ebias(15)
-    IEEE_F16BE.lock()
 
-    IEEE_F16LE = IEEE_F16BE.copy()
-    IEEE_F16LE.set_order(H5T_ORDER_LE)
-    IEEE_F16LE.lock()
-ELSE:
-    IEEE_F16BE = lockid(H5T_IEEE_F16BE)
-    IEEE_F16LE = lockid(H5T_IEEE_F16LE)
+### {{if HDF5_VERSION < (1, 14, 4)}}
+
+IEEE_F16BE = IEEE_F32BE.copy()
+IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
+IEEE_F16BE.set_size(2)
+IEEE_F16BE.set_ebias(15)
+IEEE_F16BE.lock()
+
+IEEE_F16LE = IEEE_F16BE.copy()
+IEEE_F16LE.set_order(H5T_ORDER_LE)
+IEEE_F16LE.lock()
+
+### {{else}}
+
+IEEE_F16BE = lockid(H5T_IEEE_F16BE)
+IEEE_F16LE = lockid(H5T_IEEE_F16LE)
+
+### {{endif}}
 
 # Quad floats
 IEEE_F128BE = IEEE_F64BE.copy()
@@ -236,11 +243,12 @@ LDOUBLE_BE = NATIVE_LDOUBLE.copy()
 LDOUBLE_BE.set_order(H5T_ORDER_BE)
 LDOUBLE_BE.lock()
 
-IF HDF5_VERSION > (1, 14, 3):
-    if H5T_NATIVE_FLOAT16 != H5I_INVALID_HID:
-        NATIVE_FLOAT16 = lockid(H5T_NATIVE_FLOAT16)
-    else:
-        NATIVE_FLOAT16 = H5I_INVALID_HID
+### {{if HDF5_VERSION > (1, 14, 3)}}
+if H5T_NATIVE_FLOAT16 != H5I_INVALID_HID:
+    NATIVE_FLOAT16 = lockid(H5T_NATIVE_FLOAT16)
+else:
+    NATIVE_FLOAT16 = H5I_INVALID_HID
+### {{endif}}
 
 # Unix time types
 UNIX_D32LE = lockid(H5T_UNIX_D32LE)
@@ -1589,13 +1597,14 @@ cdef TypeCompoundID _c_complex(cnp.dtype dt):
             tid_sub = H5T_NATIVE_DOUBLE
 
     elif length == 32:
-        IF COMPLEX256_SUPPORT:
-            size = h5py_size_n256
-            off_r = h5py_offset_n256_real
-            off_i = h5py_offset_n256_imag
-            tid_sub = H5T_NATIVE_LDOUBLE
-        ELSE:
-            raise TypeError("Illegal length %d for complex dtype" % length)
+        ### {{if COMPLEX256_SUPPORT}}
+        size = h5py_size_n256
+        off_r = h5py_offset_n256_real
+        off_i = h5py_offset_n256_imag
+        tid_sub = H5T_NATIVE_LDOUBLE
+        ### {{else}}
+        raise TypeError("Illegal length %d for complex dtype" % length)
+        ### {{endif}}
     else:
         raise TypeError("Illegal length %d for complex dtype" % length)
 

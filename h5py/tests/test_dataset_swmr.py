@@ -3,7 +3,7 @@ import pytest
 
 import h5py
 
-from .common import ut, TestCase
+from .common import TestCase
 
 
 class TestDatasetSwmrRead(TestCase):

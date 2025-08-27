@@ -11,8 +11,6 @@
     Module for HDF5 "H5O" functions.
 """
 
-include 'config.pxi'
-
 # Cython C-level imports
 from ._objects cimport ObjectID, pdefault
 from .h5g cimport GroupID

@@ -16,7 +16,7 @@ import h5py
 import h5py._hl.selections as sel
 import h5py._hl.selections2 as sel2
 
-from .common import ut, TestCase, name
+from .common import TestCase, name
 
 class BaseSelection(TestCase):
     def setUp(self):

@@ -7,8 +7,6 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-include "config.pxi"
-
 from warnings import warn
 from .defs cimport *
 from ._objects import phil, with_phil
@@ -21,9 +19,9 @@ ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
 INDEX_NAME      = H5_INDEX_NAME       # Index on names
 INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
 
-HDF5_VERSION_COMPILED_AGAINST = HDF5_VERSION
-NUMPY_VERSION_COMPILED_AGAINST = NUMPY_BUILD_VERSION
-CYTHON_VERSION_COMPILED_WITH = CYTHON_BUILD_VERSION
+HDF5_VERSION_COMPILED_AGAINST = {{HDF5_VERSION}}
+NUMPY_VERSION_COMPILED_AGAINST = {{repr(NUMPY_BUILD_VERSION)}}
+CYTHON_VERSION_COMPILED_WITH = {{repr(CYTHON_BUILD_VERSION)}}
 
 
 class ByteStringContext:
@@ -128,17 +126,17 @@ cdef class H5PYConfig:
     @property
     def mpi(self):
         """ Boolean indicating if Parallel HDF5 is available """
-        return MPI
+        return {{MPI}}
 
     @property
     def ros3(self):
         """ Boolean indicating if ROS3 VDS is available """
-        return ROS3
+        return {{ROS3}}
 
     @property
     def direct_vfd(self):
         """ Boolean indicating if DIRECT VFD is available """
-        return DIRECT_VFD
+        return {{DIRECT_VFD}}
 
     @property
     def swmr_min_hdf5_version(self):

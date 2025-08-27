@@ -1,4 +1,3 @@
-import threading
 from ctypes import (
     addressof,
     c_char_p,
@@ -14,7 +13,7 @@ import pytest
 import h5py
 from h5py import h5z
 
-from .common import insubprocess, is_parallel_test
+from .common import insubprocess
 
 
 # Type of filter callback function of H5Z_class2_t
