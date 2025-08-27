@@ -29,7 +29,7 @@ pytestmark = [
     [
         pytest.param(
             {},
-            id="v1",
+            id="HDF5-v1",
             marks=pytest.mark.skipif(
                 h5py.version.hdf5_version_tuple >= (2, 0, 0),
                 reason="Requires HDF5 < 2.0",
@@ -37,7 +37,7 @@ pytestmark = [
         ),
         pytest.param(
             {"aws_region": b"us-east-2"},
-            id="v2",
+            id="HDF5-v2",
             marks=pytest.mark.skipif(
                 h5py.version.hdf5_version_tuple < (2, 0, 0),
                 reason="Requires HDF5 >= 2.0",
@@ -64,7 +64,7 @@ def test_ros3(kwargs):
                 "AWS region required for s3:// location",
                 r"^foo://wrong/scheme: S3 location must begin with",
             ],
-            id="v1",
+            id="HDF5-v1",
             marks=pytest.mark.skipif(
                 h5py.version.hdf5_version_tuple >= (2, 0, 0),
                 reason="Requires HDF5 < 2.0",
@@ -73,7 +73,7 @@ def test_ros3(kwargs):
         pytest.param(
             OSError,
             [None, "can't parse object key from path"],
-            id="v2",
+            id="HDF5-v2",
             marks=pytest.mark.skipif(
                 h5py.version.hdf5_version_tuple < (2, 0, 0),
                 reason="Requires HDF5 >= 2.0",
