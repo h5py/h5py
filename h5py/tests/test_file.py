@@ -954,7 +954,7 @@ class TestFileLocking:
 
     def test_reopen(self, tmp_path):
         """Test file locking when opening twice the same file"""
-        fname = tmp_path / "test.h5"
+        fname = tmp_path / name("test{}.h5")
 
         with h5py.File(fname, mode="w", locking=True) as f:
             f.flush()
@@ -978,14 +978,14 @@ class TestFileLocking:
 
     def test_unsupported_locking(self, tmp_path):
         """Test with erroneous file locking value"""
-        fname = tmp_path / "test.h5"
+        fname = tmp_path / name("test{}.h5")
         with pytest.raises(ValueError):
             with h5py.File(fname, mode="r", locking='unsupported-value') as h5f_read:
                 pass
 
     def test_multiprocess(self, tmp_path):
         """Test file locking option from different concurrent processes"""
-        fname = tmp_path / "test.h5"
+        fname = tmp_path / name("test{}.h5")
 
         def open_in_subprocess(filename, mode, locking):
             """Open HDF5 file in a subprocess and return True on success"""
@@ -1032,8 +1032,8 @@ f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
 )
 def test_file_locking_external_link(tmp_path, locking_arg, file_locking_props):
     """Test that same file locking is used for external link"""
-    fname_main = tmp_path / "test_main.h5"
-    fname_elink = tmp_path / "test_linked.h5"
+    fname_main = tmp_path / name("test_main{}.h5")
+    fname_elink = tmp_path / name("test_linked{}.h5")
 
     # Create test files
     with h5py.File(fname_elink, "w") as f:
@@ -1051,13 +1051,13 @@ def test_file_locking_external_link(tmp_path, locking_arg, file_locking_props):
         assert elink_locking_info == file_locking_props
 
 
-def test_close_gc(writable_file):
+def test_close_gc(tmp_path):
     # https://github.com/h5py/h5py/issues/1852
-    for i in range(100):
-        writable_file[str(i)] = []
+    filename = tmp_path / name("test{}.h5")
 
-    filename = writable_file.filename
-    writable_file.close()
+    with h5py.File(filename, 'w') as f:
+        for i in range(100):
+            f[str(i)] = []
 
     # Ensure that Python's garbage collection doesn't interfere with closing
     # a file. Try a few times - the problem is not 100% consistent, but
@@ -1076,10 +1076,10 @@ def test_reproducible_file(tmp_path):
             g = hf.create_group(name("x"), track_order=True)
             g.create_dataset(name("y"), shape=10, dtype='f4')
 
-    f1 = tmp_path / "f1.h5"
+    f1 = tmp_path / name("f1{}.h5")
     write(f1)
     time.sleep(1.1)  # Ensure any timestamps are different
-    f2 = tmp_path / "f2.h5"
+    f2 = tmp_path / name("f2{}.h5")
     write(f2)
 
     assert sha256(f1.read_bytes()).hexdigest() == sha256(f2.read_bytes()).hexdigest()

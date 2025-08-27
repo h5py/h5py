@@ -211,11 +211,11 @@ def insubprocess(f):
         for c in "/\\,:.":
             insub = insub.replace(c, "_")
         defined = os.environ.get(insub, None)
-        # fork process
         if defined:
+            # We're already running in a subprocess
             return f(request, *args, **kwargs)
         else:
-            os.environ[insub] = '1'
+            # Spawn a new interpreter and run pytest in it
             env = os.environ.copy()
             env[insub] = '1'
             env.update(getattr(f, 'subproc_env', {}))
@@ -243,7 +243,7 @@ def subproc_env(d):
 MAIN_THREAD = threading.get_ident()
 
 
-def name(prefix: str = "foo") -> str:
+def name(template_or_prefix: str = "foo", /) -> str:
     """Return a static name, to be used e.g. as dataset name.
 
     When running in pytest-run-parallel, append a thread ID to the name.
@@ -252,9 +252,19 @@ def name(prefix: str = "foo") -> str:
     writes will be serialized by the `phil` lock).
 
     Calling this function twice from the same thread will return the same name.
+
+    Parameters
+    ----------
+    template_or_prefix
+        Either a prefix to which potentially append the thread ID, or a template
+        containing exactly one "{}" to be replaced with the thread ID.
     """
     tid = threading.get_ident()
-    return prefix if tid == MAIN_THREAD else f"{prefix}-{tid}"
+    suffix = "" if tid == MAIN_THREAD else f"-{tid}"
+    if "{}" in template_or_prefix:
+        return template_or_prefix.format(suffix)
+    else:
+        return template_or_prefix + suffix
 
 
 def is_parallel_test() -> bool:

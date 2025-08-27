@@ -67,12 +67,12 @@ class TestCreate(BaseGroup):
 
     def test_create_intermediate_str(self):
         """ Intermediate groups can be created automatically """
-        path = name() + "/bar/baz"
+        path = name("foo{}/bar/baz")
         grp = self.f.create_group(path)
         self.assertEqual(grp.name, "/" + path)
 
     def test_create_intermediate_bytes(self):
-        path = name() + "/bar/baz"
+        path = name("foo{}/bar/baz")
         grp2 = self.f.create_group(path.encode("utf8"))
         self.assertEqual(grp2.name, "/" + path)
 
@@ -176,24 +176,24 @@ class TestRequire(BaseGroup):
     def test_intermediate_create_dataset(self):
         """ Intermediate is created if it doesn't exist """
         dt = h5py.string_dtype()
-        self.f.require_dataset(name() + "/bar/baz", (1,), dtype=dt)
+        self.f.require_dataset(name("foo{}/bar/baz"), (1,), dtype=dt)
         group = self.f.get(name())
         assert isinstance(group, Group)
-        group = self.f.get(name() + "/bar")
+        group = self.f.get(name("foo{}/bar"))
         assert isinstance(group, Group)
 
     def test_intermediate_create_group(self):
         dt = h5py.string_dtype()
-        self.f.require_group(name() + "/bar/baz")
+        self.f.require_group(name("foo{}/bar/baz"))
         group = self.f.get(name())
         assert isinstance(group, Group)
-        group = self.f.get(name() + "/bar")
+        group = self.f.get(name("foo{}/bar"))
         assert isinstance(group, Group)
-        group = self.f.get(name() + "/bar/baz")
+        group = self.f.get(name("foo{}/bar/baz"))
         assert isinstance(group, Group)
 
     def test_require_shape(self):
-        n = name() + "/resizable"
+        n = name("foo{}/resizable")
         ds = self.f.require_dataset(n, shape=(0, 3), maxshape=(None, 3), dtype=int)
         ds.resize(20, axis=0)
         self.f.require_dataset(n, shape=(0, 3), maxshape=(None, 3), dtype=int)
@@ -1035,11 +1035,11 @@ class TestCopy(TestCase):
         self.f1.copy(name("foo"), baz)
         baz = self.f1[name("baz")]
         self.assertIsInstance(baz, Group)
-        self.assertArrayEqual(baz[name("foo") + "/bar"], np.array([1,2,3]))
+        self.assertArrayEqual(baz[name("foo{}/bar")], np.array([1,2,3]))
 
         self.f1.copy(name("foo"), self.f2['/'])
         self.assertIsInstance(self.f2[name("foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo") + "/bar"], np.array([1,2,3]))
+        self.assertArrayEqual(self.f2[name("foo{}/bar")], np.array([1,2,3]))
 
     def test_copy_group_to_path(self):
 
@@ -1053,7 +1053,7 @@ class TestCopy(TestCase):
 
         self.f2.copy(foo, name("foo"))
         self.assertIsInstance(self.f2[name("foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo") + "/bar"], np.array([1,2,3]))
+        self.assertArrayEqual(self.f2[name("foo{}/bar")], np.array([1,2,3]))
 
     def test_copy_group_to_group(self):
 
@@ -1064,11 +1064,11 @@ class TestCopy(TestCase):
         self.f1.copy(foo, baz)
         baz = self.f1[name("baz")]
         self.assertIsInstance(baz, Group)
-        self.assertArrayEqual(baz[name("foo") + "/bar"], np.array([1,2,3]))
+        self.assertArrayEqual(baz[name("foo{}/bar")], np.array([1,2,3]))
 
         self.f1.copy(foo, self.f2['/'])
         self.assertIsInstance(self.f2[name("/foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo") + "/bar"], np.array([1,2,3]))
+        self.assertArrayEqual(self.f2[name("foo{}/bar")], np.array([1,2,3]))
 
     def test_copy_dataset(self):
         self.f1[name("foo")] = [1,2,3]
@@ -1107,10 +1107,10 @@ class TestCopy(TestCase):
         self.assertArrayEqual(baz['qux'], np.array([1,2,3]))
 
         self.f2.copy(foo, name("foo"), shallow=True)
-        self.assertIsInstance(self.f2[name("/foo")], Group)
-        self.assertIsInstance(self.f2[name("foo") + "/bar"], Group)
-        self.assertEqual(len(self.f2[name("foo") + "/bar"]), 0)
-        self.assertArrayEqual(self.f2[name("foo") + "/qux"], np.array([1,2,3]))
+        self.assertIsInstance(self.f2[name("/foo{}")], Group)
+        self.assertIsInstance(self.f2[name("foo{}/bar")], Group)
+        self.assertEqual(len(self.f2[name("foo{}/bar")]), 0)
+        self.assertArrayEqual(self.f2[name("foo{}/qux")], np.array([1,2,3]))
 
     def test_copy_without_attributes(self):
 
@@ -1137,10 +1137,10 @@ class TestCopy(TestCase):
         del self.f1[name("bar")]
 
         self.assertIsInstance(self.f1[name("qux")], Group)
-        self.assertArrayEqual(self.f1[name("qux") + "/baz"], np.array([1, 2, 3]))
+        self.assertArrayEqual(self.f1[name("qux{}/baz")], np.array([1, 2, 3]))
 
         self.assertIsInstance(self.f2[name("/foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo") + "/baz"], np.array([1, 2, 3]))
+        self.assertArrayEqual(self.f2[name("foo{}/baz")], np.array([1, 2, 3]))
 
     def test_copy_external_links(self):
 
@@ -1196,15 +1196,15 @@ class TestMove(BaseGroup):
         grp = self.f.create_group(name("X"))
         self.f.move(name("X"), name("Y"))
         self.assertEqual(self.f[name("Y")], grp)
-        self.f.move(name("Y"), name("new") + "/nested/path")
-        self.assertEqual(self.f[name("new") + "/nested/path"], grp)
+        self.f.move(name("Y"), name("new{}/nested/path"))
+        self.assertEqual(self.f[name("new{}/nested/path")], grp)
 
     def test_move_softlink(self):
         """ Moving a soft link """
-        self.f[name("soft")] = h5py.SoftLink(name("relative") + "/path")
+        self.f[name("soft")] = h5py.SoftLink(name("relative{}/path"))
         self.f.move(name("soft"), name("new_soft"))
         lnk = self.f.get(name("new_soft"), getlink=True)
-        self.assertEqual(lnk.path, name("relative") + "/path")
+        self.assertEqual(lnk.path, name("relative{}/path"))
 
     def test_move_conflict(self):
         """ Move conflict raises ValueError """

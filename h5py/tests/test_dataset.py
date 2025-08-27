@@ -129,7 +129,7 @@ class TestCreateShape(BaseDataset):
         dset = self.f.create_dataset(name("foo").encode('utf-8'), (1,))
         self.assertEqual(dset.shape, (1,))
 
-        dset2 = self.f.create_dataset((name("bar") + "/baz").encode('utf-8'), (2,))
+        dset2 = self.f.create_dataset((name("bar{}/baz")).encode('utf-8'), (2,))
         self.assertEqual(dset2.shape, (2,))
 
 class TestCreateData(BaseDataset):
@@ -1079,7 +1079,7 @@ class TestChunkIterator(BaseDataset):
             dset.iter_chunks()
 
     def test_rank_mismatch(self):
-        dset = self.f.create_dataset("foo", shape=(100,), chunks=(32,))
+        dset = self.f.create_dataset(name(), shape=(100,), chunks=(32,))
         with self.assertRaises(ValueError):
             dset.iter_chunks((slice(19,67), 9))
 
@@ -2243,6 +2243,7 @@ def test_view_properties(view_getter, make_ds, writable_file):
     assert len(view) == 5
 
 
+@pytest.mark.thread_unsafe(reason="spawns thread pool itself")
 def test_concurrent_dataset_creation(writable_file):
     N_THREADS = 25
     N_DATASETS_PER_THREAD = 5

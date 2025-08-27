@@ -290,31 +290,37 @@ class TestFieldNames(BaseSlicing):
     def test_unicode_names(self):
         """ Unicode field names for for read and write """
         self.assertArrayEqual(self.dset['a'], self.data['a'])
-        self.dset['a'] = 42
+
         data = self.data.copy()
+        dset = self.f.create_dataset(name(), data=data)
+        dset['a'] = 42
         data['a'] = 42
-        self.assertArrayEqual(self.dset['a'], data['a'])
+        self.assertArrayEqual(dset['a'], data['a'])
 
     def test_write(self):
         """ Test write with field selections """
-        data2 = self.data.copy()
-        data2['a'] *= 2
-        self.dset['a'] = data2
-        self.assertTrue(np.all(self.dset[...] == data2))
-        data2['b'] *= 4
-        self.dset['b'] = data2
-        self.assertTrue(np.all(self.dset[...] == data2))
-        data2['a'] *= 3
-        data2['c'] *= 3
-        self.dset['a','c'] = data2
-        self.assertTrue(np.all(self.dset[...] == data2))
+        data = self.data.copy()
+        dset = self.f.create_dataset(name(), data=data)
+
+        data['a'] *= 2
+        dset['a'] = data
+        self.assertTrue(np.all(dset[...] == data))
+        data['b'] *= 4
+        dset['b'] = data
+        self.assertTrue(np.all(dset[...] == data))
+        data['a'] *= 3
+        data['c'] *= 3
+        dset['a','c'] = data
+        self.assertTrue(np.all(dset[...] == data))
 
     def test_write_noncompound(self):
         """ Test write with non-compound source (single-field) """
-        data2 = self.data.copy()
-        data2['b'] = 1.0
-        self.dset['b'] = 1.0
-        self.assertTrue(np.all(self.dset[...] == data2))
+        data = self.data.copy()
+        dset = self.f.create_dataset(name(), data=data)
+
+        data['b'] = 1.0
+        dset['b'] = 1.0
+        self.assertTrue(np.all(dset[...] == data))
 
 
 class TestMultiBlockSlice(BaseSlicing):
