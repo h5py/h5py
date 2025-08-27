@@ -22,17 +22,15 @@ import sys
 import numpy as np
 import platform
 import pytest
-import warnings
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from .common import ut, TestCase
 from .data_files import get_data_file_path
-from h5py import File, Group, Dataset
+from h5py import File, Dataset
 from h5py._hl.base import is_empty_dataspace, product
 from h5py import h5f, h5t
-from h5py.h5py_warnings import H5pyDeprecationWarning
-from h5py import version
 import h5py
-import h5py._hl.selections as sel
 from h5py.tests.common import NUMPY_RELEASE_VERSION
 
 class BaseDataset(TestCase):
@@ -1067,6 +1065,11 @@ class TestChunkIterator(BaseDataset):
         with self.assertRaises(TypeError):
             dset.iter_chunks()
 
+    def test_rank_mismatch(self):
+        dset = self.f.create_dataset("foo", shape=(100,), chunks=(32,))
+        with self.assertRaises(ValueError):
+            dset.iter_chunks((slice(19,67), 9))
+
     def test_1d(self):
         dset = self.f.create_dataset("foo", (100,), chunks=(32,))
         expected = ((slice(0,32,1),), (slice(32,64,1),), (slice(64,96,1),),
@@ -1074,19 +1077,38 @@ class TestChunkIterator(BaseDataset):
         self.assertEqual(list(dset.iter_chunks()), list(expected))
         expected = ((slice(50,64,1),), (slice(64,96,1),), (slice(96,97,1),))
         self.assertEqual(list(dset.iter_chunks(np.s_[50:97])), list(expected))
+        expected = ((slice(0,32,1),), (slice(32,50,1),))
+        self.assertEqual(list(dset.iter_chunks(np.s_[:50])), list(expected))
+        expected = ((slice(96,97,1),),)
+        self.assertEqual(list(dset.iter_chunks(np.s_[96])), list(expected))
 
     def test_2d(self):
         dset = self.f.create_dataset("foo", (100,100), chunks=(32,64))
-        expected = ((slice(0, 32, 1), slice(0, 64, 1)), (slice(0, 32, 1),
-        slice(64, 100, 1)), (slice(32, 64, 1), slice(0, 64, 1)),
-        (slice(32, 64, 1), slice(64, 100, 1)), (slice(64, 96, 1),
-        slice(0, 64, 1)), (slice(64, 96, 1), slice(64, 100, 1)),
-        (slice(96, 100, 1), slice(0, 64, 1)), (slice(96, 100, 1),
-        slice(64, 100, 1)))
+        expected = (
+            (slice(0, 32, 1), slice(0, 64, 1)),
+            (slice(0, 32, 1), slice(64, 100, 1)),
+            (slice(32, 64, 1), slice(0, 64, 1)),
+            (slice(32, 64, 1), slice(64, 100, 1)),
+            (slice(64, 96, 1), slice(0, 64, 1)),
+            (slice(64, 96, 1), slice(64, 100, 1)),
+            (slice(96, 100, 1), slice(0, 64, 1)),
+            (slice(96, 100, 1), slice(64, 100, 1)),
+        )
         self.assertEqual(list(dset.iter_chunks()), list(expected))
-
         expected = ((slice(48, 52, 1), slice(40, 50, 1)),)
         self.assertEqual(list(dset.iter_chunks(np.s_[48:52,40:50])), list(expected))
+        expected = (
+            (slice(0, 32, 1), slice(40, 64, 1)),
+            (slice(0, 32, 1), slice(64, 100, 1)),
+            (slice(32, 52, 1), slice(40, 64, 1)),
+            (slice(32, 52, 1), slice(64, 100, 1)),
+        )
+        self.assertEqual(list(dset.iter_chunks(np.s_[:52,40:])), list(expected))
+        expected = (
+            (slice(96, 97, 1), slice(19, 64, 1)),
+            (slice(96, 97, 1), slice(64, 67, 1)),
+        )
+        self.assertEqual(list(dset.iter_chunks(np.s_[96,19:67])), list(expected))
 
     def test_2d_partial_slice(self):
         dset = self.f.create_dataset("foo", (5,5), chunks=(2,2))
@@ -2196,3 +2218,24 @@ def test_view_properties(view_getter, make_ds, writable_file):
     assert view.shape == (5, 6)
     assert view.size == 30
     assert len(view) == 5
+
+
+def test_concurrent_dataset_creation(writable_file):
+    N_THREADS = 25
+    N_DATASETS_PER_THREAD = 5
+    # Defines a thread barrier that will be spawned before parallel execution
+    # this increases the probability of concurrent access clashes.
+    barrier = threading.Barrier(N_THREADS)
+
+    def closure(ithread):
+        # Ensure that all threads reach this point before concurrent execution.
+        barrier.wait()
+        for j in range(N_DATASETS_PER_THREAD):
+            writable_file.create_dataset(f'concurrent_{ithread:02d}_{j:02d}', (1000,), dtype='i4')
+
+    with ThreadPoolExecutor(max_workers=N_THREADS) as executor:
+        futures = [executor.submit(closure, ithread) for ithread in range(N_THREADS)]
+
+    [f.result() for f in futures]
+    expected = set(f'concurrent_{i:02d}_{j:02d}' for i in range(N_THREADS) for j in range(N_DATASETS_PER_THREAD))
+    assert set(writable_file) == expected

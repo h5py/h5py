@@ -15,7 +15,7 @@ from h5py import File, special_dtype
 from h5py._hl.files import direct_vfd
 
 from .common import ut, TestCase
-from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
+from .common import ut, TestCase
 
 
 class TestFileID(TestCase):

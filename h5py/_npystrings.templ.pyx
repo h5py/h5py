@@ -4,66 +4,65 @@ This module requires NumPy >=2.0 to be imported. To allow the rest of h5py
 to work with NumPy 1.x installed, this module must be imported conditionally
 and can't be cimport'ed.
 """
-include "config.pxi"
-
 from .defs cimport *
 from .utils cimport emalloc
 from numpy cimport PyArray_Descr
 import numpy as np
 
-assert NUMPY_BUILD_VERSION >= '2.0'  # See pyproject.toml
+assert {{NUMPY_BUILD_VERSION_TUPLE >= (2, 0, 0)}}  # See pyproject.toml
 
 # =========================================================================
 # Scatter/gather routines for vlen strings to/from NumPy StringDType arrays
 # See also: _proxy.pyx::h5py_copy, h5py_scatter_cb, h5py_gather_cb
 
-IF NUMPY_BUILD_VERSION < '2.3':
-    # Backport NpyStrings from 2.3 to 2.0
-    # The C API was available since 2.0, but the Cython API was added in 2.3.
-    # This is a copy-paste from numpy/__init__.pxd of NumPy 2.3
-    cdef extern from "numpy/ndarraytypes.h":
-        ctypedef struct npy_string_allocator:
-            pass
+### {{if NUMPY_BUILD_VERSION_TUPLE < (2, 3, 0)}}
+# Backport NpyStrings from 2.3 to 2.0
+# The C API was available since 2.0, but the Cython API was added in 2.3.
+# This is a copy-paste from numpy/__init__.pxd of NumPy 2.3
+cdef extern from "numpy/ndarraytypes.h":
+    ctypedef struct npy_string_allocator:
+        pass
 
-        ctypedef struct npy_packed_static_string:
-            pass
+    ctypedef struct npy_packed_static_string:
+        pass
 
-        ctypedef struct npy_static_string:
-            size_t size
-            const char *buf
+    ctypedef struct npy_static_string:
+        size_t size
+        const char *buf
 
-        ctypedef struct PyArray_StringDTypeObject:
-            PyArray_Descr base
-            PyObject *na_object
-            char coerce
-            char has_nan_na
-            char has_string_na
-            char array_owned
-            npy_static_string default_string
-            npy_static_string na_name
-            npy_string_allocator *allocator
+    ctypedef struct PyArray_StringDTypeObject:
+        PyArray_Descr base
+        PyObject *na_object
+        char coerce
+        char has_nan_na
+        char has_string_na
+        char array_owned
+        npy_static_string default_string
+        npy_static_string na_name
+        npy_string_allocator *allocator
 
-    cdef extern from "numpy/arrayobject.h":
-        npy_string_allocator *NpyString_acquire_allocator(const PyArray_StringDTypeObject *descr)
-        void NpyString_acquire_allocators(size_t n_descriptors, PyArray_Descr *const descrs[], npy_string_allocator *allocators[])
-        void NpyString_release_allocator(npy_string_allocator *allocator)
-        void NpyString_release_allocators(size_t length, npy_string_allocator *allocators[])
-        int NpyString_load(npy_string_allocator *allocator, const npy_packed_static_string *packed_string, npy_static_string *unpacked_string)
-        int NpyString_pack_null(npy_string_allocator *allocator, npy_packed_static_string *packed_string)
-        int NpyString_pack(npy_string_allocator *allocator, npy_packed_static_string *packed_string, const char *buf, size_t size)
+cdef extern from "numpy/arrayobject.h":
+    npy_string_allocator *NpyString_acquire_allocator(const PyArray_StringDTypeObject *descr)
+    void NpyString_acquire_allocators(size_t n_descriptors, PyArray_Descr *const descrs[], npy_string_allocator *allocators[])
+    void NpyString_release_allocator(npy_string_allocator *allocator)
+    void NpyString_release_allocators(size_t length, npy_string_allocator *allocators[])
+    int NpyString_load(npy_string_allocator *allocator, const npy_packed_static_string *packed_string, npy_static_string *unpacked_string)
+    int NpyString_pack_null(npy_string_allocator *allocator, npy_packed_static_string *packed_string)
+    int NpyString_pack(npy_string_allocator *allocator, npy_packed_static_string *packed_string, const char *buf, size_t size)
 
-ELSE:
-    from numpy cimport (
-        npy_string_allocator,
-        npy_static_string,
-        npy_packed_static_string,
-        NpyString_pack,
-        NpyString_pack_null,
-        NpyString_load,
-        NpyString_acquire_allocator,
-        NpyString_release_allocator,
-        PyArray_StringDTypeObject,
-    )
+### {{else}}
+from numpy cimport (
+    npy_string_allocator,
+    npy_static_string,
+    npy_packed_static_string,
+    NpyString_pack,
+    NpyString_pack_null,
+    NpyString_load,
+    NpyString_acquire_allocator,
+    NpyString_release_allocator,
+    PyArray_StringDTypeObject,
+)
+### {{endif}}
 
 # Can't call sizeof(npy_packed_static_string) because the struct is
 # internal to NumPy

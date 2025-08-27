@@ -9,9 +9,6 @@
 
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
-
-include "config.pxi"
-
 from cpython cimport PyErr_Occurred, PyErr_SetObject
 import re
 
@@ -80,15 +77,17 @@ _exact_table = {
     (H5E_FILE, H5E_CANTCONVERT):    ValueError, # Invalid file format
 }
 
-IF HDF5_VERSION > (1, 12, 0):
-    _exact_table[(H5E_DATASET, H5E_CANTCREATE)] = ValueError  # bad param for dataset setup
+### {{if HDF5_VERSION > (1, 12, 0)}}
+_exact_table[(H5E_DATASET, H5E_CANTCREATE)] = ValueError  # bad param for dataset setup
+### {{endif}}
 
-IF HDF5_VERSION < (1, 13, 0):
-    _minor_table[H5E_BADATOM] = ValueError  # Unable to find atom information (already closed?)
-    _exact_table[(H5E_SYM, H5E_CANTINIT)] = ValueError  # Object already exists/1.8
-ELSE:
-    _minor_table[H5E_BADID] = ValueError  # Unable to find ID information
-    _exact_table[(H5E_SYM, H5E_CANTCREATE)] = ValueError  # Object already exists
+### {{if HDF5_VERSION < (1, 13, 0)}}
+_minor_table[H5E_BADATOM] = ValueError  # Unable to find atom information (already closed?)
+_exact_table[(H5E_SYM, H5E_CANTINIT)] = ValueError  # Object already exists/1.8
+### {{else}}
+_minor_table[H5E_BADID] = ValueError  # Unable to find ID information
+_exact_table[(H5E_SYM, H5E_CANTCREATE)] = ValueError  # Object already exists
+### {{endif}}
 
 cdef struct err_data_t:
     H5E_error_t err
