@@ -43,6 +43,10 @@ if hdf5_version >= (1, 13, 0):
     libver_dict.update({'v114': h5f.LIBVER_V114})
     libver_dict_r.update({h5f.LIBVER_V114: 'v114'})
 
+if hdf5_version >= (2, 0, 0):
+    libver_dict.update({'v200': h5f.LIBVER_V200})
+    libver_dict_r.update({h5f.LIBVER_V200: 'v200'})
+
 
 def _set_fapl_mpio(plist, **kwargs):
     """Set file access property list for mpio driver"""
@@ -492,17 +496,19 @@ class File(Group):
             This property should be used in conjunction with
             ``alignment_threshold``. See the description above. For more
             details, see
-            https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT
+            https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gab99d5af749aeb3896fd9e3ceb273677a
 
         meta_block_size
             Set the current minimum size, in bytes, of new metadata block allocations.
-            See https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE
+            See https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga8822e3dedc8e1414f20871a87d533cb1
 
         Additional keywords
             Passed on to the selected file driver.
         """
         if driver == 'ros3':
-            if ros3:
+            if not ros3:
+                raise ValueError("h5py was built without ROS3 support, can't use ros3 driver")
+            if hdf5_version < (2, 0, 0):
                 from urllib.parse import urlparse
                 url = urlparse(name)
                 if url.scheme == 's3':
@@ -513,9 +519,6 @@ class File(Group):
                 elif url.scheme not in ('https', 'http'):
                     raise ValueError(f'{name}: S3 location must begin with '
                                      'either "https://", "http://", or "s3://"')
-            else:
-                raise ValueError(
-                    "h5py was built without ROS3 support, can't use ros3 driver")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:

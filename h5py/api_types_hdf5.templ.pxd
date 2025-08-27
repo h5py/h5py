@@ -152,13 +152,25 @@ cdef extern from "hdf5.h":
   int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
   ### {{endif}}
 
-  ### {{if HDF5_VERSION >= (1, 14, 0)}}
+  ### {{if HDF5_VERSION >= (1, 14, 0) and HDF5_VERSION < (2, 0, 0)}}
   ctypedef enum H5F_libver_t:
     H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
     H5F_LIBVER_V18 = 1,
     H5F_LIBVER_V110 = 2,
     H5F_LIBVER_V112 = 3,
     H5F_LIBVER_V114 = 4,
+    H5F_LIBVER_NBOUNDS
+  int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+  ### {{endif}}
+
+  ### {{if HDF5_VERSION >= (2, 0, 0)}}
+  ctypedef enum H5F_libver_t:
+    H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+    H5F_LIBVER_V18 = 1,
+    H5F_LIBVER_V110 = 2,
+    H5F_LIBVER_V112 = 3,
+    H5F_LIBVER_V114 = 4,
+    H5F_LIBVER_V200 = 5,
     H5F_LIBVER_NBOUNDS
   int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
   ### {{endif}}
