@@ -32,31 +32,9 @@ RUN_REQUIRES = [
     "numpy >=1.21.2",
 ]
 
-# Packages needed to build h5py (in addition to static list in pyproject.toml)
-# For packages we link to (numpy, mpi4py), we build against the oldest
-# supported version; h5py wheels should then work with newer versions of these.
-# Downstream packagers - e.g. Linux distros - can safely build with newer
-# versions.
-# TODO: setup_requires is deprecated in setuptools.
-SETUP_REQUIRES = []
-
 if setup_configure.mpi_enabled():
-    # mpi4py 3.1.1 fixed a typo in python_requires, which made older versions
-    # incompatible with newer setuptools.
     # 3.1.2 is the first release with any wheels for Python 3.10
     RUN_REQUIRES.append('mpi4py >=3.1.2')
-    SETUP_REQUIRES.append("mpi4py ==3.1.2; python_version=='3.10.*'")
-    SETUP_REQUIRES.append("mpi4py ==3.1.4; python_version=='3.11.*'")
-    SETUP_REQUIRES.append("mpi4py ==3.1.6; python_version=='3.12.*'")
-    SETUP_REQUIRES.append("mpi4py ==4.0.1; python_version=='3.13.*'")
-    SETUP_REQUIRES.append("mpi4py ==4.1.0; python_version=='3.14.*'")
-    # leave dependency unpinned for unstable Python versions
-    SETUP_REQUIRES.append("mpi4py")
-
-# Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
-# setup_requires for any reason.
-if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
-    SETUP_REQUIRES = []
 
 # --- Custom Distutils commands -----------------------------------------------
 
@@ -73,7 +51,6 @@ setup(
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
-  setup_requires = SETUP_REQUIRES,
   cmdclass = CMDCLASS,
 )
 
