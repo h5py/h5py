@@ -400,7 +400,8 @@ class File(Group):
             recommended), 'core', 'sec2', 'direct', 'stdio', 'mpio', 'ros3'.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
-            'v110', 'v112', 'v114' and 'latest'.
+            'v110', 'v112', 'v114', 'v200' and 'latest' depending on the
+            version of libhdf5 h5py is built against.
         userblock_size
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).
