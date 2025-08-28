@@ -46,10 +46,11 @@ class TestRepr(BaseDataset):
     """
         Feature: repr(Dataset) behaves sensibly
     """
+    endian_mark = '>' if sys.byteorder=='big' else '<'
 
     def test_repr_basic(self):
         ds = self.f.create_dataset('foo', (4,), dtype='int32')
-        assert repr(ds) == '<HDF5 dataset "foo": shape (4,), type "<i4">'
+        assert repr(ds) == f'<HDF5 dataset "foo": shape (4,), type "{self.endian_mark}i4">'
 
     def test_repr_closed(self):
         """ repr() works on live and dead datasets """
@@ -59,7 +60,7 @@ class TestRepr(BaseDataset):
 
     def test_repr_anonymous(self):
         ds = self.f.create_dataset(None, (4,), dtype='int32')
-        assert repr(ds) == '<HDF5 dataset (anonymous): shape (4,), type "<i4">'
+        assert repr(ds) == f'<HDF5 dataset (anonymous): shape (4,), type "{self.endian_mark}i4">'
 
 
 class TestCreateShape(BaseDataset):
