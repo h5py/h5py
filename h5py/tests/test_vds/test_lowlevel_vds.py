@@ -3,13 +3,14 @@ Unit test for the low level vds interface for eiger
 https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
 '''
 
-
-from ..common import ut, name
-import numpy as np
-import h5py as h5
 import os.path as osp
 import shutil
 import tempfile
+
+import numpy as np
+
+import h5py as h5
+from ..common import ut, name
 
 
 class TestEigerLowLevel(ut.TestCase):

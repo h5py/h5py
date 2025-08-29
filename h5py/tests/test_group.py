@@ -20,16 +20,17 @@
 import numpy as np
 import os
 import os.path
+from collections.abc import MutableMapping
 from tempfile import mkdtemp
 
-from collections.abc import MutableMapping
+import pytest
 
-from .common import ut, TestCase, name
 import h5py
 from h5py import File, Group, SoftLink, HardLink, ExternalLink
 from h5py import Dataset, Datatype
 from h5py import h5t
 from h5py._hl.compat import filename_encode
+from .common import ut, TestCase, name, is_parallel_test
 
 # If we can't encode unicode filenames, there's not much point failing tests
 # which must fail
@@ -117,14 +118,15 @@ class TestDatasetAssignment(BaseGroup):
     def test_ndarray(self):
         """ Dataset auto-creation by direct assignment """
         data = np.ones((4,4),dtype='f')
-        self.f['a'] = data
-        self.assertIsInstance(self.f['a'], Dataset)
-        self.assertArrayEqual(self.f['a'][...], data)
+        self.f[name()] = data
+        self.assertIsInstance(self.f[name()], Dataset)
+        self.assertArrayEqual(self.f[name()][...], data)
 
     def test_name_bytes(self):
         data = np.ones((4, 4), dtype='f')
-        self.f[b'b'] = data
-        self.assertIsInstance(self.f[b'b'], Dataset)
+        n = name().encode('utf8')
+        self.f[n] = data
+        self.assertIsInstance(self.f[n], Dataset)
 
 class TestDtypeAssignment(BaseGroup):
 
@@ -135,15 +137,16 @@ class TestDtypeAssignment(BaseGroup):
     def test_dtype(self):
         """ Named type creation """
         dtype = np.dtype('|S10')
-        self.f['a'] = dtype
-        self.assertIsInstance(self.f['a'], Datatype)
-        self.assertEqual(self.f['a'].dtype, dtype)
+        self.f[name()] = dtype
+        self.assertIsInstance(self.f[name()], Datatype)
+        self.assertEqual(self.f[name()].dtype, dtype)
 
     def test_name_bytes(self):
         """ Named type creation """
         dtype = np.dtype('|S10')
-        self.f[b'b'] = dtype
-        self.assertIsInstance(self.f[b'b'], Datatype)
+        n = name().encode('utf8')
+        self.f[n] = dtype
+        self.assertIsInstance(self.f[n], Datatype)
 
 
 class TestRequire(BaseGroup):
@@ -177,7 +180,7 @@ class TestRequire(BaseGroup):
         """ Intermediate is created if it doesn't exist """
         dt = h5py.string_dtype()
         self.f.require_dataset(name("foo{}/bar/baz"), (1,), dtype=dt)
-        group = self.f.get(name())
+        group = self.f.get(name("foo{}"))
         assert isinstance(group, Group)
         group = self.f.get(name("foo{}/bar"))
         assert isinstance(group, Group)
@@ -185,7 +188,7 @@ class TestRequire(BaseGroup):
     def test_intermediate_create_group(self):
         dt = h5py.string_dtype()
         self.f.require_group(name("foo{}/bar/baz"))
-        group = self.f.get(name())
+        group = self.f.get(name("foo{}"))
         assert isinstance(group, Group)
         group = self.f.get(name("foo{}/bar"))
         assert isinstance(group, Group)
@@ -285,12 +288,14 @@ class TestOpen(BaseGroup):
 
     def test_invalid_ref(self):
         """ Invalid region references should raise an exception """
-
         ref = h5py.h5r.Reference()
 
         with self.assertRaises(ValueError):
             self.f[ref]
 
+    @pytest.mark.thread_unsafe(reason="FIXME #2672 does not raise")
+    def test_deleted_ref(self):
+        """ References to deleted objects should raise an exception """
         self.f.create_group(name())
         ref = self.f[name()].ref
         del self.f[name()]
@@ -320,9 +325,10 @@ class TestRepr(BaseGroup):
         g.id._close()
         self.assertIsInstance(repr(g), str)
         g = self.f[name()]
-        # Closing the file shouldn't break it
-        self.f.close()
-        self.assertIsInstance(repr(g), str)
+        if not is_parallel_test():
+            # Closing the file shouldn't break it
+            self.f.close()
+            self.assertIsInstance(repr(g), str)
 
 class BaseMapping(BaseGroup):
 
@@ -350,9 +356,17 @@ class TestLen(BaseMapping):
     def test_len(self):
         """ len() returns number of group members """
         self.assertEqual(len(self.f), len(self.groups))
-        self.f.create_group(name())
-        self.assertEqual(len(self.f), len(self.groups)+1)
 
+    def test_len_after_create_group(self):
+        # Can't use a shared file when running in pytest-run-parallel
+        with File(self.mktemp(), 'w') as f:
+            self.assertEqual(len(f), 0)
+            f.create_group("x")
+            self.assertEqual(len(f), 1)
+            f.create_group("y")
+            self.assertEqual(len(f), 2)
+            del f["x"]
+            self.assertEqual(len(f), 1)
 
 class TestContains(BaseGroup):
 
@@ -371,12 +385,15 @@ class TestContains(BaseGroup):
         self.assertNotIn(b'mongoose', self.f)
         self.assertNotIn('mongoose', self.f)
 
-    def test_exc(self):
-        """ "in" on closed group returns False (see also issue 174) """
-        self.f.create_group(name())
-        self.f.close()
-        self.assertFalse(name().encode("utf-8") in self.f)
-        self.assertFalse(name() in self.f)
+    def test_closed(self):
+        """ "in" on closed File returns False (see also issue 174) """
+        f = File(self.mktemp(), 'w')
+        f.create_group('a')
+        self.assertTrue(b'a' in f)
+        self.assertTrue('a' in f)
+        f.close()
+        self.assertFalse(b'a' in f)
+        self.assertFalse('a' in f)
 
     def test_empty(self):
         """ Empty strings work properly and aren't contained """
@@ -530,14 +547,30 @@ class TestAdditionalMappingFuncs(BaseMapping):
             self.f.close()
 
     def test_pop_item(self):
-        """.pop_item exists and removes item"""
-        key, val = self.group.popitem()
-        self.assertNotIn(key, self.group)
+        """.pop_item removes an item"""
+        g = self.f.create_group(name())
+        g.create_group("a")
+        g.create_group("b")
+        k, _ = g.popitem()
+        assert k in ("a", "b")
+        self.assertNotIn(k, g)
+
+        k2, _ = g.popitem()
+        assert k2 == "b" if k == "a" else "a"
+        self.assertNotIn(k2, g)
+
+        # popitem() from an empty group raises
+        with self.assertRaises(KeyError):
+            g.popitem()
 
     def test_pop(self):
-        """.pop exists and removes specified item"""
-        self.group.pop('a')
-        self.assertNotIn('a', self.group)
+        """.pop returns and removes specified item"""
+        g = self.f.create_group(name())
+        g.create_group("a")
+        g.create_group("b")
+        g.pop("a")
+        self.assertNotIn("a", g)
+        self.assertIn("b", g)
 
     def test_pop_default(self):
         """.pop falls back to default"""
@@ -553,29 +586,36 @@ class TestAdditionalMappingFuncs(BaseMapping):
 
     def test_clear(self):
         """.clear removes groups"""
-        self.group.clear()
-        self.assertEqual(len(self.group), 0)
+        g = self.f.create_group(name())
+        g.create_group('a')
+        g.create_group('b')
+        self.assertEqual(len(g), 2)
+        g.clear()
+        self.assertEqual(len(g), 0)
 
     def test_update_dict(self):
         """.update works with dict"""
+        g = self.f.create_group(name())
         new_items = {'e': np.array([42])}
-        self.group.update(new_items)
-        self.assertIn('e', self.group)
+        g.update(new_items)
+        self.assertIn('e', g)
 
     def test_update_iter(self):
         """.update works with list"""
+        g = self.f.create_group(name())
         new_items = [
             ('e', np.array([42])),
             ('f', np.array([42]))
         ]
-        self.group.update(new_items)
-        self.assertIn('e', self.group)
+        g.update(new_items)
+        self.assertIn('e', g)
 
     def test_update_kwargs(self):
         """.update works with kwargs"""
+        g = self.f.create_group(name())
         new_items = {'e': np.array([42])}
-        self.group.update(**new_items)
-        self.assertIn('e', self.group)
+        g.update(**new_items)
+        self.assertIn('e', g)
 
     def test_setdefault(self):
         """.setdefault gets group if it exists"""
@@ -584,9 +624,8 @@ class TestAdditionalMappingFuncs(BaseMapping):
 
     def test_setdefault_with_default(self):
         """.setdefault gets default if group doesn't exist"""
-        # e shouldn't exist as a group
         # 42 used as groups should be strings
-        value = self.group.setdefault('e', np.array([42]))
+        value = self.group.setdefault(name(), np.array([42]))
         self.assertEqual(value, 42)
 
     def test_setdefault_no_default(self):
@@ -806,38 +845,41 @@ class TestLexicographic(TestCase):
         self.f['A/B/C'] = self.f['A']
         self.f['A/a'] = self.f['A']
 
-        # create vistor
-        self.v = Visitor()
-
     def test_nontrivial_sort_visit(self):
         """check that test example is not trivially sorted"""
-        self.f.visit(self.v)
-        assert self.v.names != sorted(self.v.names)
+        v = Visitor()
+        self.f.visit(v)
+        assert v.names != sorted(v.names)
 
     def test_visit(self):
         """check that File.visit iterates in lexicographic order"""
-        self.f.visit(self.v)
-        assert self.v.names == sorted(self.v.names, key=self.split_parts)
+        v = Visitor()
+        self.f.visit(v)
+        assert v.names == sorted(v.names, key=self.split_parts)
 
     def test_visit_links(self):
         """check that File.visit_links iterates in lexicographic order"""
-        self.f.visit_links(self.v)
-        assert self.v.names == sorted(self.v.names, key=self.split_parts)
+        v = Visitor()
+        self.f.visit_links(v)
+        assert v.names == sorted(v.names, key=self.split_parts)
 
     def test_visititems(self):
         """check that File.visititems iterates in lexicographic order"""
-        self.f.visititems(self.v)
-        assert self.v.names == sorted(self.v.names, key=self.split_parts)
+        v = Visitor()
+        self.f.visititems(v)
+        assert v.names == sorted(v.names, key=self.split_parts)
 
     def test_visititems_links(self):
         """check that File.visititems_links iterates in lexicographic order"""
-        self.f.visititems_links(self.v)
-        assert self.v.names == sorted(self.v.names, key=self.split_parts)
+        v = Visitor()
+        self.f.visititems_links(v)
+        assert v.names == sorted(v.names, key=self.split_parts)
 
     def test_visit_group(self):
         """check that Group.visit iterates in lexicographic order"""
-        self.f['A'].visit(self.v)
-        assert self.v.names == sorted(self.v.names, key=self.split_parts)
+        v = Visitor()
+        self.f['A'].visit(v)
+        assert v.names == sorted(v.names, key=self.split_parts)
 
 class TestSoftLinks(BaseGroup):
 
@@ -859,8 +901,8 @@ class TestSoftLinks(BaseGroup):
         """ Create new soft link by assignment """
         g = self.f.create_group(name("new"))
         sl = SoftLink(name("/new"))
-        self.f['alias'] = sl
-        g2 = self.f['alias']
+        self.f[name('alias')] = sl
+        g2 = self.f[name('alias')]
         self.assertEqual(g, g2)
 
     def test_exc(self):
@@ -901,33 +943,33 @@ class TestExternalLinks(TestCase):
 
     def test_create(self):
         """ Creating external links """
-        self.f['ext'] = ExternalLink(self.ename, '/external')
-        grp = self.f['ext']
+        self.f[name()] = ExternalLink(self.ename, '/external')
+        grp = self.f[name()]
         self.ef = grp.file
         self.assertNotEqual(self.ef, self.f)
         self.assertEqual(grp.name, '/external')
 
     def test_exc(self):
         """ KeyError raised when attempting to open broken link """
-        self.f['ext'] = ExternalLink(self.ename, '/missing')
+        self.f[name()] = ExternalLink(self.ename, '/missing')
         with self.assertRaises(KeyError):
-            self.f['ext']
+            self.f[name()]
 
     # I would prefer OSError but there's no way to fix this as the exception
     # class is determined by HDF5.
     def test_exc_missingfile(self):
         """ KeyError raised when attempting to open missing file """
-        self.f['ext'] = ExternalLink('mongoose.hdf5','/foo')
+        self.f[name()] = ExternalLink('mongoose.hdf5','/foo')
         with self.assertRaises(KeyError):
-            self.f['ext']
+            self.f[name()]
 
     def test_close_file(self):
         """ Files opened by accessing external links can be closed
 
         Issue 189.
         """
-        self.f['ext'] = ExternalLink(self.ename, '/')
-        grp = self.f['ext']
+        self.f[name()] = ExternalLink(self.ename, '/')
+        grp = self.f[name()]
         f2 = grp.file
         f2.close()
         self.assertFalse(f2)
@@ -941,7 +983,7 @@ class TestExternalLinks(TestCase):
         ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
-        self.f['ext'] = ExternalLink(ext_filename, '/external')
+        self.f[name()] = ExternalLink(ext_filename, '/external')
 
     @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
     def test_unicode_decode(self):
@@ -953,8 +995,8 @@ class TestExternalLinks(TestCase):
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
             ext_file["external"].attrs["ext_attr"] = "test"
-        self.f['ext'] = ExternalLink(ext_filename, '/external')
-        self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
+        self.f[name()] = ExternalLink(ext_filename, '/external')
+        self.assertEqual(self.f[name()].attrs["ext_attr"], "test")
 
     def test_unicode_hdf5_path(self):
         """
@@ -965,8 +1007,8 @@ class TestExternalLinks(TestCase):
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('α')
             ext_file["α"].attrs["ext_attr"] = "test"
-        self.f['ext'] = ExternalLink(ext_filename, '/α')
-        self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
+        self.f[name()] = ExternalLink(ext_filename, '/α')
+        self.assertEqual(self.f[name()].attrs["ext_attr"], "test")
 
 class TestExtLinkBugs(TestCase):
 
@@ -1143,12 +1185,10 @@ class TestCopy(TestCase):
         self.assertArrayEqual(self.f2[name("foo{}/baz")], np.array([1, 2, 3]))
 
     def test_copy_external_links(self):
-
-        filename = self.f1.filename
-        self.f1[name("foo")] = [1,2,3]
-        self.f2[name("bar")] = ExternalLink(filename, name("foo"))
-        self.f1.close()
-        self.f1 = None
+        filename = self.mktemp()
+        with File(filename, 'w') as f1:
+            f1[name("foo")] = [1,2,3]
+            self.f2[name("bar")] = ExternalLink(f1.filename, name("foo"))
 
         self.assertArrayEqual(self.f2[name("bar")], np.array([1,2,3]))
 
@@ -1176,7 +1216,7 @@ class TestCopy(TestCase):
         baz_bar = self.f2[name("baz")].attrs['bar']
         self.assertArrayEqual(self.f2[baz_bar], np.array([4,5,6]))
 
-        self.f1.copy("/", self.f2, name("root"), expand_refs=True)
+        self.f1.copy('/', self.f2, name("root"), expand_refs=True)
         self.assertArrayEqual(self.f2[name("root") + name("/foo")], np.array([1,2,3]))
         self.assertArrayEqual(self.f2[name("root") + name("/bar")], np.array([4,5,6]))
         foo_bar = self.f2[name("root") + name("/foo")].attrs['bar']

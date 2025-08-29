@@ -1,24 +1,24 @@
-import pytest
+import h5py
 
 from .common import TestCase, name
 
 
 class TestCompletions(TestCase):
 
-    @pytest.mark.thread_unsafe
     def test_root_group_completions(self):
         # Test completions on top-level file.
-        self.f.create_group('h')
-        self.f.create_group('g')
-        self.f.create_group('data2')
-        self.f.create_dataset('data', [1, 2, 3])
+        with h5py.File(self.mktemp(), 'w') as f:
+            f.create_group('h')
+            f.create_group('g')
+            f.create_group('data2')
+            f.create_dataset('data', [1, 2, 3])
 
-        # Test that order is alphabetical, and that there is no
-        # internal ordering between groups and datasets.
-        self.assertEqual(
-            self.f._ipython_key_completions_(),
-            ['data', 'data2', 'g', 'h'],
-        )
+            # Test that order is alphabetical, and that there is no
+            # internal ordering between groups and datasets.
+            self.assertEqual(
+                f._ipython_key_completions_(),
+                ['data', 'data2', 'g', 'h'],
+            )
 
     def test_subgroup_completions(self):
         g = self.f.create_group(name())

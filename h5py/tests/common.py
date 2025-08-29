@@ -269,7 +269,7 @@ def name(template_or_prefix: str = "foo", /) -> str:
 
 def is_parallel_test() -> bool:
     """Return True if the test calling this function is likely being executed
-    in a thread pool by pytest-run-parallel; false otherwise.
+    in a thread pool by pytest-run-parallel; False otherwise.
     """
     tid = threading.get_ident()
     return tid != MAIN_THREAD

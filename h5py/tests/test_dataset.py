@@ -25,12 +25,14 @@ import pytest
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-from .common import ut, TestCase, NUMPY_RELEASE_VERSION, is_parallel_test, name
-from .data_files import get_data_file_path
 from h5py import File, Dataset
 from h5py._hl.base import is_empty_dataspace, product
 from h5py import h5f, h5t
 import h5py
+
+from .common import ut, TestCase, NUMPY_RELEASE_VERSION, is_parallel_test, name
+from .data_files import get_data_file_path
+
 
 class BaseDataset(TestCase):
     def setUp(self):
@@ -153,7 +155,7 @@ class TestCreateData(BaseDataset):
 
     def test_dataset_intermediate_group(self):
         """ Create dataset with missing intermediate groups """
-        n = f"/{name()}/bar/baz"
+        n = name("/foo{}/bar/baz")
         ds = self.f.create_dataset(n, shape=(10, 10), dtype='<i4')
         self.assertIsInstance(ds, h5py.Dataset)
         self.assertTrue(n in self.f)
@@ -210,7 +212,7 @@ class TestCreateData(BaseDataset):
             self.f.create_dataset(name(), data=np.array([b'abc', b'def'], dtype='U3'))
 
     def test_empty_create_via_None_shape(self):
-        self.f.create_dataset(name(), shape=None, dtype='f')
+        self.f.create_dataset(name(), dtype='f')
         self.assertTrue(is_empty_dataspace(self.f[name()].id))
 
     def test_empty_create_via_Empty_class(self):
@@ -239,7 +241,7 @@ class TestReadDirectly:
         ])
     def test_read_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
         source_values = np.arange(product(source_shape), dtype="int64").reshape(source_shape)
-        dset = writable_file.create_dataset(name(), shape=source_shape, data=source_values)
+        dset = writable_file.create_dataset(name(), source_shape, data=source_values)
         arr = np.full(dest_shape, -1, dtype="int64")
         expected = arr.copy()
         expected[dest_sel] = source_values[source_sel]
@@ -248,7 +250,7 @@ class TestReadDirectly:
         np.testing.assert_array_equal(arr, expected)
 
     def test_no_sel(self, writable_file):
-        dset = writable_file.create_dataset(name(), shape=(10,), data=np.arange(10, dtype="int64"))
+        dset = writable_file.create_dataset(name(), (10,), data=np.arange(10, dtype="int64"))
         arr = np.ones((10,), dtype="int64")
         dset.read_direct(arr)
         np.testing.assert_array_equal(arr, np.arange(10, dtype="int64"))
@@ -260,20 +262,20 @@ class TestReadDirectly:
             empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
     def test_wrong_shape(self, writable_file):
-        dset = writable_file.create_dataset(name(), shape=(100,), dtype='int64')
+        dset = writable_file.create_dataset(name(), (100,), dtype='int64')
         arr = np.ones((200,))
         with pytest.raises(TypeError):
             dset.read_direct(arr)
 
     def test_not_c_contiguous(self, writable_file):
-        dset = writable_file.create_dataset(name(), shape=(10, 10), dtype='int64')
+        dset = writable_file.create_dataset(name(), (10, 10), dtype='int64')
         arr = np.ones((10, 10), order='F')
         with pytest.raises(TypeError):
             dset.read_direct(arr)
 
     def test_zero_length(self, writable_file):
         shape = (0, 20)
-        dset = writable_file.create_dataset(name(), shape=shape, dtype=np.int64)
+        dset = writable_file.create_dataset(name(), shape, dtype=np.int64)
         arr = np.zeros(shape, dtype=np.int64)
         dset.read_direct(arr)
 
@@ -298,7 +300,7 @@ class TestWriteDirectly:
             ((5, 7, 9), (6,), np.s_[2, :6, 3], np.s_[:]),
         ])
     def test_write_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
-        dset = writable_file.create_dataset(name(), shape=dest_shape, dtype='int32', fillvalue=-1)
+        dset = writable_file.create_dataset(name(), dest_shape, dtype='int32', fillvalue=-1)
         arr = np.arange(product(source_shape)).reshape(source_shape)
         expected = np.full(dest_shape, -1, dtype='int32')
         expected[dest_sel] = arr[source_sel]
@@ -311,13 +313,13 @@ class TestWriteDirectly:
             empty_dset.write_direct(np.ones((100,)), np.s_[0:10], np.s_[50:60])
 
     def test_wrong_shape(self, writable_file):
-        dset = writable_file.create_dataset(name(), shape=(100,), dtype='int64')
+        dset = writable_file.create_dataset(name(), (100,), dtype='int64')
         arr = np.ones((200,))
         with pytest.raises(TypeError):
             dset.write_direct(arr)
 
     def test_not_c_contiguous(self, writable_file):
-        dset = writable_file.create_dataset(name(), shape=(10, 10), dtype='int64')
+        dset = writable_file.create_dataset(name(), (10, 10), dtype='int64')
         arr = np.ones((10, 10), order='F')
         with pytest.raises(TypeError):
             dset.write_direct(arr)
@@ -392,7 +394,8 @@ class TestCreateRequire(BaseDataset):
         """ require_dataset with convertible type succeeds (non-strict mode)
         """
         dset = self.f.create_dataset(name(), (10, 3), 'i4')
-        dset[0, 0] = 98765  # Test for spurious intermediate conversions
+        # Set a value too large for i2 to test for spurious intermediate conversions
+        dset[0, 0] = 98765
         dset2 = self.f.require_dataset(name(), (10, 3), 'i2', exact=False)
         self.assertEqual(dset, dset2)
         self.assertEqual(dset2.dtype, np.dtype('i4'))
@@ -680,7 +683,7 @@ class TestCreateCompressionNumber(BaseDataset):
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
-            dset = self.f.create_dataset(name(), (20, 30), compression=h5py.h5z.FILTER_DEFLATE, compression_opts=(7,))
+            dset = self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE, compression_opts=(7,))
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
@@ -691,11 +694,11 @@ class TestCreateCompressionNumber(BaseDataset):
     def test_compression_number_invalid(self):
         """ Create with invalid compression numbers  """
         with self.assertRaises(ValueError) as e:
-            self.f.create_dataset(name(), (20, 30), compression=-999)
+            self.f.create_dataset('foo', (20, 30), compression=-999)
         self.assertIn("Invalid filter", str(e.exception))
 
         with self.assertRaises(ValueError) as e:
-            self.f.create_dataset(name(), (20, 30), compression=100)
+            self.f.create_dataset('foo', (20, 30), compression=100)
         self.assertIn("Unknown compression", str(e.exception))
 
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
@@ -704,7 +707,7 @@ class TestCreateCompressionNumber(BaseDataset):
 
             # Using gzip compression requires a compression level specified in compression_opts
             with self.assertRaises(IndexError):
-                self.f.create_dataset(name(), (20, 30), compression=h5py.h5z.FILTER_DEFLATE)
+                self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE)
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
@@ -783,15 +786,11 @@ class TestCreateFletcher32(BaseDataset):
 class TestCreateScaleOffset(BaseDataset):
     """
         Feature: Datasets can use the scale/offset filter
-    """
-    def reopen(self):
-        if is_parallel_test():
-            self.f.flush()
-        else:
-            filename = self.f.filename
-            self.f.close()
-            self.f = h5py.File(filename, 'r')
 
+    Note: loss of precision caused by scaleoffset only becomes visible
+    when closing and reopening the File.
+    Can't close/reopen the shared self.f in pytest-run-parallel.
+    """
     def test_float_fails_without_options(self):
         """ Ensure that a scale factor is required for scaleoffset compression of floating point data """
 
@@ -817,20 +816,22 @@ class TestCreateScaleOffset(BaseDataset):
         shape = (100, 300)
         range = 20 * 10 ** scalefac
         testdata = (np.random.rand(*shape) - 0.5) * range
+        fname = self.mktemp()
 
-        dset = self.f.create_dataset(name(), shape, dtype=np.float64, scaleoffset=scalefac)
+        with h5py.File(fname, 'w') as f:
+            dset = f.create_dataset(
+                'foo', shape, dtype=np.float64, scaleoffset=scalefac
+            )
+            # Dataset reports that scaleoffset is in use
+            assert dset.scaleoffset is not None
+            # Dataset round-trips
+            dset[...] = testdata
 
-        # Dataset reports that scaleoffset is in use
-        assert dset.scaleoffset is not None
-
-        # Dataset round-trips
-        dset[...] = testdata
-        self.reopen()
-        readdata = self.f[name()][...]
+        with h5py.File(fname, 'r') as f:
+            readdata = f['foo'][...]
 
         # Test that data round-trips to requested precision
         self.assertArrayEqual(readdata, testdata, precision=10 ** (-scalefac))
-
         # Test that the filter is actually active (i.e. compression is lossy)
         assert not (readdata == testdata).all()
 
@@ -840,17 +841,19 @@ class TestCreateScaleOffset(BaseDataset):
         nbits = 12
         shape = (100, 300)
         testdata = np.random.randint(0, 2 ** nbits - 1, size=shape, dtype=np.int64)
+        fname = self.mktemp()
 
-        # Create dataset; note omission of nbits (for library-determined precision)
-        dset = self.f.create_dataset(name(), shape, dtype=np.int64, scaleoffset=True)
+        with h5py.File(fname, 'w') as f:
+            # Create dataset; note omission of nbits (for library-determined precision)
+            dset = f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=True)
+            # Dataset reports scaleoffset enabled
+            assert dset.scaleoffset is not None
+            # Data round-trips correctly and identically
+            dset[...] = testdata
 
-        # Dataset reports scaleoffset enabled
-        assert dset.scaleoffset is not None
+        with h5py.File(fname, 'r') as f:
+            readdata = f['foo'][...]
 
-        # Data round-trips correctly and identically
-        dset[...] = testdata
-        self.reopen()
-        readdata = self.f[name()][...]
         self.assertArrayEqual(readdata, testdata)
 
     def test_int_with_minbits(self):
@@ -859,16 +862,18 @@ class TestCreateScaleOffset(BaseDataset):
         nbits = 12
         shape = (100, 300)
         testdata = np.random.randint(0, 2 ** nbits, size=shape, dtype=np.int64)
+        fname = self.mktemp()
 
-        dset = self.f.create_dataset(name(), shape, dtype=np.int64, scaleoffset=nbits)
+        with h5py.File(fname, 'w') as f:
+            dset = f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=nbits)
+            # Dataset reports scaleoffset enabled with correct precision
+            self.assertTrue(dset.scaleoffset == 12)
+            # Data round-trips correctly
+            dset[...] = testdata
 
-        # Dataset reports scaleoffset enabled with correct precision
-        self.assertTrue(dset.scaleoffset == 12)
+        with h5py.File(fname, 'r') as f:
+            readdata = f['foo'][...]
 
-        # Data round-trips correctly
-        dset[...] = testdata
-        self.reopen()
-        readdata = self.f[name()][...]
         self.assertArrayEqual(readdata, testdata)
 
     def test_int_with_minbits_lossy(self):
@@ -877,16 +882,17 @@ class TestCreateScaleOffset(BaseDataset):
         nbits = 12
         shape = (100, 300)
         testdata = np.random.randint(0, 2 ** (nbits + 1) - 1, size=shape, dtype=np.int64)
+        fname = self.mktemp()
 
-        dset = self.f.create_dataset(name(), shape, dtype=np.int64, scaleoffset=nbits)
+        with h5py.File(fname, 'w') as f:
+            dset = f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=nbits)
+            # Dataset reports scaleoffset enabled with correct precision
+            self.assertTrue(dset.scaleoffset == 12)
+            # Data can be written and read
+            dset[...] = testdata
 
-        # Dataset reports scaleoffset enabled with correct precision
-        self.assertTrue(dset.scaleoffset == 12)
-
-        # Data can be written and read
-        dset[...] = testdata
-        self.reopen()
-        readdata = self.f[name()][...]
+        with h5py.File(fname, 'r') as f:
+            readdata = f['foo'][...]
 
         # Compression is lossy
         assert not (readdata == testdata).all()
@@ -1148,13 +1154,13 @@ class TestResize(BaseDataset):
         self.assertEqual(dset.maxshape, (20, 60))
 
     def test_create_1D_integer_maxshape_tuple(self):
-        """ Create dataset with "maxshape" using integer maxshape"""
+        """ Create dataset with "maxshape" using tuple shape and integer maxshape"""
         dset = self.f.create_dataset(name(), (20,), maxshape=20)
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20,))
 
     def test_create_1D_integer_maxshape_integer(self):
-        """ Create dataset with "maxshape" using integer maxshape"""
+        """ Create dataset with "maxshape" using integer shape and integer maxshape"""
         dset = self.f.create_dataset(name(), 20, maxshape=20)
         self.assertEqual(dset.maxshape, (20,))
 
@@ -1809,15 +1815,13 @@ class TestVlen(BaseDataset):
 
     def test_reuse_struct_from_other(self):
         dt = [('a', int), ('b', h5py.vlen_dtype(int))]
-        self.f.create_dataset(name("x"), (1,), dtype=dt)
 
-        self.f.flush()
-        if not is_parallel_test():
-            fname = self.f.filename
-            self.f.close()
-            self.f = h5py.File(fname, 'a')
+        fname = self.mktemp()
+        with h5py.File(fname, 'w') as f:
+            f.create_dataset("x", (1,), dtype=dt)
 
-        self.f.create_dataset(name("y"), (1,), self.f[name("x")]['b'][()].dtype)
+        with h5py.File(fname, 'a') as f:
+            f.create_dataset("y", (1,), f["x"]['b'][()].dtype)
 
     def test_convert(self):
         dt = h5py.vlen_dtype(int)
@@ -2021,13 +2025,13 @@ def test_zero_storage_size():
     from io import BytesIO
     buf = BytesIO()
     with h5py.File(buf, 'w') as fout:
-        fout.create_dataset(name(), dtype='uint8')
+        fout.create_dataset('empty', dtype='uint8')
 
     buf.seek(0)
     with h5py.File(buf, 'r') as fin:
-        assert fin[name()].chunks is None
-        assert fin[name()].id.get_offset() is None
-        assert fin[name()].id.get_storage_size() == 0
+        assert fin['empty'].chunks is None
+        assert fin['empty'].id.get_offset() is None
+        assert fin['empty'].id.get_storage_size() == 0
 
 
 def test_python_int_uint64(writable_file):
