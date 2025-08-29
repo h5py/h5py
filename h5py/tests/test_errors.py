@@ -12,6 +12,9 @@
 """
 
 import threading
+
+import pytest
+
 import h5py
 
 
@@ -24,6 +27,7 @@ def _access_not_existing_object(filename):
             pass
 
 
+@pytest.mark.thread_unsafe(reason="Changes global state")
 def test_unsilence_errors(tmp_path, capfd):
     """Check that HDF5 errors can be muted/unmuted from h5py"""
     filename = tmp_path / 'test.h5'
