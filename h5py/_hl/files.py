@@ -404,12 +404,22 @@ class File(Group):
             recommended), 'core', 'sec2', 'direct', 'stdio', 'mpio', 'ros3'.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
-            'v110', 'v112'  and 'latest'.
+            'v110', 'v112', 'v114', 'v200' and 'latest' depending on the
+            version of libhdf5 h5py is built against.
         userblock_size
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).
         swmr
             Open the file in SWMR read mode. Only used when mode = 'r'.
+        rdcc_nslots
+            The number of chunk slots in the raw data chunk cache for this
+            file. Increasing this value reduces the number of cache collisions,
+            but slightly increases the memory used. Due to the hashing
+            strategy, this value should ideally be a prime number. As a rule of
+            thumb, this value should be at least 10 times the number of chunks
+            that can fit in rdcc_nbytes bytes. For maximum performance, this
+            value should be set approximately 100 times that number of
+            chunks. The default value is 521. Applies to all datasets unless individually changed.
         rdcc_nbytes
             Total size of the dataset chunk cache in bytes. The default size per
             dataset is 1024**2 (1 MiB) for HDF5 before 2.0 and 8 MiB for HDF5
@@ -426,15 +436,6 @@ class File(Group):
             this can be safely set to 1.  Otherwise, this should be set lower
             depending on how often you re-read or re-write the same data.  The
             default value is 0.75. Applies to all datasets unless individually changed.
-        rdcc_nslots
-            The number of chunk slots in the raw data chunk cache for this
-            file. Increasing this value reduces the number of cache collisions,
-            but slightly increases the memory used. Due to the hashing
-            strategy, this value should ideally be a prime number. As a rule of
-            thumb, this value should be at least 10 times the number of chunks
-            that can fit in rdcc_nbytes bytes. For maximum performance, this
-            value should be set approximately 100 times that number of
-            chunks. The default value is 521. Applies to all datasets unless individually changed.
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
