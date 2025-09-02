@@ -170,8 +170,8 @@ def make_fapl(
 
     try:
         set_fapl = _drivers[driver]
-    except KeyError:
-        raise ValueError('Unknown driver type "%s"' % driver)
+    except KeyError as exc:
+        raise ValueError(f'Unknown driver type {driver!r}') from exc
     else:
         if driver == 'ros3':
             token = kwds.pop('session_token', None)
@@ -229,7 +229,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
         try:
             userblock_size = int(userblock_size)
         except (TypeError, ValueError):
-            raise ValueError("User block size must be an integer")
+            raise ValueError("User block size must be an integer") from None
         if fcpl is None:
             fcpl = h5p.create(h5p.FILE_CREATE)
         fcpl.set_userblock(userblock_size)
