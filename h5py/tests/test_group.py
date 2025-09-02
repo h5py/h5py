@@ -715,7 +715,7 @@ class TestVisitLinks(TestCase):
         self.links = [
             'linkto_grp1', 'grp1/linkto_grp11', 'grp1/linkto_grp12', 'linkto_grp2', 'grp2/linkto_grp21', 'grp2/grp21/linkto_grp211'
         ]
-        for g, l in zip(self.groups, self.links):
+        for g, l in zip(self.groups, self.links, strict=True):
             self.f.create_group(g)
             self.f[l] = SoftLink(f'/{g}')
 

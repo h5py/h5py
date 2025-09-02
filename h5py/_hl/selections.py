@@ -222,7 +222,7 @@ class SimpleSelection(Selection):
     @property
     def array_shape(self):
         scalar = self._sel[3]
-        return tuple(x for x, s in zip(self.mshape, scalar) if not s)
+        return tuple(x for x, s in zip(self.mshape, scalar, strict=True) if not s)
 
     def __init__(self, shape, spaceid=None, hyperslab=None):
         super().__init__(shape, spaceid)
@@ -294,7 +294,7 @@ class SimpleSelection(Selection):
         if any(d == 0 for d in count):
             return
 
-        chunks = tuple(x//y for x, y in zip(count, tshape))
+        chunks = tuple(x//y for x, y in zip(count, tshape, strict=True))
         nchunks = product(chunks)
 
         if nchunks == 1:
@@ -303,7 +303,7 @@ class SimpleSelection(Selection):
             sid = self._id.copy()
             sid.select_hyperslab((0,)*rank, tshape, step)
             for idx in range(nchunks):
-                offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
+                offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start, strict=True))
                 sid.offset_simple(offset)
                 yield sid
 
