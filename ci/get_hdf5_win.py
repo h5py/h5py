@@ -10,7 +10,7 @@ CI environment which thrown away each time
 from os import environ, makedirs, walk, getcwd, chdir
 from os.path import join as pjoin, exists, basename, dirname, abspath
 from tempfile import TemporaryFile, TemporaryDirectory
-from sys import exit, stderr
+from sys import stderr
 from shutil import copy
 from glob import glob
 from subprocess import run
