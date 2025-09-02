@@ -560,9 +560,9 @@ class File(Group):
                                  alignment_interval=alignment_interval,
                                  meta_block_size=meta_block_size,
                                  **kwds)
-                fcpl = make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
-                                 fs_persist=fs_persist, fs_threshold=fs_threshold,
-                                 fs_page_size=fs_page_size)
+                fcpl = make_fcpl(track_order=track_order, track_times=track_times,
+                                 fs_strategy=fs_strategy, fs_persist=fs_persist,
+                                 fs_threshold=fs_threshold, fs_page_size=fs_page_size)
                 fid = make_fid(name, mode, userblock_size, fapl, fcpl, swmr=swmr)
 
             if isinstance(libver, tuple):
