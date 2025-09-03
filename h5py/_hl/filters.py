@@ -173,10 +173,10 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
             return
         try:
             tpl = tuple(tpl)
-        except TypeError:
-            raise TypeError('"%s" argument must be None or a sequence object' % name)
+        except TypeError as exc:
+            raise TypeError(f'{name!r} argument must be None or a sequence object') from exc
         if len(tpl) != len(shape):
-            raise ValueError('"%s" must have same rank as dataset shape' % name)
+            raise ValueError(f'{name!r} must have same rank as dataset shape')
 
     rq_tuple(chunks, 'chunks')
     rq_tuple(maxshape, 'maxshape')
@@ -208,8 +208,8 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
             err = "SZIP options must be a 2-tuple ('ec'|'nn', even integer 0-32)"
             try:
                 szmethod, szpix = compression_opts
-            except TypeError:
-                raise TypeError(err)
+            except TypeError as exc:
+                raise TypeError(err) from exc
             if szmethod not in ('ec', 'nn'):
                 raise ValueError(err)
             if not (0<szpix<=32 and szpix%2 == 0):
