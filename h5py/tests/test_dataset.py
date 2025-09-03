@@ -1242,7 +1242,7 @@ class TestIter(BaseDataset):
         """ Iterating over a dataset yields rows """
         data = np.arange(30, dtype='f').reshape((10, 3))
         dset = self.f.create_dataset('foo', data=data)
-        for x, y in zip(dset, data):
+        for x, y in zip(dset, data, strict=True):
             self.assertEqual(len(x), 3)
             self.assertArrayEqual(x, y)
 
