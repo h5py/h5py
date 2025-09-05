@@ -751,7 +751,7 @@ class Dataset(HLObject):
                 try:
                     newlen = int(size)
                 except TypeError:
-                    raise TypeError("Argument must be a single int if axis is specified")
+                    raise TypeError("Argument must be a single int if axis is specified") from None
                 size = list(self.shape)
                 size[axis] = newlen
 

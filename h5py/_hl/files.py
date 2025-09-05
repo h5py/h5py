@@ -43,6 +43,10 @@ if hdf5_version >= (1, 13, 0):
     libver_dict.update({'v114': h5f.LIBVER_V114})
     libver_dict_r.update({h5f.LIBVER_V114: 'v114'})
 
+if hdf5_version >= (2, 0, 0):
+    libver_dict.update({'v200': h5f.LIBVER_V200})
+    libver_dict_r.update({h5f.LIBVER_V200: 'v200'})
+
 
 def _set_fapl_mpio(plist, **kwargs):
     """Set file access property list for mpio driver"""
@@ -166,8 +170,8 @@ def make_fapl(
 
     try:
         set_fapl = _drivers[driver]
-    except KeyError:
-        raise ValueError('Unknown driver type "%s"' % driver)
+    except KeyError as exc:
+        raise ValueError(f'Unknown driver type {driver!r}') from exc
     else:
         if driver == 'ros3':
             token = kwds.pop('session_token', None)
@@ -225,7 +229,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
         try:
             userblock_size = int(userblock_size)
         except (TypeError, ValueError):
-            raise ValueError("User block size must be an integer")
+            raise ValueError("User block size must be an integer") from None
         if fcpl is None:
             fcpl = h5p.create(h5p.FILE_CREATE)
         fcpl.set_userblock(userblock_size)
@@ -400,12 +404,22 @@ class File(Group):
             recommended), 'core', 'sec2', 'direct', 'stdio', 'mpio', 'ros3'.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
-            'v110', 'v112'  and 'latest'.
+            'v110', 'v112', 'v114', 'v200' and 'latest' depending on the
+            version of libhdf5 h5py is built against.
         userblock_size
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).
         swmr
             Open the file in SWMR read mode. Only used when mode = 'r'.
+        rdcc_nslots
+            The number of chunk slots in the raw data chunk cache for this
+            file. Increasing this value reduces the number of cache collisions,
+            but slightly increases the memory used. Due to the hashing
+            strategy, this value should ideally be a prime number. As a rule of
+            thumb, this value should be at least 10 times the number of chunks
+            that can fit in rdcc_nbytes bytes. For maximum performance, this
+            value should be set approximately 100 times that number of
+            chunks. The default value is 521. Applies to all datasets unless individually changed.
         rdcc_nbytes
             Total size of the dataset chunk cache in bytes. The default size per
             dataset is 1024**2 (1 MiB) for HDF5 before 2.0 and 8 MiB for HDF5
@@ -422,15 +436,6 @@ class File(Group):
             this can be safely set to 1.  Otherwise, this should be set lower
             depending on how often you re-read or re-write the same data.  The
             default value is 0.75. Applies to all datasets unless individually changed.
-        rdcc_nslots
-            The number of chunk slots in the raw data chunk cache for this
-            file. Increasing this value reduces the number of cache collisions,
-            but slightly increases the memory used. Due to the hashing
-            strategy, this value should ideally be a prime number. As a rule of
-            thumb, this value should be at least 10 times the number of chunks
-            that can fit in rdcc_nbytes bytes. For maximum performance, this
-            value should be set approximately 100 times that number of
-            chunks. The default value is 521. Applies to all datasets unless individually changed.
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
@@ -492,17 +497,19 @@ class File(Group):
             This property should be used in conjunction with
             ``alignment_threshold``. See the description above. For more
             details, see
-            https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT
+            https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gab99d5af749aeb3896fd9e3ceb273677a
 
         meta_block_size
             Set the current minimum size, in bytes, of new metadata block allocations.
-            See https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE
+            See https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga8822e3dedc8e1414f20871a87d533cb1
 
         Additional keywords
             Passed on to the selected file driver.
         """
         if driver == 'ros3':
-            if ros3:
+            if not ros3:
+                raise ValueError("h5py was built without ROS3 support, can't use ros3 driver")
+            if hdf5_version < (2, 0, 0):
                 from urllib.parse import urlparse
                 url = urlparse(name)
                 if url.scheme == 's3':
@@ -513,9 +520,6 @@ class File(Group):
                 elif url.scheme not in ('https', 'http'):
                     raise ValueError(f'{name}: S3 location must begin with '
                                      'either "https://", "http://", or "s3://"')
-            else:
-                raise ValueError(
-                    "h5py was built without ROS3 support, can't use ros3 driver")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
@@ -556,9 +560,9 @@ class File(Group):
                                  alignment_interval=alignment_interval,
                                  meta_block_size=meta_block_size,
                                  **kwds)
-                fcpl = make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
-                                 fs_persist=fs_persist, fs_threshold=fs_threshold,
-                                 fs_page_size=fs_page_size)
+                fcpl = make_fcpl(track_order=track_order, track_times=track_times,
+                                 fs_strategy=fs_strategy, fs_persist=fs_persist,
+                                 fs_threshold=fs_threshold, fs_page_size=fs_page_size)
                 fid = make_fid(name, mode, userblock_size, fapl, fcpl, swmr=swmr)
 
             if isinstance(libver, tuple):
