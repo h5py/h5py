@@ -76,6 +76,10 @@ cpdef TypeID typewrap(hid_t id_):
         pcls = TypeVlenID
     elif cls == H5T_ARRAY:
         pcls = TypeArrayID
+    ### {{if HDF5_VERSION >= (2, 0, 0)}}
+    elif cls == H5T_COMPLEX:
+        pcls = TypeComplexID
+    ### {{endif}}
     else:
         pcls = TypeID
 
@@ -103,6 +107,9 @@ REFERENCE = H5T_REFERENCE
 ENUM      = H5T_ENUM
 VLEN      = H5T_VLEN
 ARRAY     = H5T_ARRAY
+### {{if HDF5_VERSION >= (2, 0, 0)}}
+COMPLEX   = H5T_COMPLEX
+### {{endif}}
 
 # Enumeration H5T_sign_t
 SGN_NONE   = H5T_SGN_NONE
@@ -155,7 +162,6 @@ IEEE_F64LE = lockid(H5T_IEEE_F64LE)
 IEEE_F64BE = lockid(H5T_IEEE_F64BE)
 
 ### {{if HDF5_VERSION < (1, 14, 4)}}
-
 IEEE_F16BE = IEEE_F32BE.copy()
 IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
 IEEE_F16BE.set_size(2)
@@ -165,12 +171,9 @@ IEEE_F16BE.lock()
 IEEE_F16LE = IEEE_F16BE.copy()
 IEEE_F16LE.set_order(H5T_ORDER_LE)
 IEEE_F16LE.lock()
-
 ### {{else}}
-
 IEEE_F16BE = lockid(H5T_IEEE_F16BE)
 IEEE_F16LE = lockid(H5T_IEEE_F16LE)
-
 ### {{endif}}
 
 # Quad floats
@@ -184,6 +187,15 @@ IEEE_F128BE.lock()
 IEEE_F128LE = IEEE_F128BE.copy()
 IEEE_F128LE.set_order(H5T_ORDER_LE)
 IEEE_F128LE.lock()
+
+### {{if HDF5_VERSION >= (2, 0, 0)}}
+COMPLEX_IEEE_F16LE = lockid(H5T_COMPLEX_IEEE_F16LE)
+COMPLEX_IEEE_F16BE = lockid(H5T_COMPLEX_IEEE_F16BE)
+COMPLEX_IEEE_F32LE = lockid(H5T_COMPLEX_IEEE_F32LE)
+COMPLEX_IEEE_F32BE = lockid(H5T_COMPLEX_IEEE_F32BE)
+COMPLEX_IEEE_F64LE = lockid(H5T_COMPLEX_IEEE_F64LE)
+COMPLEX_IEEE_F64BE = lockid(H5T_COMPLEX_IEEE_F64BE)
+### {{endif}}
 
 # Signed 2's complement integer types
 STD_I8LE  = lockid(H5T_STD_I8LE)
@@ -250,6 +262,23 @@ else:
     NATIVE_FLOAT16 = H5I_INVALID_HID
 ### {{endif}}
 
+### {{if HDF5_VERSION >= (2, 0, 0)}}
+if H5T_NATIVE_FLOAT_COMPLEX != H5I_INVALID_HID:
+    NATIVE_FLOAT_COMPLEX = lockid(H5T_NATIVE_FLOAT_COMPLEX)
+else:
+    NATIVE_FLOAT_COMPLEX = H5I_INVALID_HID
+
+if H5T_NATIVE_DOUBLE_COMPLEX != H5I_INVALID_HID:
+    NATIVE_DOUBLE_COMPLEX = lockid(H5T_NATIVE_DOUBLE_COMPLEX)
+else:
+    NATIVE_DOUBLE_COMPLEX = H5I_INVALID_HID
+
+if H5T_NATIVE_LDOUBLE_COMPLEX != H5I_INVALID_HID:
+    NATIVE_LDOUBLE_COMPLEX = lockid(H5T_NATIVE_LDOUBLE_COMPLEX)
+else:
+    NATIVE_LDOUBLE_COMPLEX = H5I_INVALID_HID
+### {{endif}}
+
 # Unix time types
 UNIX_D32LE = lockid(H5T_UNIX_D32LE)
 UNIX_D64LE = lockid(H5T_UNIX_D64LE)
@@ -306,6 +335,27 @@ cdef tuple _get_available_ftypes():
 
 cdef tuple _available_ftypes = _get_available_ftypes()
 
+### {{if HDF5_VERSION >= (2, 0, 0)}}
+
+# Available NumPy complex datatypes
+cdef tuple _get_available_ctypes():
+    """Info on available NumPy complex number datatypes."""
+    cdef:
+        str complex_typecodes = np.typecodes["Complex"]
+        str ctc
+        cnp.dtype cdtype
+        list available_ctypes = []
+
+    for ctc in complex_typecodes:
+        cdtype = np.dtype(ctc)
+        available_ctypes.append(
+            (<object>(cdtype.typeobj), np.finfo(cdtype), cdtype.itemsize)
+        )
+    return tuple(available_ctypes)
+
+
+cdef tuple _available_ctypes = _get_available_ctypes()
+### {{endif}}
 
 cdef (int, int, int) _correct_float_info(ftype_, finfo):
     nmant = finfo.nmant
@@ -841,7 +891,7 @@ cdef class TypeReferenceID(TypeID):
             raise TypeError("Unknown reference type")
 
 
-# === Numeric classes (integers and floats) ===================================
+# === Numeric classes (integers, floats, native complex) ======================
 
 cdef class TypeAtomicID(TypeID):
 
@@ -1107,6 +1157,33 @@ cdef class TypeFloatID(TypeAtomicID):
 
         return new_dtype
 
+### {{if HDF5_VERSION >= (2, 0, 0)}}
+cdef class TypeComplexID(TypeAtomicID):
+    """Native complex number datatypes"""
+
+    cdef object py_dtype(self):
+        """Return equivalent NumPy complex number dtype for an HDF5 native
+        complex datatype."""
+        global cfg
+        if not cfg.native_complex:
+            raise TypeError("Native HDF5 complex number datatypes not available")
+
+        ### {{if not COMPLEX256_SUPPORT}}
+        if <bint>(H5Tequal(self.id, H5T_NATIVE_LDOUBLE_COMPLEX)):
+            raise TypeError("numpy.complex256 not available")
+        ### {{endif}}
+        h5t_size = self.get_size()
+        order = _order_map[self.get_order()]    # string with '<' or '>'
+        for ctype_, finfo, size in _available_ctypes:
+            if size == h5t_size:
+                new_dtype = np.dtype(ctype_).newbyteorder(order)
+                break
+        else:
+            raise TypeError(
+                f"No NumPy equivalent for {self.__class__.__name__} of size {size} bytes found")
+
+        return new_dtype
+### {{endif}}
 
 # === Composite types (enums and compound) ====================================
 
