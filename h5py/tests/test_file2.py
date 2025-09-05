@@ -105,7 +105,7 @@ class TestDriverRegistration(TestCase):
             fname = self.mktemp()
             h5py.File(fname, driver=name(), mode='w')
 
-        self.assertEqual(str(e.exception), f'Unknown driver type "{name()}"')
+        self.assertEqual(str(e.exception), f"Unknown driver type '{name()}'")
 
 
 class TestCache(TestCase):
