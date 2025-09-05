@@ -111,7 +111,7 @@ if hasattr(os, "register_at_fork"):
 # time is taking actions that may create or invalidate identifiers. See the
 # "locking code" section above.
 #
-# See also __cinit__ and __del__ for class ObjectID.
+# See also __cinit__ and __dealloc__ for class ObjectID.
 
 import gc
 import weakref
@@ -119,7 +119,7 @@ import warnings
 
 # Will map id(obj) -> weakref(obj), where obj is an ObjectID instance.
 # Objects are added only via ObjectID.__cinit__, and removed only by
-# ObjectID.__del__.
+# ObjectID.__dealloc__.
 cdef dict registry = {}
 
 @with_phil
@@ -221,17 +221,17 @@ cdef class ObjectID:
             registry[self._pyid] = weakref.ref(self)
 
 
-    def __del__(self):
-        self._del()
+    def __dealloc__(self):
+        self._dealloc()
 
     # Hack to increase the reference counter of _phil by 1.
     # In free-threading interpreters, this prevents a race condition during interpreter
     # shutdown where the global _phil is dereferenced by the main thread while
-    # ObjectID.__del__ is being executed in another thread.
-    def _del(self, _phil=_phil):
+    # ObjectID.__dealloc__ is being executed in another thread.
+    def _dealloc(self, _phil=_phil):
         with _phil:
             ### {{if OBJECTS_DEBUG_ID}}
-            print("DEL - unregistering %d HDF5 id %d" % (self._pyid, self.id))
+            print("DEALLOC - unregistering %d HDF5 id %d" % (self._pyid, self.id))
             ### {{endif}}
             if is_h5py_obj_valid(self) and (not self.locked):
                 if H5Idec_ref(self.id) < 0:
@@ -333,7 +333,7 @@ cdef hid_t pdefault(ObjectID pid):
 
 
 # Note: _phil=_phil is a hack to increase the reference counter of _phil by 1.
-# Read note at ObjectID.__del__.
+# Read note at ObjectID.__dealloc__.
 cdef int is_h5py_obj_valid(ObjectID obj, _phil=_phil):
     """
     Check that h5py object is valid, i.e. HDF5 object wrapper is valid and HDF5
