@@ -222,6 +222,13 @@ cdef class ObjectID:
 
 
     def __dealloc__(self):
+        self._dealloc()
+
+    # Hack to increase the reference counter of _phil by 1.
+    # In free-threading interpreters, this prevents a race condition during interpreter
+    # shutdown where the global _phil is dereferenced by the main thread while
+    # ObjectID.__dealloc__ is being executed in another thread.
+    def _dealloc(self, _phil=_phil):
         with _phil:
             ### {{if OBJECTS_DEBUG_ID}}
             print("DEALLOC - unregistering %d HDF5 id %d" % (self._pyid, self.id))
@@ -235,7 +242,6 @@ cdef class ObjectID:
                     )
             if self._pyid is not None:
                 del registry[self._pyid]
-
 
     def _close(self):
         """ Manually close this object. """
@@ -326,7 +332,9 @@ cdef hid_t pdefault(ObjectID pid):
     return pid.id
 
 
-cdef int is_h5py_obj_valid(ObjectID obj):
+# Note: _phil=_phil is a hack to increase the reference counter of _phil by 1.
+# Read note at ObjectID.__dealloc__.
+cdef int is_h5py_obj_valid(ObjectID obj, _phil=_phil):
     """
     Check that h5py object is valid, i.e. HDF5 object wrapper is valid and HDF5
     object is valid
