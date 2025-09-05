@@ -290,9 +290,9 @@ class Group(HLObject, MutableMappingHDF5):
             try:
                 dsid = dataset.open_dset(self, self._e(name), **kwds)
                 dset = dataset.Dataset(dsid)
-            except KeyError:
+            except KeyError as exc:
                 dset = self[name]
-                raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
+                raise TypeError(f"Incompatible object ({dset.__class__.__name__}) already exists") from exc
 
             if shape != dset.shape:
                 if "maxshape" not in kwds:
@@ -421,8 +421,8 @@ class Group(HLObject, MutableMappingHDF5):
                     return {h5o.TYPE_GROUP: Group,
                             h5o.TYPE_DATASET: dataset.Dataset,
                             h5o.TYPE_NAMED_DATATYPE: datatype.Datatype}[typecode]
-                except KeyError:
-                    raise TypeError("Unknown object type")
+                except KeyError as exc:
+                    raise TypeError("Unknown object type") from exc
 
             elif getlink:
                 typecode = self.id.links.get_info(self._e(name), lapl=self._lapl).type
