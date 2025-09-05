@@ -8,9 +8,10 @@
 #           and contributor agreement.
 import os
 import threading
+import time
 from unittest import SkipTest
 
-import time
+import pytest
 
 from h5py import _objects as o
 from .common import TestCase
@@ -40,6 +41,7 @@ class TestObjects(TestCase):
         with self.assertRaises(TypeError):
             hash(oid)
 
+    @pytest.mark.thread_unsafe(reason="fork() from a thread may deadlock")
     def test_phil_fork_with_threads(self):
         # Test that handling of the phil Lock after fork is correct.
         # We simulate a deadlock in the forked process by explicitly
