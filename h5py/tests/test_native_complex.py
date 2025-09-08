@@ -1,0 +1,79 @@
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
+
+"""
+Testing native complex number datatypes support.
+"""
+
+import sys
+import numpy as np
+import h5py
+from h5py.h5 import get_config # type: ignore
+from h5py import h5t
+import pytest
+
+
+cfg = get_config()
+sys_bo = h5t.ORDER_BE if sys.byteorder == "big" else h5t.ORDER_LE
+
+pytestmark = [
+    pytest.mark.skipif(
+        h5py.version.hdf5_version_tuple < (2, 0, 0),
+        reason="Requires HDF5 >= 2.0",
+    ),
+    pytest.mark.skipif(
+        not cfg.native_complex,
+        reason="Native HDF5 complex number datatypes not available"
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "h5type,size,order",
+    [
+        pytest.param(h5t.COMPLEX_IEEE_F16LE,     4, h5t.ORDER_LE, id="COMPLEX_IEEE_F16LE"),
+        pytest.param(h5t.COMPLEX_IEEE_F16BE,     4, h5t.ORDER_BE, id="COMPLEX_IEEE_F16BE"),
+        pytest.param(h5t.COMPLEX_IEEE_F32LE,     8, h5t.ORDER_LE, id="COMPLEX_IEEE_F32LE"),
+        pytest.param(h5t.COMPLEX_IEEE_F32BE,     8, h5t.ORDER_BE, id="COMPLEX_IEEE_F32BE"),
+        pytest.param(h5t.COMPLEX_IEEE_F64LE,    16, h5t.ORDER_LE, id="COMPLEX_IEEE_F64LE"),
+        pytest.param(h5t.COMPLEX_IEEE_F64BE,    16, h5t.ORDER_BE, id="COMPLEX_IEEE_F64BE"),
+        pytest.param(h5t.NATIVE_FLOAT_COMPLEX,   8,       sys_bo, id="NATIVE_FLOAT_COMPLEX"),
+        pytest.param(h5t.NATIVE_DOUBLE_COMPLEX, 16,       sys_bo, id="NATIVE_DOUBLE_COMPLEX"),
+        pytest.param(
+            h5t.NATIVE_LDOUBLE_COMPLEX, 32, sys_bo, id="NATIVE_LDOUBLE_COMPLEX_yes",
+            marks=pytest.mark.skipif(not hasattr(np, "complex256"), reason="numpy.complex256 not available"),
+        ),
+        pytest.param(
+            h5t.NATIVE_LDOUBLE_COMPLEX, 16, sys_bo, id="NATIVE_LDOUBLE_COMPLEX_no",
+            marks=pytest.mark.skipif(hasattr(np, "complex256"), reason="numpy.complex256 available"),
+        ),
+    ],
+)
+def test_hdf5_dtype(h5type, size, order):
+    """Low-level checks of HDF5 native complex number datatypes"""
+    assert isinstance(h5type, h5t.TypeComplexID)
+    assert h5type.get_size() == size
+    assert h5type.get_order() == order
+
+
+@pytest.mark.parametrize(
+    "h5type,dt",
+    [
+        pytest.param(h5t.COMPLEX_IEEE_F32LE, np.dtype("<c8"), id="COMPLEX_IEEE_F32LE"),
+        pytest.param(h5t.COMPLEX_IEEE_F32BE, np.dtype(">c8"), id="COMPLEX_IEEE_F32BE"),
+        pytest.param(h5t.COMPLEX_IEEE_F64LE, np.dtype("<c16"), id="COMPLEX_IEEE_F64LE"),
+        pytest.param(h5t.COMPLEX_IEEE_F64BE, np.dtype(">c16"), id="COMPLEX_IEEE_F64BE"),
+        pytest.param(h5t.NATIVE_FLOAT_COMPLEX, np.dtype("=c8"), id="NATIVE_FLOAT_COMPLEX"),
+        pytest.param(h5t.NATIVE_DOUBLE_COMPLEX, np.dtype("=c16"), id="NATIVE_DOUBLE_COMPLEX"),
+    ],
+)
+def test_cmplx_type_trans(h5type, dt):
+    """Translate native HDF5 complex number datatype to and from NumPy dtype"""
+    assert h5type.dtype == dt
+    assert h5t.py_create(dt) == h5type
