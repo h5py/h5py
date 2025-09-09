@@ -8,7 +8,7 @@
 #           and contributor agreement.
 
 """
-Testing native complex number datatypes support.
+Testing native complex number datatypes.
 """
 
 import sys
@@ -20,7 +20,6 @@ import pytest
 
 
 cfg = get_config()
-sys_bo = h5t.ORDER_BE if sys.byteorder == "big" else h5t.ORDER_LE
 
 pytestmark = [
     pytest.mark.skipif(
@@ -33,6 +32,7 @@ pytestmark = [
     ),
 ]
 
+sys_bo = h5t.ORDER_BE if sys.byteorder == "big" else h5t.ORDER_LE
 
 @pytest.mark.parametrize(
     "h5type,size,order",
@@ -77,3 +77,12 @@ def test_cmplx_type_trans(h5type, dt):
     """Translate native HDF5 complex number datatype to and from NumPy dtype"""
     assert h5type.dtype == dt
     assert h5t.py_create(dt) == h5type
+
+
+def test_create_dset(writable_file):
+    """Create complex number datasets of different datatypes"""
+    for dt in ("<c8", ">c8", "<c16", ">c16"):
+        complex_array = (np.random.rand(100) + 1j * np.random.rand(100)).astype(dt)
+        ds = writable_file.create_dataset(dt, data=complex_array)
+        assert isinstance(ds.id.get_type(), h5t.TypeComplexID)
+        np.testing.assert_array_equal(ds[...], complex_array)
