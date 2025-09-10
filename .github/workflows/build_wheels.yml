@@ -188,3 +188,8 @@ jobs:
           files: |
             dist/*.whl
         if: github.repository_owner == 'h5py' && github.event_name == 'push'
+
+      # If it's a tag, publish to PyPI
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc # v1.12.4
+        if: github.repository_owner == 'h5py' && github.event_name == 'push' && github.ref_type == 'tag'
