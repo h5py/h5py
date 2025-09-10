@@ -33,20 +33,15 @@ Steps to make an h5py release:
    other maintainers to check it as well.
 6. When everything looks good, merge the PR.
 7. Checkout the master branch, pull, make and push the tag, which will cause
-   CI to build wheels & make a GitHub release::
+   CI to build sdist, wheels & make a GitHub release::
 
     git switch master
     git pull
     git tag 3.14.0  # <-- change this
     git push --tags
 
-8. Prepare the sdist::
-
-    git clean -xfdi
-    python -m build --sdist
-
-9. Download the wheels: ``gh release download 3.14.0 -D dist/``
-10. Upload to PyPI: ``twine upload dist/h5py-3.14.0*`` - this requires a token
+8. Download the artifacts: ``gh release download 3.14.0 -D dist/``
+9. Upload to PyPI: ``twine upload dist/h5py-3.14.0*`` - this requires a token
     from PyPI, which must be `supplied to twine <https://twine.readthedocs.io/en/stable/#configuration>`_.
-11. Close the GitHub milestone for this release and open one for the next
+10. Close the GitHub milestone for this release and open one for the next
     version.
