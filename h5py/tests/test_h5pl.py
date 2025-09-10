@@ -62,6 +62,7 @@ def test_replace(request):
 
 @pytest.mark.mpi_skip
 @insubprocess
+@subproc_env({'HDF5_PLUGIN_PATH': 'h5py_plugin_test'})
 def test_remove(request):
     h5pl.remove(0)
     assert h5pl.size() == 0
