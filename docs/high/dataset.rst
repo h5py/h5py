@@ -179,7 +179,7 @@ the data points in range ``dset[400:500, 100:200]``.
 
 Chunking has performance implications because entire chunk is involved even if
 just one chunk element is needed. Chunk shape determines how many chunks are
-required to satify a read or write operation. Chunk size (in bytes) influences
+required to satisfy a read or write operation. Chunk size (in bytes) influences
 how fast each chunk is processed, usually due to compression or decompression.
 Selecting an appropriate chunk shape to favor expected I/O operations along the
 first few dataset's dimensions helps improve performance.
