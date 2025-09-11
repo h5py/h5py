@@ -377,13 +377,16 @@ Reference
 
         :param data:    Initialize dataset to this (NumPy array).
 
-        :keyword chunks:    Chunk shape, or True to enable auto-chunking.
+        :keyword chunks:    Chunk shape, or ``True`` to enable auto-chunking.
+                            Auto-chunking is also silently enabled when
+                            ``chunks=None`` if some of the other keywords are used.
 
         :keyword maxshape:  Dataset will be resizable up to this shape (Tuple).
-                            Automatically enables chunking.  Use None for the
+                            Automatically enables chunking.  Use ``None`` for the
                             axes you want to be unlimited.
 
-        :keyword compression:   Compression strategy.  See :ref:`dataset_compression`.
+        :keyword compression:   Compression strategy. Automatically enables
+                                chunking.  See :ref:`dataset_compression`.
 
         :keyword compression_opts:  Parameters for compression filter.
 
