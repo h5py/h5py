@@ -171,6 +171,27 @@ class h5py_build_ext(build_ext):
 
         return Extension('h5py.' + module, sources, **settings)
 
+    def get_ext_filename(self, ext_name: str) -> str:
+        r"""Convert the name of an extension (eg. "foo.bar") into the name
+        of the file from which it will be loaded (eg. "foo/bar.so", or
+        "foo\bar.pyd").
+        """
+        if USE_PY_LIMITED_API:
+            # this is essentially identical to the parent method,
+            # the only difference is that we use only the last component of EXT_SUFFIX
+            # ('.cpython-311-darwin.so' -> '.so'), removing version specific information
+            # On UNIX, 'abi3.so' is a valid suffix, but on windows, 'abi3.pyd' is invalid,
+            # so we don't mark 'abi3' anywhere for maximum portability
+            from sysconfig import get_config_var
+
+            ext_path = ext_name.split('.')
+            base_ext_suffix = get_config_var('EXT_SUFFIX')
+            _, _, so = base_ext_suffix.rpartition('.')
+            ext_suffix = f".{so}"
+            return os.path.join(*ext_path) + ext_suffix
+        else:
+            return super().get_ext_filename(ext_name)
+
     def run(self):
         """ Distutils calls this method to run the command """
 
