@@ -177,18 +177,26 @@ Data will be read and written in blocks with shape (100,100); for example,
 the data in ``dset[0:100,0:100]`` will be stored together in the file, as will
 the data points in range ``dset[400:500, 100:200]``.
 
-Chunking has performance implications.  It's recommended to keep the total
-size of your chunks between 10 KiB and 1 MiB, larger for larger datasets.
-Also keep in mind that when any element in a chunk is accessed, the entire
-chunk is read from disk.
+Chunking has performance implications because entire chunk is involved even if
+just one chunk element is needed. Chunk shape determines how many chunks are
+required to satisfy a read or write operation. Chunk size (in bytes) influences
+how fast each chunk is processed, usually due to compression or decompression.
+Selecting an appropriate chunk shape to favor expected I/O operations along the
+first few dataset's dimensions helps improve performance.
+
+Chunk size is the product of the number of dataset elements in a chunk and the
+dataset's ``dtype`` size in bytes. A suggested range for chunk size is between
+10 KiB and 1 MiB, larger for larger datasets. The lower end of the range is
+acceptable for files in a file system, whereas for files in cloud object storage
+it is beneficial to opt for larger chunk sizes, up to 2-4 MiB.
 
 Since picking a chunk shape can be confusing, you can have h5py guess a chunk
 shape for you::
 
     >>> dset = f.create_dataset("autochunk", (1000, 1000), chunks=True)
 
-Auto-chunking is also enabled when using compression or ``maxshape``, etc.,
-if a chunk shape is not manually specified.
+Auto-chunking is also silently enabled when using the ``compression`` or
+``maxshape`` keywords, etc., even if ``chunks=None``.
 
 The iter_chunks method returns an iterator that can be used to perform chunk by chunk
 reads or writes::
