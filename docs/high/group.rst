@@ -378,8 +378,9 @@ Reference
         :param data:    Initialize dataset to this (NumPy array).
 
         :keyword chunks:    Chunk shape, or ``True`` to enable auto-chunking.
-                            Auto-chunking is also silently enabled when
-                            ``chunks=None`` if some of the other keywords are used.
+                            When ``chunks=None`` (the default) auto-chunking
+                            is enabled if required for resizable datasets (see
+                            *maxshape*) or compression (see *compression*).
 
         :keyword maxshape:  Dataset will be resizable up to this shape (Tuple).
                             Automatically enables chunking.  Use ``None`` for the
