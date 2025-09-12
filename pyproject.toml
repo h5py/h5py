@@ -6,6 +6,7 @@ requires = [
     "numpy >=2.0.0, <3",
     "pkgconfig",
     "setuptools >=77",
+    "wheel >=0.38",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -125,7 +126,6 @@ skip = [
     "cp310-win_arm64", #Skipped due to unavailability of Python binary and NumPy for Win-ARM64
 ]
 build-verbosity = 1
-build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
 manylinux-x86_64-image = "ghcr.io/h5py/manylinux_2_28_x86_64-hdf5"
 manylinux-aarch64-image = "ghcr.io/h5py/manylinux_2_28_aarch64-hdf5"
 musllinux-x86_64-image = "ghcr.io/h5py/musllinux_1_2_x86_64-hdf5"
@@ -133,11 +133,20 @@ musllinux-aarch64-image = "ghcr.io/h5py/musllinux_1_2_aarch64-hdf5"
 test-groups = ["wheels"]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 
+# tmp patch to demonstrate compatibility with Cython 3.1.x (3.1.4, unreleased)
+build-frontend = { name = "pip", args = ["--only-binary", "numpy", "--no-build-isolation"] }
+before-build = [
+    # https://github.com/cython/cython/commit/67998b0d8f24eb1332e26c52310b691f233e326b
+    "python -m pip install git+https://github.com/cython/cython@67998b0d8f24eb1332e26c52310b691f233e326b",
+    "python -m pip install numpy setuptools pkgconfig wheel"
+]
+
 [tool.cibuildwheel.linux]
 environment-pass = ["GITHUB_ACTIONS"]
 
 [tool.cibuildwheel.linux.environment]
 CFLAGS = "-g1"
+H5PY_LIMITED_API = "1"
 
 [tool.cibuildwheel.macos]
 # https://cibuildwheel.pypa.io/en/stable/faq/#macos-passing-dyld_library_path-to-delocate
@@ -149,3 +158,7 @@ delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} \
 [tool.cibuildwheel.macos.environment]
 H5PY_ROS3 = "0"
 H5PY_DIRECT_VFD = "0"
+H5PY_LIMITED_API = "1"
+
+[tool.cibuildwheel.windows.environment]
+H5PY_LIMITED_API = "1"

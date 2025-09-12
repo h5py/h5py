@@ -20,11 +20,20 @@ from pathlib import Path
 from Cython import Tempita as tempita
 import api_gen
 from setup_configure import BuildConfig
+from wheel.bdist_wheel import bdist_wheel
 
 
 def localpath(*args):
     return op.abspath(op.join(op.dirname(__file__), *args))
 
+
+USE_PY_LIMITED_API = (
+    os.getenv('H5PY_LIMITED_API', '0') == '1'
+    and sys.version_info >= (3, 11)
+    and not sysconfig.get_config_var("Py_GIL_DISABLED")
+)
+ABI3_TARGET_VERSION = "".join(str(_) for _ in sys.version_info[:2])
+ABI3_TARGET_HEX = hex(sys.hexversion & 0xFFFF00F0)
 
 MODULES_NUMPY2 = ['_npystrings']
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
@@ -49,6 +58,8 @@ COMPILER_SETTINGS = {
                        ('NPY_NO_DEPRECATED_API', 0),
                       ]
 }
+if USE_PY_LIMITED_API:
+    COMPILER_SETTINGS['define_macros'].append(('Py_LIMITED_API', ABI3_TARGET_HEX))
 
 EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c") ]}
 
@@ -73,6 +84,11 @@ if sys.platform.startswith('win'):
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
 
+class h5py_bdist_wheel(bdist_wheel):
+    def finalize_options(self):
+        if USE_PY_LIMITED_API:
+            self.py_limited_api = f"cp{ABI3_TARGET_VERSION}"
+        super().finalize_options()
 
 class h5py_build_ext(build_ext):
 
@@ -151,7 +167,30 @@ class h5py_build_ext(build_ext):
             # These modules will not be importable when NumPy 1.x is installed.
             settings['define_macros'].append(('NPY_TARGET_VERSION', 0x00000012))
 
+        settings["py_limited_api"] = USE_PY_LIMITED_API
+
         return Extension('h5py.' + module, sources, **settings)
+
+    def get_ext_filename(self, ext_name: str) -> str:
+        r"""Convert the name of an extension (eg. "foo.bar") into the name
+        of the file from which it will be loaded (eg. "foo/bar.so", or
+        "foo\bar.pyd").
+        """
+        if USE_PY_LIMITED_API:
+            # this is essentially identical to the parent method,
+            # the only difference is that we use only the last component of EXT_SUFFIX
+            # ('.cpython-311-darwin.so' -> '.so'), removing version specific information
+            # On UNIX, 'abi3.so' is a valid suffix, but on windows, 'abi3.pyd' is invalid,
+            # so we don't mark 'abi3' anywhere for maximum portability
+            from sysconfig import get_config_var
+
+            ext_path = ext_name.split('.')
+            base_ext_suffix = get_config_var('EXT_SUFFIX')
+            _, _, so = base_ext_suffix.rpartition('.')
+            ext_suffix = f".{so}"
+            return os.path.join(*ext_path) + ext_suffix
+        else:
+            return super().get_ext_filename(ext_name)
 
     def run(self):
         """ Distutils calls this method to run the command """
