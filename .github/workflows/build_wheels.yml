@@ -93,12 +93,6 @@ jobs:
 
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@c923d83ad9c1bc00211c5041d0c3f73294ff88f6 # v3.1.4
-        env:
-          CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_BUILD: ${{ env.CIBW_BUILD }}
-          CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
-          CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
-          CIBW_ENABLE: ${{ env.CIBW_ENABLE }}
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
