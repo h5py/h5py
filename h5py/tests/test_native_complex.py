@@ -84,5 +84,9 @@ def test_create_dset(writable_file):
     for dt in ("<c8", ">c8", "<c16", ">c16"):
         complex_array = (np.random.rand(100) + 1j * np.random.rand(100)).astype(dt)
         ds = writable_file.create_dataset(dt, data=complex_array)
+        c = np.array(1.9 + 1j * 6.7, dtype=dt)
+        ds.attrs["c"] = c
         assert isinstance(ds.id.get_type(), h5t.TypeComplexID)
+        assert isinstance(ds.attrs.get_id("c").get_type(), h5t.TypeComplexID)
         np.testing.assert_array_equal(ds[...], complex_array)
+        np.testing.assert_array_equal(ds.attrs["c"], c)
