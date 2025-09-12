@@ -218,7 +218,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         If the attribute doesn't exist, it will be automatically created.
         """
         with phil:
-            if not name in self:
+            if name not in self:
                 self[name] = value
             else:
                 attr = h5a.open(self._id, self._e(name))
