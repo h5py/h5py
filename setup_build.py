@@ -5,11 +5,6 @@
     linking.
 """
 
-try:
-    from setuptools import Extension
-except ImportError:
-    from distutils.extension import Extension
-from distutils.command.build_ext import build_ext
 import copy
 import sys
 import sysconfig
@@ -17,7 +12,11 @@ import os
 import os.path as op
 import platform
 from pathlib import Path
+
 from Cython import Tempita as tempita
+from setuptools import Extension
+from distutils.command.build_ext import build_ext
+
 import api_gen
 from setup_configure import BuildConfig
 
