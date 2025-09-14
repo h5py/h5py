@@ -1,6 +1,6 @@
 
 """
-    Implements a new custom Distutils command for handling library
+    Implements a new custom setuptools command for handling library
     configuration.
 
     The "configure" command exists to provide a set of attributes that are
