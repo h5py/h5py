@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """
-    Implements a custom Distutils build_ext replacement, which handles the
+    Implements a custom build_ext replacement, which handles the
     full extension module build process, from api_gen to C compilation and
     linking.
 """
 
-try:
-    from setuptools import Extension
-except ImportError:
-    from distutils.extension import Extension
-from distutils.command.build_ext import build_ext
 import copy
 import sys
 import sysconfig
@@ -17,7 +12,11 @@ import os
 import os.path as op
 import platform
 from pathlib import Path
+
 from Cython import Tempita as tempita
+from setuptools import Extension
+from setuptools.command.build_ext import build_ext
+
 import api_gen
 from setup_configure import BuildConfig
 
@@ -77,7 +76,7 @@ if sys.platform.startswith('win'):
 class h5py_build_ext(build_ext):
 
     """
-        Custom distutils command which encapsulates api_gen pre-building,
+        Custom setuptools command which encapsulates api_gen pre-building,
         Cython building, and C compilation.
 
         Also handles making the Extension modules, since we can't rely on
@@ -200,12 +199,16 @@ class h5py_build_ext(build_ext):
         }
         # Run Cython
         print("Executing cythonize()")
-        self.extensions = cythonize(self._make_extensions(config, templ_config),
-                                    force=config.changed() or self.force,
-                                    language_level=3)
+        self.extensions = self.distribution.ext_modules = cythonize(
+            self._make_extensions(config, templ_config),
+            force=config.changed() or self.force,
+            language_level=3
+        )
 
         # Perform the build
-        build_ext.run(self)
+        self.swig_opts = None # workaround https://github.com/pypa/setuptools/pull/5083
+        self.finalize_options()
+        super().run()
 
         # Record the configuration we built
         config.record_built()
