@@ -5,7 +5,7 @@ requires = [
     "Cython >=3.0.0,<4",
     "numpy >=2.0.0, <3",
     "pkgconfig",
-    "setuptools >=77",
+    "setuptools >=77.0.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -111,12 +111,13 @@ tables = [
 test = [
     "pytest>=8.2.2",
     "pytest-cov>=5.0.0",
-    "pytest-mpi>=0.2",
+    "pytest-mpi>=0.6",
 ]
 wheels = [
     "codecov>=2.1.13",
     "coverage>=7.9.1",
     "tox>=4.26.0",
+    "tox-uv>=1.27.0",
 ]
 
 [tool.cibuildwheel]
@@ -149,3 +150,7 @@ delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} \
 [tool.cibuildwheel.macos.environment]
 H5PY_ROS3 = "0"
 H5PY_DIRECT_VFD = "0"
+
+[tool.uv]
+# never build numpy from source
+no-build-package = ["numpy"]
