@@ -1644,10 +1644,13 @@ cdef TypeID _c_complex(cnp.dtype dt):
     cdef size_t size, off_r, off_i
     cdef size_t length = dt.itemsize
     cdef char byteorder = dt.byteorder
+    ### {{if HDF5_VERSION >= (2, 0, 0)}}
     cdef TypeComplexID tid_cmplx
+    ### {{endif}}
 
     if cfg.native_complex:
         # A native HDF5 datatype
+        ### {{if HDF5_VERSION >= (2, 0, 0)}}
         if length == 8:
             if byteorder == c'<':
                 tid_cmplx = COMPLEX_IEEE_F32LE
@@ -1672,6 +1675,9 @@ cdef TypeID _c_complex(cnp.dtype dt):
             raise TypeError("Illegal length %d for complex dtype" % length)
 
         return tid_cmplx.copy()
+        ### {{else}}
+        raise TypeError("Need HDF5 >= 2.0 for native complex number dtypes")
+        ### {{endif}}
 
     else:
         # A two-field HDF5 compound (field names depend on cfg)
