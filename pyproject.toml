@@ -2,9 +2,9 @@
 
 # REMEMBER TO KEEP THE VERSIONS IN THIS FILE THE SAME AS IN ci/triage_build.sh
 requires = [
-    "Cython >=3.0.0,<4",
-    "numpy >=2.0.0, <3",
-    "pkgconfig",
+    "Cython >=3.0.0, <4",
+    "numpy >=1.25.0, <3",
+    "pkgconfig >=1.5.5",
     "setuptools >=77.0.1",
 ]
 build-backend = "setuptools.build_meta"
@@ -135,7 +135,10 @@ test-groups = ["wheels"]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 
 [tool.cibuildwheel.linux]
-environment-pass = ["GITHUB_ACTIONS"]
+environment-pass = [
+    "GITHUB_ACTIONS",
+    "ONLY_MINDEPS_TESTS",
+]
 
 [tool.cibuildwheel.linux.environment]
 CFLAGS = "-g1"
