@@ -202,7 +202,7 @@ class ComputeWidget:
 
         for entry, val in zip((self.nxfield, self.nyfield, self.escapefield,
                 self.startxfield, self.startyfield, self.extentxfield,
-                self.extentyfield), suggestions[self.suggest]):
+                self.extentyfield), suggestions[self.suggest], strict=True):
             entry.delete(0, 999)
             entry.insert(0, repr(val))
 
