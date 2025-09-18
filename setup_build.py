@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """
-    Implements a custom Distutils build_ext replacement, which handles the
+    Implements a custom build_ext replacement, which handles the
     full extension module build process, from api_gen to C compilation and
     linking.
 """
 
-try:
-    from setuptools import Extension
-except ImportError:
-    from distutils.extension import Extension
-from distutils.command.build_ext import build_ext
 import copy
 import sys
 import sysconfig
@@ -17,7 +12,11 @@ import os
 import os.path as op
 import platform
 from pathlib import Path
+
 from Cython import Tempita as tempita
+from setuptools import Extension
+from setuptools.command.build_ext import build_ext
+
 import api_gen
 from setup_configure import BuildConfig
 
@@ -26,7 +25,6 @@ def localpath(*args):
     return op.abspath(op.join(op.dirname(__file__), *args))
 
 
-MODULES_NUMPY2 = ['_npystrings']
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
             'h5', 'h5i', 'h5r', 'utils', '_selector',
             '_conv', 'h5t', 'h5s',
@@ -34,9 +32,10 @@ MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
             'h5d', 'h5a', 'h5f', 'h5g',
             'h5l', 'h5o',
             'h5ds', 'h5ac',
-            'h5pl'] + MODULES_NUMPY2
+            'h5pl']
+MODULES_NUMPY2_ONLY = ['_npystrings']
 
-ALL_MODULES = MODULES + ["api_types_ext", "api_types_hdf5"]
+ALL_MODULES = MODULES + MODULES_NUMPY2_ONLY + ["api_types_ext", "api_types_hdf5"]
 
 COMPILER_SETTINGS = {
    'libraries'      : ['hdf5', 'hdf5_hl'],
@@ -77,7 +76,7 @@ if sys.platform.startswith('win'):
 class h5py_build_ext(build_ext):
 
     """
-        Custom distutils command which encapsulates api_gen pre-building,
+        Custom setuptools command which encapsulates api_gen pre-building,
         Cython building, and C compilation.
 
         Also handles making the Extension modules, since we can't rely on
@@ -135,21 +134,22 @@ class h5py_build_ext(build_ext):
                 if new_text != current_text:
                     target.write_text(new_text, 'utf-8')
 
-        return [cls._make_extension(m, settings) for m in MODULES]
+        settings['define_macros'].append(('NPY_TARGET_VERSION', 'NPY_1_21_API_VERSION'))
+        extensions = [cls._make_extension(m, settings) for m in MODULES]
+
+        if int(numpy.__version__.split('.')[0]) >= 2:
+            # Enable NumPy 2.0 C API for modules that require it.
+            # NUMPY2_MODULES will not be importable when NumPy 1.x is installed.
+            settings['define_macros'].append(('NPY_TARGET_VERSION', 'NPY_2_0_API_VERSION'))
+            extensions.extend(cls._make_extension(m, settings) for m in MODULES_NUMPY2_ONLY)
+
+        return extensions
 
     @staticmethod
     def _make_extension(module, settings):
-        import numpy
-
         sources = [localpath('h5py', module + '.pyx')] + EXTRA_SRC.get(module, [])
         settings = copy.deepcopy(settings)
         settings['libraries'] += EXTRA_LIBRARIES.get(module, [])
-
-        assert int(numpy.__version__.split('.')[0]) >= 2  # See build dependencies in pyproject.toml
-        if module in MODULES_NUMPY2:
-            # Enable NumPy 2.0 C API for modules that require it.
-            # These modules will not be importable when NumPy 1.x is installed.
-            settings['define_macros'].append(('NPY_TARGET_VERSION', 0x00000012))
 
         return Extension('h5py.' + module, sources, **settings)
 
@@ -200,12 +200,16 @@ class h5py_build_ext(build_ext):
         }
         # Run Cython
         print("Executing cythonize()")
-        self.extensions = cythonize(self._make_extensions(config, templ_config),
-                                    force=config.changed() or self.force,
-                                    language_level=3)
+        self.extensions = self.distribution.ext_modules = cythonize(
+            self._make_extensions(config, templ_config),
+            force=config.changed() or self.force,
+            language_level=3
+        )
 
         # Perform the build
-        build_ext.run(self)
+        self.swig_opts = None # workaround https://github.com/pypa/setuptools/pull/5083
+        self.finalize_options()
+        super().run()
 
         # Record the configuration we built
         config.record_built()

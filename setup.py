@@ -58,7 +58,7 @@ if setup_configure.mpi_enabled():
 if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
     SETUP_REQUIRES = []
 
-# --- Custom Distutils commands -----------------------------------------------
+# --- Custom setuptools commands -----------------------------------------------
 
 CMDCLASS = {'build_ext': setup_build.h5py_build_ext}
 
