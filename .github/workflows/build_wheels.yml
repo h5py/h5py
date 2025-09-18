@@ -71,6 +71,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-6
           path: cache/hdf5
+        if: runner.os != 'Linux'
 
       # Windows HDF5
       - uses: nuget/setup-nuget@323ab0502cd38fdc493335025a96c8fdb0edc71f # v2.0.1
