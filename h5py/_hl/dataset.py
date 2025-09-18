@@ -66,6 +66,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     # Validate chunk shape
     if isinstance(chunks, int) and not isinstance(chunks, bool):
         chunks = (chunks,)
+    # Logically, the following `zip`` could be strict, but it's happening
+    # before we've done checks elsewhere that raise more descriptive errors
+    # (like "chunks" must have same rank as dataset shape).
     if isinstance(chunks, tuple) and any(
         chunk > dim for dim, chunk in zip(tmp_shape, chunks, strict=False) if dim is not None
     ):
