@@ -37,6 +37,25 @@ permissions:
   contents: write
 
 jobs:
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      with:
+        python-version: 3.13
+    - name: Build sdist
+      run: |
+        pipx run build --sdist
+        pipx run twine check --strict dist/*
+    - name: Upload sdist
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sdist
+        path: dist/*.tar.gz
+
   build_wheels:
     name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }}'
     runs-on: ${{ matrix.os }}
@@ -104,7 +123,6 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
-
   check-minimal-build:
     # this job isn't meant to upload anything, it's only a sanity check
     name: Check minimal build requirements (${{ matrix.label }})
@@ -137,9 +155,10 @@ jobs:
           CIBW_BUILD_FRONTEND: 'pip; args: --no-build-isolation'
           ONLY_MINDEPS_TESTS: "1"
 
-  upload_wheels:
-    name: Upload wheels
+  upload_artifacts:
+    name: Upload build artifacts
     needs:
+      - build_sdist
       - build_wheels
       - check-minimal-build
     runs-on: ubuntu-latest
@@ -147,7 +166,14 @@ jobs:
       run:
         shell: bash -el {0}
     steps:
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      - name: Download sdist
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: sdist
+          path: dist
+        if: github.repository_owner == 'h5py' && github.event_name == 'push' && github.ref_type == 'tag'
+      - name: Download wheels
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           pattern: cibw-wheels-*
           merge-multiple: true
