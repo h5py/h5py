@@ -7,5 +7,10 @@ repos:
     -   id: trailing-whitespace
         exclude: .+\.patch
 
+- repo: https://github.com/zizmorcore/zizmor-pre-commit
+  rev: v1.13.0
+  hooks:
+    - id: zizmor
+
 ci:
     autoupdate_schedule: monthly
