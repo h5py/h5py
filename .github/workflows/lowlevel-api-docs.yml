@@ -12,6 +12,8 @@ on:
 jobs:
   api-docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       HDF5_VERSION: 1.14.6
       HDF5_DIR: ${{ github.workspace }}/cache/hdf5
