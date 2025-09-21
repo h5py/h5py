@@ -34,7 +34,6 @@ on:
 
 permissions:
   actions: read
-  contents: write
 
 jobs:
   build_sdist:
