@@ -92,8 +92,10 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-6
           path: cache/hdf5
-          lookup-only: true
-        if: runner.os != 'Linux'
+        # When preparing to upload a release, always build HDF5 to avoid potential
+        # cache-poisoning attacks. We also ignore the cache on Linux, because
+        # HDF5 is built separately in the hdf5-manylinux container image.
+        if: ${{ github.ref_type != 'tag' && github.event_name != 'schedule' && runner.os != 'Linux' }}
 
       # Windows HDF5
       - uses: nuget/setup-nuget@323ab0502cd38fdc493335025a96c8fdb0edc71f # v2.0.1
