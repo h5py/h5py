@@ -162,7 +162,7 @@ jobs:
   upload_artifacts:
     name: Upload build artifacts
     permissions:
-      actions: write
+      contents: write
     needs:
       - build_sdist
       - build_wheels
