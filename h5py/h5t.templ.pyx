@@ -337,8 +337,7 @@ cdef tuple _available_ftypes = _get_available_ftypes()
 
 ### {{if HDF5_VERSION >= (2, 0, 0)}}
 
-# Available NumPy complex datatypes
-cdef tuple _get_available_ctypes():
+cdef tuple _get_available_cmplx_types():
     """Info on available NumPy complex number datatypes."""
     cdef:
         str complex_typecodes = np.typecodes["Complex"]
@@ -349,12 +348,11 @@ cdef tuple _get_available_ctypes():
     for ctc in complex_typecodes:
         cdtype = np.dtype(ctc)
         available_ctypes.append(
-            (<object>(cdtype.typeobj), np.finfo(cdtype), cdtype.itemsize)
-        )
+            (<object>(cdtype.typeobj), np.finfo(cdtype), cdtype.itemsize))
     return tuple(available_ctypes)
 
 
-cdef tuple _available_ctypes = _get_available_ctypes()
+cdef tuple _available_cmplx_types = _get_available_cmplx_types()
 ### {{endif}}
 
 cdef (int, int, int) _correct_float_info(ftype_, finfo):
@@ -1166,7 +1164,7 @@ cdef class TypeComplexID(TypeAtomicID):
         complex datatype."""
         h5t_size = self.get_size()
         order = _order_map[self.get_order()]    # string with '<' or '>'
-        for ctype_, finfo, size in _available_ctypes:
+        for ctype_, finfo, size in _available_cmplx_types:
             if size == h5t_size:
                 new_dtype = np.dtype(ctype_).newbyteorder(order)
                 break
