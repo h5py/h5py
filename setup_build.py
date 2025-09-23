@@ -11,6 +11,7 @@ import sysconfig
 import os
 import os.path as op
 import platform
+from packaging.version import Version
 from pathlib import Path
 
 from Cython import Tempita as tempita
@@ -198,11 +199,16 @@ class h5py_build_ext(build_ext):
             "OBJECTS_DEBUG_ID": False,
             "FREE_THREADING": sysconfig.get_config_var("Py_GIL_DISABLED") == 1,
         }
+        compiler_directives = {}
+        if Version(cython_version) >= Version("3.1.0b1"):
+            compiler_directives["freethreading_compatible"] = True
+
         # Run Cython
         print("Executing cythonize()")
         self.extensions = self.distribution.ext_modules = cythonize(
             self._make_extensions(config, templ_config),
             force=config.changed() or self.force,
+            compiler_directives=compiler_directives,
             language_level=3
         )
 
