@@ -88,12 +88,14 @@ jobs:
 
       # Cache HDF5
       - name: Cache built HDF5
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-6
           path: cache/hdf5
-          lookup-only: true
-        if: runner.os != 'Linux'
+        # When preparing to upload a release, always build HDF5 to avoid potential
+        # cache-poisoning attacks. We also ignore the cache on Linux, because
+        # HDF5 is built separately in the hdf5-manylinux container image.
+        if: ${{ github.ref_type != 'tag' && github.event_name != 'schedule' && runner.os != 'Linux' }}
 
       # Windows HDF5
       - uses: nuget/setup-nuget@323ab0502cd38fdc493335025a96c8fdb0edc71f # v2.0.1
@@ -161,6 +163,10 @@ jobs:
 
   upload_artifacts:
     name: Upload build artifacts
+    if: ${{ github.repository_owner == 'h5py' && (
+                (github.event_name == 'push' && github.ref_type == 'tag')
+                || (github.event_name == 'schedule'))
+      }}
     permissions:
       contents: write
     needs:
@@ -185,7 +191,7 @@ jobs:
           merge-multiple: true
           path: dist
       - run: pwd && ls -alt . && ls -alt dist/
-      # If it's a PR, do nothing else.
+
       # If it's a scheduled run, it was built with nightly NumPy, push to scientific-python:
       - name: Upload wheels to Anaconda Cloud as nightlies
         uses: scientific-python/upload-nightly-action@b36e8c0c10dbcfd2e05bf95f17ef8c14fd708dbf # 0.6.2
@@ -193,32 +199,14 @@ jobs:
           artifacts_path: dist
           anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
         if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
-      # If it's a push to master, create a (private) draft release;
-      # If it's a tag, publish it to the existing public release, knowing that the tag name
-      # is the same as th release name:
-      - name: Set release variables
-        id: vars
-        run: |
-          set -eo pipefail
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            RELEASE_NAME=""  # will use the tag name, which we always set to the release name
-            GENERATE=false
-          else
-            RELEASE_NAME=dev
-            GENERATE=true
-          fi
-          echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
-          echo "generate=$GENERATE" >> $GITHUB_OUTPUT
 
+      # If it's a tag, create a Github release
       - name: Upload to GitHub releases
         uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
         with:
-          name: ${{ steps.vars.outputs.release_name }}
           # Note that draft releases are not public
-          draft: ${{ github.ref_type != 'tag' }}
-          prerelease: ${{ github.ref_type != 'tag' }}
-          generate_release_notes: ${{ steps.vars.outputs.generate }}
+          generate_release_notes: false
           files: |
-            dist/*.whl
+            dist/*
         if: github.repository_owner == 'h5py' && github.event_name == 'push'
