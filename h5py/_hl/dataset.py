@@ -66,8 +66,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     # Validate chunk shape
     if isinstance(chunks, int) and not isinstance(chunks, bool):
         chunks = (chunks,)
+    # Logically, the following `zip` could be strict, but it's happening
+    # before we've done checks elsewhere that raise more descriptive errors
     if isinstance(chunks, tuple) and any(
-        chunk > dim for dim, chunk in zip(tmp_shape, chunks) if dim is not None
+        chunk > dim for dim, chunk in zip(tmp_shape, chunks, strict=False) if dim is not None
     ):
         errmsg = "Chunk shape must not be greater than data shape in any dimension. "\
                  "{} is not compatible with {}".format(chunks, shape)

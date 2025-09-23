@@ -44,7 +44,7 @@ class TestCompound(ut.TestCase):
 
         tid = h5t.create(h5t.COMPOUND, size)
         for name, offset, dt in zip(
-                type_dict["names"], type_dict["offsets"], type_dict["formats"]
+                type_dict["names"], type_dict["offsets"], type_dict["formats"], strict=True
         ):
             tid.insert(
                 name.encode("utf8") if isinstance(name, str) else name,

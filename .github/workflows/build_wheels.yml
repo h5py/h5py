@@ -34,11 +34,31 @@ on:
 
 permissions:
   actions: read
-  contents: write
 
 jobs:
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      with:
+        python-version: 3.13
+    - name: Build sdist
+      run: |
+        pipx run build --sdist
+        pipx run twine check --strict dist/*
+    - name: Upload sdist
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sdist
+        path: dist/*.tar.gz
+
   build_wheels:
-    name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }} ${{ matrix.python }}'
+    name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }}'
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     strategy:
@@ -60,6 +80,7 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
+          persist-credentials: false
 
       # Get HDF5 outside of cibuildwheel so that we can set env vars via GITHUB_ENV
       # inside the HDF5-getting scripts and have them be in effect for the
@@ -67,10 +88,14 @@ jobs:
 
       # Cache HDF5
       - name: Cache built HDF5
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-6
           path: cache/hdf5
+        # When preparing to upload a release, always build HDF5 to avoid potential
+        # cache-poisoning attacks. We also ignore the cache on Linux, because
+        # HDF5 is built separately in the hdf5-manylinux container image.
+        if: ${{ github.ref_type != 'tag' && github.event_name != 'schedule' && runner.os != 'Linux' }}
 
       # Windows HDF5
       - uses: nuget/setup-nuget@323ab0502cd38fdc493335025a96c8fdb0edc71f # v2.0.1
@@ -89,10 +114,10 @@ jobs:
         if: runner.os == 'macOS'
 
       # Triage build
-      - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}" "${{ matrix.python }}"
+      - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}"
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@c923d83ad9c1bc00211c5041d0c3f73294ff88f6 # v3.1.4
+      - uses: pypa/cibuildwheel@7c619efba910c04005a835b110b057fc28fd6e93 # v3.2.0
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
@@ -103,21 +128,70 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
-  upload_wheels:
-    name: Upload wheels
-    needs: build_wheels
+  check-minimal-build:
+    # this job isn't meant to upload anything, it's only a sanity check
+    name: Check minimal build requirements (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            cibw_before_build: pip install --only-binary ':all:' 'numpy==1.25.0' 'Cython==3.0.0' 'setuptools==77.0.1' 'pkgconfig==1.5.5'
+            label: 'numpy-min'
+          - os: ubuntu-latest
+            arch: x86_64
+            cibw_before_build: pip install --only-binary ':all:' 'numpy==2.0.0' 'Cython==3.0.0' 'setuptools==77.0.1' 'pkgconfig==1.5.5'
+            label: 'cython-min + numpy 2.0'
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0  # get the non-merge commit for PRs
+          persist-credentials: false
+
+      # Triage build
+      - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}"
+
+      # Now actually build the wheels
+      - uses: pypa/cibuildwheel@7c619efba910c04005a835b110b057fc28fd6e93 # v3.2.0
+        env:
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BUILD: "cp310-*"
+          CIBW_BEFORE_BUILD: ${{ matrix.cibw_before_build }}
+          CIBW_BUILD_FRONTEND: 'pip; args: --no-build-isolation'
+          ONLY_MINDEPS_TESTS: "1"
+
+  upload_artifacts:
+    name: Upload build artifacts
+    if: ${{ github.repository_owner == 'h5py' && (
+                (github.event_name == 'push' && github.ref_type == 'tag')
+                || (github.event_name == 'schedule'))
+      }}
+    permissions:
+      contents: write
+    needs:
+      - build_sdist
+      - build_wheels
+      - check-minimal-build
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}
     steps:
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      - name: Download sdist
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: sdist
+          path: dist
+        if: github.repository_owner == 'h5py' && github.event_name == 'push' && github.ref_type == 'tag'
+      - name: Download wheels
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           pattern: cibw-wheels-*
           merge-multiple: true
           path: dist
       - run: pwd && ls -alt . && ls -alt dist/
-      # If it's a PR, do nothing else.
+
       # If it's a scheduled run, it was built with nightly NumPy, push to scientific-python:
       - name: Upload wheels to Anaconda Cloud as nightlies
         uses: scientific-python/upload-nightly-action@b36e8c0c10dbcfd2e05bf95f17ef8c14fd708dbf # 0.6.2
@@ -125,32 +199,14 @@ jobs:
           artifacts_path: dist
           anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
         if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
-      # If it's a push to master, create a (private) draft release;
-      # If it's a tag, publish it to the existing public release, knowing that the tag name
-      # is the same as th release name:
-      - name: Set release variables
-        id: vars
-        run: |
-          set -eo pipefail
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            RELEASE_NAME=""  # will use the tag name, which we always set to the release name
-            GENERATE=false
-          else
-            RELEASE_NAME=dev
-            GENERATE=true
-          fi
-          echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
-          echo "generate=$GENERATE" >> $GITHUB_OUTPUT
 
+      # If it's a tag, create a Github release
       - name: Upload to GitHub releases
         uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
         with:
-          name: ${{ steps.vars.outputs.release_name }}
           # Note that draft releases are not public
-          draft: ${{ github.ref_type != 'tag' }}
-          prerelease: ${{ github.ref_type != 'tag' }}
-          generate_release_notes: ${{ steps.vars.outputs.generate }}
+          generate_release_notes: false
           files: |
-            dist/*.whl
+            dist/*
         if: github.repository_owner == 'h5py' && github.event_name == 'push'
