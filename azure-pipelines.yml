@@ -74,18 +74,18 @@ jobs:
         HDF5_MPI: ON
         CC: mpicc
     # Latest python version
-      py313-deps-hdf51146:
-        python.version: '3.13'
+      py314-deps-hdf51146:
+        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
         python.architecture: 'x64'
-        TOXENV: py313-test-deps
+        TOXENV: py314-test-deps
         HDF5_VERSION: 1.14.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # Free-threading (noGIL) Python
-      py313t-deps-hdf51146:
-        python.version: '3.13'
+      py314t-deps-hdf51146:
+        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
         python.architecture: 'x64-freethreaded'
-        TOXENV: py313t-test-deps
+        TOXENV: py314t-test-deps
         HDF5_VERSION: 1.14.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
