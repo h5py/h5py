@@ -23,7 +23,8 @@ steps:
     allowUnstable: true
     # GH 'classic' PAT token, set as a secret variable in Azure pipeline config.
     # Max validity 1 year. Used for Python builds not already installed on Azure.
-    githubToken: '$(githubToken)'  # Last changed 2025-09-24
+    # See #2701, #2710.
+    # githubToken: '$(githubToken)'
   displayName: 'Use Python $(python.version) $(python.architecture)'
   condition: and(succeeded(), ne(variables['python.version'], 'Pre'))
 
