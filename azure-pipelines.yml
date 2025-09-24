@@ -36,26 +36,30 @@ jobs:
     # test when we're not in a unicode locale
       py310-Clocale:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps
         TOX_TESTENV_PASSENV: LANG LC_ALL
         LANG: C
         LC_ALL: C
         H5PY_ENFORCE_COVERAGE: yes
-    # Build HDF5 1.10 or 1.12 in the test environment
+    # Build HDF5 1.10, 1.12 or 1.14 in the test environment
       py310-deps-hdf51107:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.10.7
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
       py310-deps-hdf51122:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.12.2
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
       py310-deps-hdf51146:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.14.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
@@ -63,11 +67,35 @@ jobs:
     # do mpi tests
       py310-deps-hdf51122-mpi:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-mindeps-mpi
         HDF5_VERSION: 1.12.2
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_MPI: ON
         CC: mpicc
+    # Latest python version
+      py314-deps-hdf51146:
+        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
+        python.architecture: 'x64'
+        TOXENV: py314-test-deps
+        HDF5_VERSION: 1.14.6
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+    # Free-threading (noGIL) Python
+      py314t-deps-hdf51146:
+        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
+        python.architecture: 'x64-freethreaded'
+
+        # FIXME it was decided to not mark the module as freethreading-compatible
+        # for the time being due to instability concerns.
+        # See https://github.com/h5py/h5py/pull/2650
+        PYTHON_GIL: 0
+
+        TOXENV: py314t-test-deps
+        HDF5_VERSION: 1.14.6
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+
     maxParallel: 4
 
   steps:
@@ -89,6 +117,7 @@ jobs:
     # 64 bit - HDF5 1.10
       py310-hdf5110:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
         HDF5_VERSION: 1.10.7
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
@@ -98,6 +127,7 @@ jobs:
     # Fewer combinations here; test_windows_wheels also tests HDF5 1.12
       py310-hdf5112:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.12.1
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
@@ -106,6 +136,7 @@ jobs:
     # 64 bit - HDF5 1.14
       py310-hdf5114:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.14.2
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
@@ -131,6 +162,7 @@ jobs:
       # -deps-pre : test pre-release versions of (python) dependencies)
       py310:
         python.version: '3.10'
+        python.architecture: 'x64'
         TOXENV: py310-test-deps
         H5PY_ENFORCE_COVERAGE: yes
     maxParallel: 4

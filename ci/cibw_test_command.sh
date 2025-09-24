@@ -11,7 +11,7 @@ echo "PROJECT_PATH=$PROJECT_PATH"
 WHEEL_PATH=$2
 echo "WHEEL_PATH=$WHEEL_PATH"
 
-export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])))")
+export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])) + ('t' if (sys.version_info>=(3,13) and sys.implementation.name=='cpython' and not sys._is_gil_enabled()) else ''))")
 
 ENVLIST="py$PYVER-test-mindeps"
 if [[ "$ONLY_MINDEPS_TESTS" != "1" ]] ; then

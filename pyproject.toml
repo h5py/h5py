@@ -39,6 +39,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading :: 1 - Unstable",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering",
     "Topic :: Database",
@@ -122,8 +123,8 @@ wheels = [
 
 [tool.cibuildwheel]
 skip = [
-    "cp314t-*",
-    "cp310-win_arm64", #Skipped due to unavailability of Python binary and NumPy for Win-ARM64
+    "cp314t-*",  # Disabled due to instability concerns.
+    "cp310-win_arm64", # Skipped due to unavailability of Python binary and NumPy for Win-ARM64
 ]
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
