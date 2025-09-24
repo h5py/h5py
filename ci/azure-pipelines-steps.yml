@@ -21,7 +21,7 @@ steps:
     versionSpec: '$(python.version)'
     architecture: '$(python.architecture)'
     allowUnstable: true
-    # githubToken: '$(githubToken)'
+    githubToken: '$(githubToken)'
   displayName: 'Use Python $(python.version) $(python.architecture)'
   condition: and(succeeded(), ne(variables['python.version'], 'Pre'))
 
