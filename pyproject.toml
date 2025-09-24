@@ -4,7 +4,6 @@
 requires = [
     "Cython >=3.0.0, <4",
     "numpy >=1.25.0, <3",
-    "packaging >=23.0",
     "pkgconfig >=1.5.5",
     "setuptools >=77.0.1",
 ]
@@ -124,12 +123,9 @@ wheels = [
 
 [tool.cibuildwheel]
 skip = [
+    "cp314t-*",  # Disabled due to instability concerns.
     "cp310-win_arm64", # Skipped due to unavailability of Python binary and NumPy for Win-ARM64
 ]
-enable = [
-    "cpython-freethreading",  # Build cp313t wheels
-]
-
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
 manylinux-x86_64-image = "ghcr.io/h5py/manylinux_2_28_x86_64-hdf5"
