@@ -1,7 +1,7 @@
 
 import numpy as np
 from h5py import File
-from .common import TestCase
+from .common import TestCase, name
 from .data_files import get_data_file_path
 
 
@@ -43,7 +43,7 @@ class TestEndianess(TestCase):
         be_number = 0 * 256 ** 3 + 1 * 256 ** 2 + 3 * 256 ** 1 + 2 * 256 ** 0
 
         with File(fname, mode="w") as f:
-            f.create_dataset("int", data=arr)
+            f.create_dataset(name(), data=arr)
 
         with File(fname, mode="r") as f:
-            assert f["int"][()][0] == be_number
+            assert f[name()][()][0] == be_number
