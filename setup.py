@@ -75,6 +75,7 @@ setup(
   install_requires = RUN_REQUIRES,
   setup_requires = SETUP_REQUIRES,
   cmdclass = CMDCLASS,
+  options = setup_build.OPTIONS,
 )
 
 # see pyproject.toml for static metadata
