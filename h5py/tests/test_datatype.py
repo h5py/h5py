@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import TestCase
+from .common import TestCase, is_parallel_test, name
 
 from h5py import Datatype
 
@@ -27,12 +27,12 @@ class TestCreation(TestCase):
 
     def test_repr(self):
         """ repr() on datatype objects """
-        self.f['foo'] = np.dtype('S10')
-        dt = self.f['foo']
+        self.f[name()] = np.dtype('S10')
+        dt = self.f[name()]
         self.assertIsInstance(repr(dt), str)
-        self.f.close()
-        self.assertIsInstance(repr(dt), str)
-
+        if not is_parallel_test():
+            self.f.close()
+            self.assertIsInstance(repr(dt), str)
 
     def test_appropriate_low_level_id(self):
         " Binding a group to a non-TypeID identifier fails with ValueError "
