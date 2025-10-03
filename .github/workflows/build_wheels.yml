@@ -8,7 +8,7 @@ concurrency:
 # and https://cibuildwheel.pypa.io/en/stable/setup/#github-actions
 
 # 1. Move as much as possible to pyproject.toml instead of using env vars
-# 2. Use native compiling for macOS via -13 (Intel) and -14 (arm) runners
+# 2. Use native compiling for macOS via -15-intel and -14 (arm) runners
 # 3. Use native compiling for aarch64 using public beta runner
 #    https://github.blog/changelog/2025-01-16-linux-arm64-hosted-runners-now-available-for-free-in-public-repositories-public-preview/
 # 4. On pushes, build and test all wheels and push as release artifacts (in
@@ -74,7 +74,7 @@ jobs:
             arch: ARM64
           - os: macos-14
             arch: arm64
-          - os: macos-13
+          - os: macos-15-intel
             arch: x86_64
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
