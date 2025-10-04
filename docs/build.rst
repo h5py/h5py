@@ -162,7 +162,7 @@ compile HDF5 from source, everything must be built with the correct version of
 Visual Studio. Additional patches are also needed to HDF5 to get HDF5 and Python
 to work together.
 
-We recommend examining the appveyor build scripts, and using those to build and
+We recommend examining the CI build scripts, and using those to build and
 install HDF5 and h5py.
 
 Downstream packagers
