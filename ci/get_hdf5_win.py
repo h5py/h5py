@@ -1,4 +1,10 @@
-# -*- coding: utf-8 -*-
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "requests>=2.30.0",
+# ]
+# ///
+
 """
 Script for downloading and building HDF5 on Windows
 This does not support MPI, nor non-Windows OSes
