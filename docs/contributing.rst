@@ -188,7 +188,7 @@ will post comments asking you to fix minor things, like add a few tests, clean
 up the style to be PEP-8 compliant, etc.
 
 The pull request page also shows the results of building and testing the
-modified code on Travis and Appveyor CI and Azure Pipelines.
+modified code on GitHub Actions and Azure Pipelines.
 Check back after about 30 minutes to see if the build succeeded,
 and if not, try to modify your changes to make it work.
 
