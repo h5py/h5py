@@ -13,11 +13,11 @@ Testing native complex number datatypes.
 
 import sys
 import numpy as np
-import h5py
-from h5py.h5 import get_config # type: ignore
-from h5py import h5t
 import pytest
-
+import h5py
+from h5py.h5 import get_config  # type: ignore
+from h5py import h5t
+from .data_files import get_data_file_path
 
 cfg = get_config()
 
@@ -28,7 +28,7 @@ pytestmark = [
     ),
     pytest.mark.skipif(
         not cfg.native_complex,
-        reason="Native HDF5 complex number datatypes not available"
+        reason="Native HDF5 complex number datatypes not available",
     ),
 ]
 
@@ -40,11 +40,11 @@ def test_hdf5_dtype():
         (h5t.COMPLEX_IEEE_F16LE, 4, h5t.ORDER_LE),
         (h5t.COMPLEX_IEEE_F16BE, 4, h5t.ORDER_BE),
         (h5t.COMPLEX_IEEE_F32LE, 8, h5t.ORDER_LE),
-        (h5t.COMPLEX_IEEE_F32BE,  8, h5t.ORDER_BE),
+        (h5t.COMPLEX_IEEE_F32BE, 8, h5t.ORDER_BE),
         (h5t.COMPLEX_IEEE_F64LE, 16, h5t.ORDER_LE),
         (h5t.COMPLEX_IEEE_F64BE, 16, h5t.ORDER_BE),
         (h5t.NATIVE_FLOAT_COMPLEX, 8, sys_bo),
-        (h5t.NATIVE_DOUBLE_COMPLEX, 16, sys_bo)
+        (h5t.NATIVE_DOUBLE_COMPLEX, 16, sys_bo),
     ]
     if hasattr(np, "complex256"):
         cases.append((h5t.NATIVE_LDOUBLE_COMPLEX, 32, sys_bo))
@@ -73,8 +73,8 @@ def test_cmplx_type_trnslt():
         assert h5t.py_create(dt) == h5type
 
 
-def test_create_dset(writable_file):
-    """Create complex number datasets of different datatypes"""
+def test_create_dset_and_attr(writable_file):
+    """Create complex number datasets and attributes of different datatypes"""
     for dt in ("<c8", ">c8", "<c16", ">c16"):
         complex_array = (np.random.rand(100) + 1j * np.random.rand(100)).astype(dt)
         ds = writable_file.create_dataset(dt, data=complex_array)
@@ -84,3 +84,34 @@ def test_create_dset(writable_file):
         assert isinstance(ds.attrs.get_id("c").get_type(), h5t.TypeComplexID)
         np.testing.assert_array_equal(ds[...], complex_array)
         np.testing.assert_array_equal(ds.attrs["c"], c)
+
+
+def test_dtype_cmpnd_cmplx():
+    """Check the resulting dtype of the two-field compound data as complex numbers"""
+    with h5py.File(get_data_file_path("compound-dtype-complex.h5"), mode="r") as f:
+        for obj in f.values():
+            if isinstance(obj, h5py.Dataset):
+                stored_dtype = obj.id.get_type()
+                np_dtype = obj.dtype
+                assert isinstance(stored_dtype, h5t.TypeCompoundID)
+                assert stored_dtype.get_nmembers() == 2
+                assert stored_dtype.get_member_name(0) == cfg._r_name
+                assert stored_dtype.get_member_name(1) == cfg._i_name
+                assert isinstance(stored_dtype.get_member_type(0), h5t.TypeFloatID)
+                assert isinstance(stored_dtype.get_member_type(1), h5t.TypeFloatID)
+                assert np_dtype.kind == "c"
+                assert (
+                    stored_dtype.get_member_type(0).get_size()
+                    + stored_dtype.get_member_type(1).get_size()
+                ) == np_dtype.itemsize
+
+                if np_dtype.byteorder == ">" or (
+                    sys.byteorder == "big" and np_dtype.byteorder == "="
+                ):
+                    assert stored_dtype.get_member_type(0).get_order() == h5t.ORDER_BE
+                    assert stored_dtype.get_member_type(1).get_order() == h5t.ORDER_BE
+                elif np_dtype.byteorder == "<" or (
+                    sys.byteorder == "little" and np_dtype.byteorder == "="
+                ):
+                    assert stored_dtype.get_member_type(0).get_order() == h5t.ORDER_LE
+                    assert stored_dtype.get_member_type(1).get_order() == h5t.ORDER_LE
