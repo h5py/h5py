@@ -208,7 +208,7 @@ class TestPL(TestCase):
         self.assertEqual((0,0), cid.get_attr_phase_change())
 
 
-def test_PropLAID():
+def test_proplaid():
     """Test Link Access Property List"""
     lapl = h5p.create(h5p.LINK_ACCESS)
 
