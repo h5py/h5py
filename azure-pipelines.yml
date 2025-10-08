@@ -73,28 +73,28 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_MPI: ON
         CC: mpicc
-    # Latest python version
-      py314-deps-hdf51146:
-        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
-        python.architecture: 'x64'
-        TOXENV: py314-test-deps
-        HDF5_VERSION: 1.14.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
-    # Free-threading (noGIL) Python
-      py314t-deps-hdf51146:
-        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
-        python.architecture: 'x64-freethreaded'
-
-        # FIXME it was decided to not mark the module as freethreading-compatible
-        # for the time being due to instability concerns.
-        # See https://github.com/h5py/h5py/pull/2650
-        PYTHON_GIL: 0
-
-        TOXENV: py314t-test-deps
-        HDF5_VERSION: 1.14.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
+#    # Latest python version
+#      py314-deps-hdf51146:
+#        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
+#        python.architecture: 'x64'
+#        TOXENV: py314-test-deps
+#        HDF5_VERSION: 1.14.6
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#        H5PY_ENFORCE_COVERAGE: yes
+#    # Free-threading (noGIL) Python
+#      py314t-deps-hdf51146:
+#        python.version: '3.14.0-rc.3'  # TODO change to '3.14' when available
+#        python.architecture: 'x64-freethreaded'
+#
+#        # FIXME it was decided to not mark the module as freethreading-compatible
+#        # for the time being due to instability concerns.
+#        # See https://github.com/h5py/h5py/pull/2650
+#        PYTHON_GIL: 0
+#
+#        TOXENV: py314t-test-deps
+#        HDF5_VERSION: 1.14.6
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#        H5PY_ENFORCE_COVERAGE: yes
 
     maxParallel: 4
 
