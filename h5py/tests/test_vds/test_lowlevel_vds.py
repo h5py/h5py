@@ -232,6 +232,7 @@ class TestPercivalLowLevel(ut.TestCase):
             for foo in self.fname:
                 # FIXME can't open the same file twice from multiple threads,
                 # even if read-only
+                # https://github.com/h5py/h5py/issues/2714
                 foo2 = osp.join(self.working_dir.name, make_name('tmp{}.h5'))
                 shutil.copyfile(foo, foo2)
                 in_data = h5.File(foo2, 'r')['data']
