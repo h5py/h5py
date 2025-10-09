@@ -240,7 +240,7 @@ def subproc_env(d):
     return decorator
 
 
-MAIN_THREAD = threading.get_ident()
+MAIN_THREAD_ID = threading.get_ident()
 
 
 def name(template_or_prefix: str = "foo", /) -> str:
@@ -260,7 +260,7 @@ def name(template_or_prefix: str = "foo", /) -> str:
         containing exactly one "{}" to be replaced with the thread ID.
     """
     tid = threading.get_ident()
-    suffix = "" if tid == MAIN_THREAD else f"-{tid}"
+    suffix = "" if tid == MAIN_THREAD_ID else f"-{tid}"
     if "{}" in template_or_prefix:
         return template_or_prefix.format(suffix)
     else:
@@ -272,4 +272,4 @@ def is_parallel_test() -> bool:
     in a thread pool by pytest-run-parallel; False otherwise.
     """
     tid = threading.get_ident()
-    return tid != MAIN_THREAD
+    return tid != MAIN_THREAD_ID
