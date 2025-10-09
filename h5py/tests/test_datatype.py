@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import TestCase, is_main_thread, name
+from .common import TestCase, is_main_thread, make_name
 
 from h5py import Datatype
 
@@ -27,8 +27,9 @@ class TestCreation(TestCase):
 
     def test_repr(self):
         """ repr() on datatype objects """
-        self.f[name()] = np.dtype('S10')
-        dt = self.f[name()]
+        name = make_name()
+        self.f[name] = np.dtype('S10')
+        dt = self.f[name]
         self.assertIsInstance(repr(dt), str)
         if is_main_thread():
             self.f.close()

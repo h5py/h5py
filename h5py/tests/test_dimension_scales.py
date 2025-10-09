@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from .common import TestCase, is_main_thread, name
+from .common import TestCase, is_main_thread, make_name
 from h5py import File
 import h5py
 
@@ -74,8 +74,9 @@ class TestH5DSBindings(BaseDataset):
         self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 2), 2)
 
     def test_detach_dimensionscale(self):
-        self.f[name()] = np.ones((4, 3, 2), 'f')
-        ds = self.f[name()]
+        name = make_name()
+        self.f[name] = np.ones((4, 3, 2), 'f')
+        ds = self.f[name]
         h5py.h5ds.attach_scale(ds.id, self.f['x1'].id, 2)
         h5py.h5ds.attach_scale(ds.id, self.f['x2'].id, 2)
         self.assertTrue(h5py.h5ds.is_attached(ds.id, self.f['x1'].id, 2))
@@ -126,7 +127,7 @@ class TestDimensionManager(BaseDataset):
             )
 
     def test_repr(self):
-        ds = self.f.create_dataset(name(), (2,3))
+        ds = self.f.create_dataset(make_name(), (2,3))
         self.assertIsInstance(repr(ds.dims), str)
 
         if is_main_thread():
@@ -159,8 +160,9 @@ class TestDimensionsHighLevel(BaseDataset):
         self.assertEqual(self.f['data'].dims[0].label, 'foo')
 
     def test_attach_detach_scale(self):
-        self.f[name('data3')] = self.f['data'][...]
-        ds = self.f[name('data3')]
+        name = make_name('data3')
+        self.f[name] = self.f['data'][...]
+        ds = self.f[name]
 
         ds.dims[2].attach_scale(self.f["x1"])
         ds.dims[2].attach_scale(self.f["x2"])

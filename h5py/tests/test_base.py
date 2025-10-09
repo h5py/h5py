@@ -15,7 +15,7 @@
 
 from h5py import File
 from h5py._hl.base import is_hdf5, Empty
-from .common import ut, TestCase, UNICODE_FILENAMES, name
+from .common import ut, TestCase, UNICODE_FILENAMES, make_name
 
 import numpy as np
 import os
@@ -57,10 +57,11 @@ class TestParent(BaseTest):
 
     def test_object_parent_named(self):
         # Named objects
-        grp = self.f.create_group(name())
+        name = make_name()
+        grp = self.f.create_group(name)
         sub_grp = grp.create_group("foo")
         parent = sub_grp.parent.name
-        self.assertEqual(parent, "/" + name())
+        self.assertEqual(parent, "/" + name)
 
 
 class TestMapping(BaseTest):
@@ -108,18 +109,19 @@ class TestRepr(BaseTest):
 
     def test_group(self):
         """ Group repr() with unicode """
-        grp = self.f.create_group(name(self.USTRING))
+        grp = self.f.create_group(make_name(self.USTRING))
         self._check_type(grp)
 
     def test_dataset(self):
         """ Dataset repr() with unicode """
-        dset = self.f.create_dataset(name(self.USTRING), (1,))
+        dset = self.f.create_dataset(make_name(self.USTRING), (1,))
         self._check_type(dset)
 
     def test_namedtype(self):
         """ Named type repr() with unicode """
-        self.f[name()] = np.dtype('f')
-        typ = self.f[name()]
+        name = make_name(self.USTRING)
+        self.f[name] = np.dtype('f')
+        typ = self.f[name]
         self._check_type(typ)
 
     def test_empty(self):

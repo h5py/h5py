@@ -15,7 +15,7 @@ import h5py
 from h5py._hl.files import _drivers
 from h5py import File
 
-from .common import ut, TestCase, name
+from .common import ut, TestCase, make_name
 
 import pytest
 import io
@@ -82,11 +82,12 @@ class TestDriverRegistration(TestCase):
             called_with[0] = args, kwargs
             return _drivers['sec2'](plist)
 
-        h5py.register_driver(name(), set_fapl)
-        self.assertIn(name(), h5py.registered_drivers())
+        name = make_name()
+        h5py.register_driver(name, set_fapl)
+        self.assertIn(name, h5py.registered_drivers())
 
         fname = self.mktemp()
-        h5py.File(fname, driver=name(), driver_arg_0=0, driver_arg_1=1,
+        h5py.File(fname, driver=name, driver_arg_0=0, driver_arg_1=1,
                   mode='w')
 
         self.assertEqual(
@@ -95,17 +96,18 @@ class TestDriverRegistration(TestCase):
         )
 
     def test_unregister_driver(self):
-        h5py.register_driver(name(), lambda plist: None)
-        self.assertIn(name(), h5py.registered_drivers())
+        name = make_name()
+        h5py.register_driver(name, lambda plist: None)
+        self.assertIn(name, h5py.registered_drivers())
 
-        h5py.unregister_driver(name())
-        self.assertNotIn(name(), h5py.registered_drivers())
+        h5py.unregister_driver(name)
+        self.assertNotIn(name, h5py.registered_drivers())
 
         with self.assertRaises(ValueError) as e:
             fname = self.mktemp()
-            h5py.File(fname, driver=name(), mode='w')
+            h5py.File(fname, driver=name, mode='w')
 
-        self.assertEqual(str(e.exception), f"Unknown driver type '{name()}'")
+        self.assertEqual(str(e.exception), f"Unknown driver type '{name}'")
 
 
 class TestCache(TestCase):
@@ -249,7 +251,7 @@ class TestFileObj(TestCase):
     def test_exception_writeonly(self):
         # HDF5 expects read & write access to a file it's writing;
         # check that we get the correct exception on a write-only file object.
-        fileobj = open(os.path.join(self.tempdir, name("foo{}.h5")), 'wb')
+        fileobj = open(os.path.join(self.tempdir, make_name("foo{}.h5")), 'wb')
         f = h5py.File(fileobj, 'w')
         group = f.create_group("group")
         with self.assertRaises(io.UnsupportedOperation):

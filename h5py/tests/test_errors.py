@@ -16,7 +16,7 @@ import threading
 import pytest
 
 import h5py
-from .common import name
+from .common import make_name
 
 
 def _access_not_existing_object(filename):
@@ -58,7 +58,7 @@ def test_thread_hdf5_silence_error_membership(tmp_path, capfd):
     No console messages should be shown from membership tests
     """
     th = threading.Thread(target=_access_not_existing_object,
-                          args=(tmp_path / name("{}.h5"),))
+                          args=(tmp_path / make_name("{}.h5"),))
     th.start()
     th.join()
 
@@ -73,7 +73,7 @@ def test_thread_hdf5_silence_error_attr(tmp_path, capfd):
     No console messages should be shown for non-existing attributes
     """
     def test():
-        with h5py.File(tmp_path/name("{}.h5"), 'w') as newfile:
+        with h5py.File(tmp_path/make_name("{}.h5"), 'w') as newfile:
             newfile['newdata'] = [1, 2, 3]
             try:
                 nonexistent_attr = newfile['newdata'].attrs['nonexistent_attr']

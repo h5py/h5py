@@ -30,7 +30,7 @@ from h5py import File, Group, SoftLink, HardLink, ExternalLink
 from h5py import Dataset, Datatype
 from h5py import h5t
 from h5py._hl.compat import filename_encode
-from .common import ut, TestCase, name, is_main_thread
+from .common import ut, TestCase, make_name, is_main_thread
 
 # If we can't encode unicode filenames, there's not much point failing tests
 # which must fail
@@ -59,33 +59,34 @@ class TestCreate(BaseGroup):
 
     def test_create_str(self):
         """ Simple .create_group call """
-        grp = self.f.create_group(name())
+        grp = self.f.create_group(make_name())
         self.assertIsInstance(grp, Group)
 
     def test_create_bytes(self):
-        grp = self.f.create_group(name().encode('utf8'))
+        grp = self.f.create_group(make_name().encode('utf8'))
         self.assertIsInstance(grp, Group)
 
     def test_create_intermediate_str(self):
         """ Intermediate groups can be created automatically """
-        path = name("foo{}/bar/baz")
+        path = make_name("foo{}/bar/baz")
         grp = self.f.create_group(path)
         self.assertEqual(grp.name, "/" + path)
 
     def test_create_intermediate_bytes(self):
-        path = name("foo{}/bar/baz")
+        path = make_name("foo{}/bar/baz")
         grp2 = self.f.create_group(path.encode("utf8"))
         self.assertEqual(grp2.name, "/" + path)
 
     def test_create_exception(self):
         """ Name conflict causes group creation to fail with ValueError """
-        self.f.create_group(name())
+        name = make_name()
+        self.f.create_group(name)
         with self.assertRaises(ValueError):
-            self.f.create_group(name())
+            self.f.create_group(name)
 
     def test_unicode(self):
         """ Unicode names are correctly stored """
-        n = "/" + name() + chr(0x4500)
+        n = "/" + make_name() + chr(0x4500)
         group = self.f.create_group(n)
         self.assertEqual(group.name, n)
         self.assertEqual(group.id.links.get_info(n.encode('utf8')).cset, h5t.CSET_UTF8)
@@ -93,7 +94,7 @@ class TestCreate(BaseGroup):
     def test_unicode_default(self):
         """ Unicode names convertible to ASCII are stored as ASCII (issue 239)
         """
-        n = name("/Hello, this is a name")
+        n = make_name("/Hello, this is a name")
         group = self.f.create_group(n)
         self.assertEqual(group.name, n)
         self.assertEqual(group.id.links.get_info(n.encode('utf8')).cset, h5t.CSET_ASCII)
@@ -105,7 +106,7 @@ class TestCreate(BaseGroup):
 
     def test_appropriate_low_level_id(self):
         " Binding a group to a non-group identifier fails with ValueError "
-        dset = self.f.create_dataset(name(), [1])
+        dset = self.f.create_dataset(make_name(), [1])
         with self.assertRaises(ValueError):
             Group(dset.id)
 
@@ -117,14 +118,15 @@ class TestDatasetAssignment(BaseGroup):
 
     def test_ndarray(self):
         """ Dataset auto-creation by direct assignment """
+        name = make_name()
         data = np.ones((4,4),dtype='f')
-        self.f[name()] = data
-        self.assertIsInstance(self.f[name()], Dataset)
-        self.assertArrayEqual(self.f[name()][...], data)
+        self.f[name] = data
+        self.assertIsInstance(self.f[name], Dataset)
+        self.assertArrayEqual(self.f[name][...], data)
 
     def test_name_bytes(self):
         data = np.ones((4, 4), dtype='f')
-        n = name().encode('utf8')
+        n = make_name().encode('utf8')
         self.f[n] = data
         self.assertIsInstance(self.f[n], Dataset)
 
@@ -136,15 +138,16 @@ class TestDtypeAssignment(BaseGroup):
 
     def test_dtype(self):
         """ Named type creation """
+        name = make_name()
         dtype = np.dtype('|S10')
-        self.f[name()] = dtype
-        self.assertIsInstance(self.f[name()], Datatype)
-        self.assertEqual(self.f[name()].dtype, dtype)
+        self.f[name] = dtype
+        self.assertIsInstance(self.f[name], Datatype)
+        self.assertEqual(self.f[name].dtype, dtype)
 
     def test_name_bytes(self):
         """ Named type creation """
         dtype = np.dtype('|S10')
-        n = name().encode('utf8')
+        n = make_name().encode('utf8')
         self.f[n] = dtype
         self.assertIsInstance(self.f[n], Datatype)
 
@@ -157,46 +160,50 @@ class TestRequire(BaseGroup):
 
     def test_open_existing(self):
         """ Existing group is opened and returned """
-        grp = self.f.create_group(name())
-        grp2 = self.f.require_group(name())
+        name = make_name()
+        grp = self.f.create_group(name)
+        grp2 = self.f.require_group(name)
         self.assertEqual(grp2, grp)
 
-        grp3 = self.f.require_group(name().encode('utf8'))
+        grp3 = self.f.require_group(name.encode('utf8'))
         self.assertEqual(grp3, grp)
 
     def test_create(self):
         """ Group is created if it doesn't exist """
-        grp = self.f.require_group(name())
+        name = make_name()
+        grp = self.f.require_group(name)
         self.assertIsInstance(grp, Group)
-        self.assertEqual(grp.name, '/' + name())
+        self.assertEqual(grp.name, '/' + name)
 
     def test_require_exception(self):
         """ Opening conflicting object results in TypeError """
-        self.f.create_dataset(name(), (1,), 'f')
+        name = make_name()
+        self.f.create_dataset(name, (1,), 'f')
         with self.assertRaises(TypeError):
-            self.f.require_group(name())
+            self.f.require_group(name)
 
     def test_intermediate_create_dataset(self):
         """ Intermediate is created if it doesn't exist """
+        name = make_name("foo")
         dt = h5py.string_dtype()
-        self.f.require_dataset(name("foo{}/bar/baz"), (1,), dtype=dt)
-        group = self.f.get(name("foo{}"))
+        self.f.require_dataset(f"{name}/bar/baz", (1,), dtype=dt)
+        group = self.f.get(name)
         assert isinstance(group, Group)
-        group = self.f.get(name("foo{}/bar"))
+        group = self.f.get(f"{name}/bar")
         assert isinstance(group, Group)
 
     def test_intermediate_create_group(self):
-        dt = h5py.string_dtype()
-        self.f.require_group(name("foo{}/bar/baz"))
-        group = self.f.get(name("foo{}"))
+        name = make_name("foo")
+        self.f.require_group(f"{name}/bar/baz")
+        group = self.f.get(name)
         assert isinstance(group, Group)
-        group = self.f.get(name("foo{}/bar"))
+        group = self.f.get(f"{name}/bar")
         assert isinstance(group, Group)
-        group = self.f.get(name("foo{}/bar/baz"))
+        group = self.f.get(f"{name}/bar/baz")
         assert isinstance(group, Group)
 
     def test_require_shape(self):
-        n = name("foo{}/resizable")
+        n = make_name("foo{}/resizable")
         ds = self.f.require_dataset(n, shape=(0, 3), maxshape=(None, 3), dtype=int)
         ds.resize(20, axis=0)
         self.f.require_dataset(n, shape=(0, 3), maxshape=(None, 3), dtype=int)
@@ -219,10 +226,11 @@ class TestDelete(BaseGroup):
 
     def test_delete(self):
         """ Object deletion via "del" """
-        self.f.create_group(name())
-        self.assertIn(name(), self.f)
-        del self.f[name()]
-        self.assertNotIn(name(), self.f)
+        name = make_name()
+        self.f.create_group(name)
+        self.assertIn(name, self.f)
+        del self.f[name]
+        self.assertNotIn(name, self.f)
 
     def test_nonexisting(self):
         """ Deleting non-existent object raises KeyError """
@@ -255,9 +263,10 @@ class TestOpen(BaseGroup):
 
     def test_open(self):
         """ Simple obj[name] opening """
-        grp = self.f.create_group(name())
-        grp2 = self.f[name()]
-        grp3 = self.f["/" + name()]
+        name = make_name()
+        grp = self.f.create_group(name)
+        grp2 = self.f[name]
+        grp3 = self.f[f"/{name}"]
         self.assertEqual(grp, grp2)
         self.assertEqual(grp, grp3)
 
@@ -268,7 +277,7 @@ class TestOpen(BaseGroup):
 
     def test_reference(self):
         """ Objects can be opened by HDF5 object reference """
-        grp = self.f.create_group(name())
+        grp = self.f.create_group(make_name())
         grp2 = self.f[grp.ref]
         self.assertEqual(grp2, grp)
 
@@ -277,10 +286,10 @@ class TestOpen(BaseGroup):
 
         Test for issue 181, issue 202.
         """
-        g = self.f.create_group(name("g"))
+        g = self.f.create_group(make_name("g"))
 
         dt = np.dtype([('a', 'i'),('b', h5py.ref_dtype)])
-        dset = self.f.create_dataset(name("x"), (1,), dt)
+        dset = self.f.create_dataset(make_name("x"), (1,), dt)
 
         dset[0] =(42,g.ref)
         data = dset[0]
@@ -296,16 +305,17 @@ class TestOpen(BaseGroup):
     @pytest.mark.thread_unsafe(reason="FIXME #2672 does not raise")
     def test_deleted_ref(self):
         """ References to deleted objects should raise an exception """
-        self.f.create_group(name())
-        ref = self.f[name()].ref
-        del self.f[name()]
+        name = make_name()
+        self.f.create_group(name)
+        ref = self.f[name].ref
+        del self.f[name]
 
         with self.assertRaises(Exception):
             self.f[ref]
 
     def test_path_type_validation(self):
         """ Access with non bytes or str types should raise an exception """
-        self.f.create_group(name())
+        self.f.create_group(make_name())
 
         with self.assertRaises(TypeError):
             self.f[0]
@@ -320,11 +330,12 @@ class TestRepr(BaseGroup):
 
     def test_repr(self):
         """ Opened and closed groups provide a useful __repr__ string """
-        g = self.f.create_group(name())
+        name = make_name()
+        g = self.f.create_group(name)
         self.assertIsInstance(repr(g), str)
         g.id._close()
         self.assertIsInstance(repr(g), str)
-        g = self.f[name()]
+        g = self.f[name]
         if is_main_thread():
             # Closing the file shouldn't break it
             self.f.close()
@@ -376,12 +387,12 @@ class TestContains(BaseGroup):
 
     def test_contains(self):
         """ "in" builtin works for membership (byte and Unicode) """
-        n = name()
-        self.f.create_group(n)
-        self.assertIn(n.encode("utf-8"), self.f)
-        self.assertIn(n, self.f)
-        self.assertIn(f"/{n}".encode("utf-8"), self.f)
-        self.assertIn(f"/{n}", self.f)
+        name = make_name()
+        self.f.create_group(name)
+        self.assertIn(name.encode("utf-8"), self.f)
+        self.assertIn(name, self.f)
+        self.assertIn(f"/{name}".encode("utf-8"), self.f)
+        self.assertIn(f"/{name}", self.f)
         self.assertNotIn(b'mongoose', self.f)
         self.assertNotIn('mongoose', self.f)
 
@@ -412,8 +423,8 @@ class TestContains(BaseGroup):
 
     def test_trailing_slash(self):
         """ Trailing slashes are unconditionally ignored """
-        g = name("g")
-        d = name("d")
+        g = make_name("g")
+        d = make_name("d")
         self.f.create_group(g)
         self.f[d] = 42
         self.assertIn(f"/{g}/", self.f)
@@ -423,18 +434,19 @@ class TestContains(BaseGroup):
 
     def test_softlinks(self):
         """ Broken softlinks are contained, but their members are not """
-        self.f.create_group(name())
-        self.f[f'/{name()}/soft'] = h5py.SoftLink('/mongoose')
-        self.f[f'/{name()}/external'] = h5py.ExternalLink('mongoose.hdf5', '/mongoose')
-        self.assertIn(f"/{name()}/soft", self.f)
-        self.assertNotIn(f"/{name()}/soft/something", self.f)
-        self.assertIn(f"/{name()}/external", self.f)
-        self.assertNotIn(f"/{name()}/external/something", self.f)
+        name = make_name()
+        self.f.create_group(name)
+        self.f[f'/{name}/soft'] = h5py.SoftLink('/mongoose')
+        self.f[f'/{name}/external'] = h5py.ExternalLink('mongoose.hdf5', '/mongoose')
+        self.assertIn(f"/{name}/soft", self.f)
+        self.assertNotIn(f"/{name}/soft/something", self.f)
+        self.assertIn(f"/{name}/external", self.f)
+        self.assertNotIn(f"/{name}/external/something", self.f)
 
     def test_oddball_paths(self):
         """ Technically legitimate (but odd-looking) paths """
-        x = name('x')
-        dset = name("dset")
+        x = make_name('x')
+        dset = make_name("dset")
 
         self.f.create_group(f"{x}/y/z")
         self.f[dset] = 42
@@ -481,7 +493,7 @@ class TestTrackOrder(BaseGroup):
                 g[str(i)] = [i]
 
     def test_track_order(self):
-        g = self.f.create_group(name(), track_order=True)  # creation order
+        g = self.f.create_group(make_name(), track_order=True)  # creation order
         self.populate(g)
 
         ref = [str(i) for i in range(100)]
@@ -489,7 +501,7 @@ class TestTrackOrder(BaseGroup):
         self.assertEqual(list(reversed(g)), list(reversed(ref)))
 
     def test_no_track_order(self):
-        g = self.f.create_group(name(), track_order=False)  # name alphanumeric
+        g = self.f.create_group(make_name(), track_order=False)  # name alphanumeric
         self.populate(g)
 
         ref = sorted([str(i) for i in range(100)])
@@ -548,7 +560,7 @@ class TestAdditionalMappingFuncs(BaseMapping):
 
     def test_pop_item(self):
         """.pop_item removes an item"""
-        g = self.f.create_group(name())
+        g = self.f.create_group(make_name())
         g.create_group("a")
         g.create_group("b")
         k, _ = g.popitem()
@@ -565,7 +577,7 @@ class TestAdditionalMappingFuncs(BaseMapping):
 
     def test_pop(self):
         """.pop returns and removes specified item"""
-        g = self.f.create_group(name())
+        g = self.f.create_group(make_name())
         g.create_group("a")
         g.create_group("b")
         g.pop("a")
@@ -586,7 +598,7 @@ class TestAdditionalMappingFuncs(BaseMapping):
 
     def test_clear(self):
         """.clear removes groups"""
-        g = self.f.create_group(name())
+        g = self.f.create_group(make_name())
         g.create_group('a')
         g.create_group('b')
         self.assertEqual(len(g), 2)
@@ -595,14 +607,14 @@ class TestAdditionalMappingFuncs(BaseMapping):
 
     def test_update_dict(self):
         """.update works with dict"""
-        g = self.f.create_group(name())
+        g = self.f.create_group(make_name())
         new_items = {'e': np.array([42])}
         g.update(new_items)
         self.assertIn('e', g)
 
     def test_update_iter(self):
         """.update works with list"""
-        g = self.f.create_group(name())
+        g = self.f.create_group(make_name())
         new_items = [
             ('e', np.array([42])),
             ('f', np.array([42]))
@@ -612,7 +624,7 @@ class TestAdditionalMappingFuncs(BaseMapping):
 
     def test_update_kwargs(self):
         """.update works with kwargs"""
-        g = self.f.create_group(name())
+        g = self.f.create_group(make_name())
         new_items = {'e': np.array([42])}
         g.update(**new_items)
         self.assertIn('e', g)
@@ -625,7 +637,7 @@ class TestAdditionalMappingFuncs(BaseMapping):
     def test_setdefault_with_default(self):
         """.setdefault gets default if group doesn't exist"""
         # 42 used as groups should be strings
-        value = self.group.setdefault(name(), np.array([42]))
+        value = self.group.setdefault(make_name(), np.array([42]))
         self.assertEqual(value, 42)
 
     def test_setdefault_no_default(self):
@@ -646,42 +658,50 @@ class TestGet(BaseGroup):
 
     def test_get_default(self):
         """ Object is returned, or default if it doesn't exist """
+        name = make_name()
         default = object()
         out = self.f.get('mongoose', default)
         self.assertIs(out, default)
 
-        grp = self.f.create_group(name())
-        out = self.f.get(name().encode('utf8'))
+        grp = self.f.create_group(name)
+        out = self.f.get(name.encode('utf8'))
         self.assertEqual(out, grp)
 
     def test_get_class(self):
         """ Object class is returned with getclass option """
-        self.f.create_group(name("foo"))
-        out = self.f.get(name("foo"), getclass=True)
+        foo = make_name("foo")
+        bar = make_name("bar")
+        baz = make_name("baz")
+
+        self.f.create_group(foo)
+        out = self.f.get(foo, getclass=True)
         self.assertEqual(out, Group)
 
-        self.f.create_dataset(name("bar"), (4,))
-        out = self.f.get(name("bar"), getclass=True)
+        self.f.create_dataset(bar, (4,))
+        out = self.f.get(bar, getclass=True)
         self.assertEqual(out, Dataset)
 
-        self.f[name("baz")] = np.dtype('|S10')
-        out = self.f.get(name("baz"), getclass=True)
+        self.f[baz] = np.dtype('|S10')
+        out = self.f.get(baz, getclass=True)
         self.assertEqual(out, Datatype)
 
     def test_get_link_class(self):
         """ Get link classes """
-        default = object()
+        hard = make_name("hard")
+        soft = make_name("soft")
+        external = make_name("external")
 
+        default = object()
         sl = SoftLink('/mongoose')
         el = ExternalLink('somewhere.hdf5', 'mongoose')
 
-        self.f.create_group(name("hard"))
-        self.f[name("soft")] = sl
-        self.f[name("external")] = el
+        self.f.create_group(hard)
+        self.f[soft] = sl
+        self.f[external] = el
 
-        out_hl = self.f.get(name("hard"), default, getlink=True, getclass=True)
-        out_sl = self.f.get(name("soft"), default, getlink=True, getclass=True)
-        out_el = self.f.get(name("external"), default, getlink=True, getclass=True)
+        out_hl = self.f.get(hard, default, getlink=True, getclass=True)
+        out_sl = self.f.get(soft, default, getlink=True, getclass=True)
+        out_el = self.f.get(external, default, getlink=True, getclass=True)
 
         self.assertEqual(out_hl, HardLink)
         self.assertEqual(out_sl, SoftLink)
@@ -689,16 +709,20 @@ class TestGet(BaseGroup):
 
     def test_get_link(self):
         """ Get link values """
+        hard = make_name("hard")
+        soft = make_name("soft")
+        external = make_name("external")
+
         sl = SoftLink('/mongoose')
         el = ExternalLink('somewhere.hdf5', 'mongoose')
 
-        self.f.create_group(name("hard"))
-        self.f[name("soft")] = sl
-        self.f[name("external")] = el
+        self.f.create_group(hard)
+        self.f[soft] = sl
+        self.f[external] = el
 
-        out_hl = self.f.get(name("hard"), getlink=True)
-        out_sl = self.f.get(name("soft"), getlink=True)
-        out_el = self.f.get(name("external"), getlink=True)
+        out_hl = self.f.get(hard, getlink=True)
+        out_sl = self.f.get(soft, getlink=True)
+        out_el = self.f.get(external, getlink=True)
 
         #TODO: redo with SoftLink/ExternalLink built-in equality
         self.assertIsInstance(out_hl, HardLink)
@@ -899,17 +923,22 @@ class TestSoftLinks(BaseGroup):
 
     def test_create(self):
         """ Create new soft link by assignment """
-        g = self.f.create_group(name("new"))
-        sl = SoftLink(name("/new"))
-        self.f[name('alias')] = sl
-        g2 = self.f[name('alias')]
+        new = make_name("new")
+        alias = make_name("alias")
+
+        g = self.f.create_group(new)
+        sl = SoftLink(f"/{new}")
+        self.f[alias] = sl
+        g2 = self.f[alias]
         self.assertEqual(g, g2)
 
     def test_exc(self):
         """ Opening dangling soft link results in KeyError """
-        self.f[name('alias')] = SoftLink('new')
+        name = make_name()
+        self.f[name] = SoftLink('new')
         with self.assertRaises(KeyError):
-            self.f[name('alias')]
+            self.f[name]
+
 
 class TestExternalLinks(TestCase):
 
@@ -943,33 +972,37 @@ class TestExternalLinks(TestCase):
 
     def test_create(self):
         """ Creating external links """
-        self.f[name()] = ExternalLink(self.ename, '/external')
-        grp = self.f[name()]
+        name = make_name()
+        self.f[name] = ExternalLink(self.ename, '/external')
+        grp = self.f[name]
         self.ef = grp.file
         self.assertNotEqual(self.ef, self.f)
         self.assertEqual(grp.name, '/external')
 
     def test_exc(self):
         """ KeyError raised when attempting to open broken link """
-        self.f[name()] = ExternalLink(self.ename, '/missing')
+        name = make_name()
+        self.f[name] = ExternalLink(self.ename, '/missing')
         with self.assertRaises(KeyError):
-            self.f[name()]
+            self.f[name]
 
     # I would prefer OSError but there's no way to fix this as the exception
     # class is determined by HDF5.
     def test_exc_missingfile(self):
         """ KeyError raised when attempting to open missing file """
-        self.f[name()] = ExternalLink('mongoose.hdf5','/foo')
+        name = make_name()
+        self.f[name] = ExternalLink('mongoose.hdf5','/foo')
         with self.assertRaises(KeyError):
-            self.f[name()]
+            self.f[name]
 
     def test_close_file(self):
         """ Files opened by accessing external links can be closed
 
         Issue 189.
         """
-        self.f[name()] = ExternalLink(self.ename, '/')
-        grp = self.f[name()]
+        name = make_name()
+        self.f[name] = ExternalLink(self.ename, '/')
+        grp = self.f[name]
         f2 = grp.file
         f2.close()
         self.assertFalse(f2)
@@ -983,7 +1016,7 @@ class TestExternalLinks(TestCase):
         ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
-        self.f[name()] = ExternalLink(ext_filename, '/external')
+        self.f[make_name()] = ExternalLink(ext_filename, '/external')
 
     @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
     def test_unicode_decode(self):
@@ -991,24 +1024,27 @@ class TestExternalLinks(TestCase):
         Check that external links decode unicode filenames properly
         Testing issue #732
         """
+        name = make_name()
         ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
             ext_file["external"].attrs["ext_attr"] = "test"
-        self.f[name()] = ExternalLink(ext_filename, '/external')
-        self.assertEqual(self.f[name()].attrs["ext_attr"], "test")
+        self.f[name] = ExternalLink(ext_filename, '/external')
+        self.assertEqual(self.f[name].attrs["ext_attr"], "test")
 
     def test_unicode_hdf5_path(self):
         """
         Check that external links handle unicode hdf5 paths properly
         Testing issue #333
         """
+        name = make_name()
         ext_filename = os.path.join(mkdtemp(), "external.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('α')
             ext_file["α"].attrs["ext_attr"] = "test"
-        self.f[name()] = ExternalLink(ext_filename, '/α')
-        self.assertEqual(self.f[name()].attrs["ext_attr"], "test")
+        self.f[name] = ExternalLink(ext_filename, '/α')
+        self.assertEqual(self.f[name].attrs["ext_attr"], "test")
+
 
 class TestExtLinkBugs(TestCase):
 
@@ -1061,168 +1097,198 @@ class TestCopy(TestCase):
             self.f2.close()
 
     def test_copy_path_to_path(self):
-        foo = self.f1.create_group(name("foo"))
-        foo['bar'] = [1,2,3]
+        name1 = make_name("foo1")
+        name2 = make_name("foo2")
 
-        self.f1.copy(name("foo"), name("baz"))
-        baz = self.f1[name("baz")]
-        self.assertIsInstance(baz, Group)
-        self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
+        foo1 = self.f1.create_group(name1)
+        foo1['bar'] = [1,2,3]
+
+        self.f1.copy(name1, name2)
+        foo2 = self.f1[name2]
+        self.assertIsInstance(foo2, Group)
+        self.assertArrayEqual(foo2['bar'], np.array([1,2,3]))
 
     def test_copy_path_to_group(self):
-        foo = self.f1.create_group(name("foo"))
-        foo['bar'] = [1,2,3]
-        baz = self.f1.create_group(name("baz"))
+        name1 = make_name("foo1")
+        name2 = make_name("foo2")
 
-        self.f1.copy(name("foo"), baz)
-        baz = self.f1[name("baz")]
-        self.assertIsInstance(baz, Group)
-        self.assertArrayEqual(baz[name("foo{}/bar")], np.array([1,2,3]))
+        foo1 = self.f1.create_group(name1)
+        foo1['bar'] = [1,2,3]
+        baz = self.f1.create_group(name2)
 
-        self.f1.copy(name("foo"), self.f2['/'])
-        self.assertIsInstance(self.f2[name("foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo{}/bar")], np.array([1,2,3]))
+        self.f1.copy(name1, baz)
+        foo2 = self.f1[name2]
+        self.assertIsInstance(foo2, Group)
+        self.assertArrayEqual(foo2[f"{name1}/bar"], np.array([1,2,3]))
+
+        self.f1.copy(name1, self.f2['/'])
+        self.assertIsInstance(self.f2[name1], Group)
+        self.assertArrayEqual(self.f2[f"{name1}/bar"], np.array([1,2,3]))
 
     def test_copy_group_to_path(self):
+        name1 = make_name("foo1")
+        name2 = make_name("foo2")
 
-        foo = self.f1.create_group(name("foo"))
-        foo['bar'] = [1,2,3]
+        foo1 = self.f1.create_group(name1)
+        foo1['bar'] = [1,2,3]
 
-        self.f1.copy(foo, name("baz"))
-        baz = self.f1[name("baz")]
-        self.assertIsInstance(baz, Group)
-        self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
+        self.f1.copy(foo1, name2)
+        foo2 = self.f1[name2]
+        self.assertIsInstance(foo2, Group)
+        self.assertArrayEqual(foo2['bar'], np.array([1,2,3]))
 
-        self.f2.copy(foo, name("foo"))
-        self.assertIsInstance(self.f2[name("foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo{}/bar")], np.array([1,2,3]))
+        self.f2.copy(foo1, name1)
+        self.assertIsInstance(self.f2[name1], Group)
+        self.assertArrayEqual(self.f2[f"{name1}/bar"], np.array([1,2,3]))
 
     def test_copy_group_to_group(self):
+        name1 = make_name("foo1")
+        name2 = make_name("foo2")
 
-        foo = self.f1.create_group(name("foo"))
-        foo["bar"] = [1,2,3]
-        baz = self.f1.create_group(name("baz"))
+        foo1 = self.f1.create_group(name1)
+        foo1['bar'] = [1,2,3]
+        foo2 = self.f1.create_group(name2)
 
-        self.f1.copy(foo, baz)
-        baz = self.f1[name("baz")]
-        self.assertIsInstance(baz, Group)
-        self.assertArrayEqual(baz[name("foo{}/bar")], np.array([1,2,3]))
+        self.f1.copy(foo1, foo2)
+        foo2 = self.f1[name2]
+        self.assertIsInstance(foo2, Group)
+        self.assertArrayEqual(foo2[f"{name1}/bar"], np.array([1,2,3]))
 
-        self.f1.copy(foo, self.f2['/'])
-        self.assertIsInstance(self.f2[name("/foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo{}/bar")], np.array([1,2,3]))
+        self.f1.copy(foo1, self.f2['/'])
+        self.assertIsInstance(self.f2[f"/{name1}"], Group)
+        self.assertArrayEqual(self.f2[f"{name1}/bar"], np.array([1,2,3]))
 
     def test_copy_dataset(self):
-        self.f1[name("foo")] = [1,2,3]
-        foo = self.f1[name("foo")]
-        grp = self.f1.create_group(name("grp"))
+        name1 = make_name("foo")
+        name2 = make_name("bar")
+        name3 = make_name("baz")
+        name4 = make_name("grp")
 
-        self.f1.copy(foo, name("bar"))
-        self.assertArrayEqual(self.f1[name("bar")], np.array([1,2,3]))
+        self.f1[name1] = [1,2,3]
+        foo = self.f1[name1]
+        grp = self.f1.create_group(name4)
 
-        self.f1.copy(name("foo"), name("baz"))
-        self.assertArrayEqual(self.f1[name("baz")], np.array([1,2,3]))
+        self.f1.copy(foo, name2)
+        self.assertArrayEqual(self.f1[name2], np.array([1,2,3]))
+
+        self.f1.copy(name1, name3)
+        self.assertArrayEqual(self.f1[name3], np.array([1,2,3]))
 
         self.f1.copy(foo, grp)
         self.assertArrayEqual(
-            self.f1[name("/grp") + name("/foo")], np.array([1,2,3])
+            self.f1[f"/{name4}/{name1}"], np.array([1,2,3])
         )
 
-        self.f1.copy(name("foo"), self.f2)
-        self.assertArrayEqual(self.f2[name("foo")], np.array([1,2,3]))
+        self.f1.copy(name1, self.f2)
+        self.assertArrayEqual(self.f2[name1], np.array([1,2,3]))
 
-        self.f2.copy(self.f1[name("foo")], self.f2, name("bar"))
-        self.assertArrayEqual(self.f2[name("bar")], np.array([1,2,3]))
+        self.f2.copy(self.f1[name1], self.f2, name2)
+        self.assertArrayEqual(self.f2[name2], np.array([1,2,3]))
 
     def test_copy_shallow(self):
+        name1 = make_name("foo1")
+        name2 = make_name("foo2")
 
-        foo = self.f1.create_group(name("foo"))
-        bar = foo.create_group('bar')
-        foo['qux'] = [1,2,3]
+        foo1 = self.f1.create_group(name1)
+        bar = foo1.create_group('bar')
+        foo1['qux'] = [1,2,3]
         bar['quux'] = [4,5,6]
 
-        self.f1.copy(foo, name("baz"), shallow=True)
-        baz = self.f1[name("baz")]
+        self.f1.copy(foo1, name2, shallow=True)
+        baz = self.f1[name2]
         self.assertIsInstance(baz, Group)
         self.assertIsInstance(baz['bar'], Group)
         self.assertEqual(len(baz['bar']), 0)
         self.assertArrayEqual(baz['qux'], np.array([1,2,3]))
 
-        self.f2.copy(foo, name("foo"), shallow=True)
-        self.assertIsInstance(self.f2[name("/foo{}")], Group)
-        self.assertIsInstance(self.f2[name("foo{}/bar")], Group)
-        self.assertEqual(len(self.f2[name("foo{}/bar")]), 0)
-        self.assertArrayEqual(self.f2[name("foo{}/qux")], np.array([1,2,3]))
+        self.f2.copy(foo1, name1, shallow=True)
+        self.assertIsInstance(self.f2[f"/{name1}"], Group)
+        self.assertIsInstance(self.f2[f"{name1}/bar"], Group)
+        self.assertEqual(len(self.f2[f"{name1}/bar"]), 0)
+        self.assertArrayEqual(self.f2[f"{name1}/qux"], np.array([1,2,3]))
 
     def test_copy_without_attributes(self):
+        name1 = make_name("foo1")
+        name2 = make_name("foo2")
 
-        self.f1[name("foo")] = [1,2,3]
-        foo = self.f1[name("foo")]
-        foo.attrs['bar'] = [4,5,6]
+        self.f1[name1] = [1,2,3]
+        foo1 = self.f1[name1]
+        foo1.attrs['bar'] = [4,5,6]
 
-        self.f1.copy(foo, name("baz"), without_attrs=True)
-        self.assertArrayEqual(self.f1[name("baz")], np.array([1,2,3]))
-        assert 'bar' not in self.f1[name("baz")].attrs
+        self.f1.copy(foo1, name2, without_attrs=True)
+        self.assertArrayEqual(self.f1[name2], np.array([1,2,3]))
+        assert 'bar' not in self.f1[name2].attrs
 
-        self.f2.copy(foo, name("baz"), without_attrs=True)
-        self.assertArrayEqual(self.f2[name("baz")], np.array([1,2,3]))
-        assert 'bar' not in self.f2[name("baz")].attrs
+        self.f2.copy(foo1, name2, without_attrs=True)
+        self.assertArrayEqual(self.f2[name2], np.array([1,2,3]))
+        assert 'bar' not in self.f2[name2].attrs
 
     def test_copy_soft_links(self):
+        name1 = make_name("foo")
+        name2 = make_name("bar")
+        name3 = make_name("baz")
 
-        self.f1[name("bar")] = [1, 2, 3]
-        foo = self.f1.create_group(name("foo"))
-        foo['baz'] = SoftLink(name("/bar"))
+        self.f1[name2] = [1, 2, 3]
+        foo = self.f1.create_group(name1)
+        foo['qux'] = SoftLink(f"/{name2}")
 
-        self.f1.copy(foo, name("qux"), expand_soft=True)
-        self.f2.copy(foo, name("foo"), expand_soft=True)
-        del self.f1[name("bar")]
+        self.f1.copy(foo, name3, expand_soft=True)
+        self.f2.copy(foo, name1, expand_soft=True)
+        del self.f1[name2]
 
-        self.assertIsInstance(self.f1[name("qux")], Group)
-        self.assertArrayEqual(self.f1[name("qux{}/baz")], np.array([1, 2, 3]))
+        self.assertIsInstance(self.f1[name3], Group)
+        self.assertArrayEqual(self.f1[f"{name3}/qux"], np.array([1, 2, 3]))
 
-        self.assertIsInstance(self.f2[name("/foo")], Group)
-        self.assertArrayEqual(self.f2[name("foo{}/baz")], np.array([1, 2, 3]))
+        self.assertIsInstance(self.f2[f"/{name1}"], Group)
+        self.assertArrayEqual(self.f2[f"{name1}/qux"], np.array([1, 2, 3]))
 
     def test_copy_external_links(self):
+        name1 = make_name("foo")
+        name2 = make_name("bar")
+        name3 = make_name("baz")
+
         filename = self.mktemp()
         with File(filename, 'w') as f1:
-            f1[name("foo")] = [1,2,3]
-            self.f2[name("bar")] = ExternalLink(f1.filename, name("foo"))
+            f1[name1] = [1,2,3]
+            self.f2[name2] = ExternalLink(f1.filename, name1)
 
-        self.assertArrayEqual(self.f2[name("bar")], np.array([1,2,3]))
+        self.assertArrayEqual(self.f2[name2], np.array([1,2,3]))
 
-        self.f2.copy(name("bar"), name("baz"), expand_external=True)
+        self.f2.copy(name2, name3, expand_external=True)
         os.unlink(filename)
-        self.assertArrayEqual(self.f2[name("baz")], np.array([1,2,3]))
+        self.assertArrayEqual(self.f2[name3], np.array([1,2,3]))
 
     def test_copy_refs(self):
+        name1 = make_name("foo")
+        name2 = make_name("bar")
+        name3 = make_name("baz")
+        name4 = make_name("qux")
 
-        self.f1[name("foo")] = [1,2,3]
-        self.f1[name("bar")] = [4,5,6]
-        foo = self.f1[name("foo")]
-        bar = self.f1[name("bar")]
+        self.f1[name1] = [1,2,3]
+        self.f1[name2] = [4,5,6]
+        foo = self.f1[name1]
+        bar = self.f1[name2]
         foo.attrs['bar'] = bar.ref
 
-        self.f1.copy(foo, name("baz"), expand_refs=True)
-        self.assertArrayEqual(self.f1[name("baz")], np.array([1,2,3]))
-        baz_bar = self.f1[name("baz")].attrs['bar']
+        self.f1.copy(foo, name3, expand_refs=True)
+        self.assertArrayEqual(self.f1[name3], np.array([1,2,3]))
+        baz_bar = self.f1[name3].attrs['bar']
         self.assertArrayEqual(self.f1[baz_bar], np.array([4,5,6]))
         # The reference points to a copy of bar, not to bar itself.
         self.assertNotEqual(self.f1[baz_bar].name, bar.name)
 
-        self.f1.copy(name("foo"), self.f2, name("baz"), expand_refs=True)
-        self.assertArrayEqual(self.f2[name("baz")], np.array([1,2,3]))
-        baz_bar = self.f2[name("baz")].attrs['bar']
+        self.f1.copy(name1, self.f2, name3, expand_refs=True)
+        self.assertArrayEqual(self.f2[name3], np.array([1,2,3]))
+        baz_bar = self.f2[name3].attrs['bar']
         self.assertArrayEqual(self.f2[baz_bar], np.array([4,5,6]))
 
-        self.f1.copy('/', self.f2, name("root"), expand_refs=True)
-        self.assertArrayEqual(self.f2[name("root") + name("/foo")], np.array([1,2,3]))
-        self.assertArrayEqual(self.f2[name("root") + name("/bar")], np.array([4,5,6]))
-        foo_bar = self.f2[name("root") + name("/foo")].attrs['bar']
+        self.f1.copy('/', self.f2, name4, expand_refs=True)
+        self.assertArrayEqual(self.f2[f"{name4}/{name1}"], np.array([1,2,3]))
+        self.assertArrayEqual(self.f2[f"{name4}/{name2}"], np.array([4,5,6]))
+        foo_bar = self.f2[f"{name4}/{name1}"].attrs['bar']
         self.assertArrayEqual(self.f2[foo_bar], np.array([4,5,6]))
         # There's only one copy of bar, which the reference points to.
-        self.assertEqual(self.f2[foo_bar], self.f2[name("root") + name("/bar")])
+        self.assertEqual(self.f2[foo_bar], self.f2[f"{name4}/{name2}"])
 
 
 class TestMove(BaseGroup):
@@ -1233,30 +1299,42 @@ class TestMove(BaseGroup):
 
     def test_move_hardlink(self):
         """ Moving an object """
-        grp = self.f.create_group(name("X"))
-        self.f.move(name("X"), name("Y"))
-        self.assertEqual(self.f[name("Y")], grp)
-        self.f.move(name("Y"), name("new{}/nested/path"))
-        self.assertEqual(self.f[name("new{}/nested/path")], grp)
+        x = make_name("x")
+        y = make_name("y")
+        z = make_name("z{}/nested/path")
+
+        grp = self.f.create_group(x)
+        self.f.move(x, y)
+        self.assertEqual(self.f[y], grp)
+        self.f.move(y, z)
+        self.assertEqual(self.f[z], grp)
 
     def test_move_softlink(self):
         """ Moving a soft link """
-        self.f[name("soft")] = h5py.SoftLink(name("relative{}/path"))
-        self.f.move(name("soft"), name("new_soft"))
-        lnk = self.f.get(name("new_soft"), getlink=True)
-        self.assertEqual(lnk.path, name("relative{}/path"))
+        name1 = make_name("soft")
+        name2 = make_name("new_soft")
+        name3 = make_name("relative{}/path")
+
+        self.f[name1] = h5py.SoftLink(name3)
+        self.f.move(name1, name2)
+        lnk = self.f.get(name2, getlink=True)
+        self.assertEqual(lnk.path, name3)
 
     def test_move_conflict(self):
         """ Move conflict raises ValueError """
-        self.f.create_group(name("X"))
-        self.f.create_group(name("Y"))
+        x = make_name("x")
+        y = make_name("y")
+
+        self.f.create_group(x)
+        self.f.create_group(y)
         with self.assertRaises(ValueError):
-            self.f.move(name("X"), name("Y"))
+            self.f.move(x, y)
 
     def test_short_circuit(self):
         ''' Test that a null-move works '''
-        self.f.create_group(name("X"))
-        self.f.move(name("X"), name("X"))
+        name = make_name()
+        self.f.create_group(name)
+        self.f.move(name, name)
 
 
 class TestMutableMapping(BaseGroup):
@@ -1265,7 +1343,7 @@ class TestMutableMapping(BaseGroup):
     '''
     def test_resolution(self):
         assert issubclass(Group, MutableMapping)
-        grp = self.f.create_group(name("K"))
+        grp = self.f.create_group(make_name())
         assert isinstance(grp, MutableMapping)
 
     def test_validity(self):

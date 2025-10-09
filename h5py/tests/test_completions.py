@@ -1,6 +1,6 @@
 import h5py
 
-from .common import TestCase, name
+from .common import TestCase, make_name
 
 
 class TestCompletions(TestCase):
@@ -21,7 +21,7 @@ class TestCompletions(TestCase):
             )
 
     def test_subgroup_completions(self):
-        g = self.f.create_group(name())
+        g = self.f.create_group(make_name())
         g.create_dataset('g_data2', [4, 5, 6])
         g.create_dataset('g_data1', [1, 2, 3])
         g.create_dataset('g_data3', [7, 8, 9])
@@ -31,7 +31,7 @@ class TestCompletions(TestCase):
         )
 
     def test_attrs_completions(self):
-        attrs = self.f.create_group(name()).attrs
+        attrs = self.f.create_group(make_name()).attrs
 
         # Write out of alphabetical order to test that completions come back in
         # alphabetical order, as opposed to, say, insertion order.

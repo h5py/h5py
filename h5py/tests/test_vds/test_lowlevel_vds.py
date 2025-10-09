@@ -10,7 +10,7 @@ import tempfile
 import numpy as np
 
 import h5py as h5
-from ..common import ut, name
+from ..common import ut, make_name
 
 
 class TestEigerLowLevel(ut.TestCase):
@@ -32,7 +32,7 @@ class TestEigerLowLevel(ut.TestCase):
         f.close()
 
     def test_eiger_low_level(self):
-        outfile = osp.join(self.working_dir.name, name('eiger{}.h5'))
+        outfile = osp.join(self.working_dir.name, make_name('eiger{}.h5'))
         with h5.File(outfile, 'w', libver='latest') as f:
             vdset_shape = (78, 200, 200)
             vdset_max_shape = vdset_shape
@@ -139,7 +139,7 @@ class TestExcaliburLowLevel(ut.TestCase):
     def test_excalibur_low_level(self):
 
         excalibur_data = self.edata
-        outfile = osp.join(self.working_dir.name, name('excalibur{}.h5'))
+        outfile = osp.join(self.working_dir.name, make_name('excalibur{}.h5'))
         vdset_stripe_shape = (1,) + excalibur_data.fem_stripe_dimensions
         vdset_stripe_max_shape = (5, ) + excalibur_data.fem_stripe_dimensions
         vdset_shape = (5,
@@ -219,7 +219,7 @@ class TestPercivalLowLevel(ut.TestCase):
         f.close()
 
     def test_percival_low_level(self):
-        outfile = osp.join(self.working_dir.name, name('percival{}.h5'))
+        outfile = osp.join(self.working_dir.name, make_name('percival{}.h5'))
         with h5.File(outfile, 'w', libver='latest') as f:
             vdset_shape = (1,200,200)
             num = h5.h5s.UNLIMITED
@@ -232,7 +232,7 @@ class TestPercivalLowLevel(ut.TestCase):
             for foo in self.fname:
                 # FIXME can't open the same file twice from multiple threads,
                 # even if read-only
-                foo2 = osp.join(self.working_dir.name, name('tmp{}.h5'))
+                foo2 = osp.join(self.working_dir.name, make_name('tmp{}.h5'))
                 shutil.copyfile(foo, foo2)
                 in_data = h5.File(foo2, 'r')['data']
                 src_shape = in_data.shape
@@ -269,12 +269,14 @@ class TestPercivalLowLevel(ut.TestCase):
 
 
 def test_virtual_prefix(tmp_path):
-    (tmp_path / name('a')).mkdir()
-    (tmp_path / name('b')).mkdir()
-    src_file = h5.File(tmp_path / name('a') / 'src.h5', 'w')
+    a = tmp_path / make_name('a')
+    b = tmp_path / make_name('b')
+    a.mkdir()
+    b.mkdir()
+    src_file = h5.File(a / 'src.h5', 'w')
     src_file['data'] = np.arange(10)
 
-    vds_file = h5.File(tmp_path / name('b') / 'vds.h5', 'w')
+    vds_file = h5.File(b / 'vds.h5', 'w')
     layout = h5.VirtualLayout(shape=(10,), dtype=np.int64)
     layout[:] = h5.VirtualSource('src.h5', 'data', shape=(10,))
     vds_file.create_virtual_dataset('data', layout, fillvalue=-1)
@@ -282,13 +284,13 @@ def test_virtual_prefix(tmp_path):
     # Path doesn't resolve
     np.testing.assert_array_equal(vds_file['data'], np.full(10, fill_value=-1))
 
-    path_a = bytes(tmp_path / name('a'))
+    a_bytes = bytes(a)
     dapl = h5.h5p.create(h5.h5p.DATASET_ACCESS)
-    dapl.set_virtual_prefix(path_a)
+    dapl.set_virtual_prefix(a_bytes)
     vds_id = h5.h5d.open(vds_file.id, b'data', dapl=dapl)
     vds = h5.Dataset(vds_id)
 
     # Now it should find the source file and read the data correctly
     np.testing.assert_array_equal(vds[:], np.arange(10))
     # Check that get_virtual_prefix gives back what we put in
-    assert vds.id.get_access_plist().get_virtual_prefix() == path_a
+    assert vds.id.get_access_plist().get_virtual_prefix() == a_bytes

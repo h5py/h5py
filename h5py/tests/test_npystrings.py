@@ -3,20 +3,21 @@ import pytest
 
 import h5py
 
-from .common import name
+from .common import make_name
 
 NUMPY_GE2 = int(np.__version__.split(".")[0]) >= 2
 pytestmark = pytest.mark.skipif(not NUMPY_GE2, reason="requires numpy >=2.0")
 
 
 def test_create_with_dtype_T(writable_file):
-    ds = writable_file.create_dataset(name(), shape=(2, 2), dtype="T")
+    name = make_name()
+    ds = writable_file.create_dataset(name, shape=(2, 2), dtype="T")
     data = [["foo", "bar"], ["hello world", ""]]
     ds[:] = data
     a = ds.asstr()[:]
     np.testing.assert_array_equal(a, data)
 
-    ds = writable_file[name()]
+    ds = writable_file[name]
     assert ds.dtype == object
     np.testing.assert_array_equal(ds.asstr()[:], data)
 
@@ -32,17 +33,20 @@ def test_create_with_dtype_T(writable_file):
 
 
 def test_fromdata(writable_file):
+    nx = make_name("x")
+    ny = make_name("y")
+    nz = make_name("z")
     data = [["foo", "bar"]]
     np_data = np.asarray(data, dtype="T")
-    x = writable_file.create_dataset(name("x"), data=data, dtype="T")
-    y = writable_file.create_dataset(name("y"), data=data, dtype=np.dtypes.StringDType())
-    z = writable_file.create_dataset(name("z"), data=np_data)
+    x = writable_file.create_dataset(nx, data=data, dtype="T")
+    y = writable_file.create_dataset(ny, data=data, dtype=np.dtypes.StringDType())
+    z = writable_file.create_dataset(nz, data=np_data)
 
     for ds in (x, y, z):
         assert ds.dtype.kind == "O"
         np.testing.assert_array_equal(ds.astype("T")[:], np_data)
-    for n in ("x", "y", "z"):
-        ds = writable_file[name(n)]
+    for n in (nx, ny, nz):
+        ds = writable_file[n]
         assert ds.dtype == object
         np.testing.assert_array_equal(ds.asstr()[:], data)
         ds = ds.astype("T")
@@ -55,7 +59,7 @@ def test_fromdata(writable_file):
 def test_fixed_to_variable_width(writable_file):
     data = ["foo", "longer than 8 bytes"]
     x = writable_file.create_dataset(
-        name(), data=data, dtype=h5py.string_dtype(length=20)
+        make_name(), data=data, dtype=h5py.string_dtype(length=20)
     )
     assert x.dtype == "S20"
 
@@ -76,7 +80,7 @@ def test_fixed_to_variable_width_too_short(writable_file):
 
     data = ["foo", "bar"]
     x = writable_file.create_dataset(
-        name(), data=data, dtype=h5py.string_dtype(length=3)
+        make_name(), data=data, dtype=h5py.string_dtype(length=3)
     )
     assert x.dtype == "S3"
 
@@ -88,7 +92,7 @@ def test_fixed_to_variable_width_too_short(writable_file):
 def test_variable_to_fixed_width(writable_file):
     data = ["foo", "longer than 8 bytes"]
     bdata = [b"foo", b"longer than 8 bytes"]
-    x = writable_file.create_dataset(name(), data=data, dtype="T")
+    x = writable_file.create_dataset(make_name(), data=data, dtype="T")
 
     # read S <- T
     y = x.astype("S20")
@@ -108,14 +112,14 @@ def test_variable_to_fixed_width(writable_file):
 
 
 def test_write_object_into_npystrings(writable_file):
-    x = writable_file.create_dataset(name(), data=["foo"], dtype="T")
+    x = writable_file.create_dataset(make_name(), data=["foo"], dtype="T")
     x[0] = np.asarray("1234", dtype="O")
     np.testing.assert_array_equal(x[:], b"1234")
 
 
 def test_write_npystrings_into_object(writable_file):
     x = writable_file.create_dataset(
-        name("x"), data=["foo"], dtype=h5py.string_dtype()
+        make_name("x"), data=["foo"], dtype=h5py.string_dtype()
     )
     assert x.dtype == object
     x[0] = np.asarray("1234", dtype="T")
@@ -123,7 +127,7 @@ def test_write_npystrings_into_object(writable_file):
 
     # Test with HDF5 variable-length strings with ASCII character set
     xa = writable_file.create_dataset(
-       name("xa"), shape=(1,), dtype=h5py.string_dtype('ascii')
+       make_name("xa"), shape=(1,), dtype=h5py.string_dtype('ascii')
     )
     xa[0] = np.asarray("2345", dtype="T")
     np.testing.assert_array_equal(xa[:], b"2345")
@@ -132,7 +136,7 @@ def test_write_npystrings_into_object(writable_file):
 def test_fillvalue(writable_file):
     # Create as NpyString dtype
     x = writable_file.create_dataset(
-        name("x"), shape=(2,), dtype="T", fillvalue="foo"
+        make_name("x"), shape=(2,), dtype="T", fillvalue="foo"
     )
     assert isinstance(x.fillvalue, bytes)
     assert x.fillvalue == b"foo"
@@ -140,7 +144,7 @@ def test_fillvalue(writable_file):
 
     # Create as object dtype
     y = writable_file.create_dataset(
-        name("y"), shape=(2,), dtype=h5py.string_dtype(), fillvalue=b"foo"
+        make_name("y"), shape=(2,), dtype=h5py.string_dtype(), fillvalue=b"foo"
     )
     assert isinstance(y.fillvalue, bytes)
     assert y.fillvalue == b"foo"
@@ -152,7 +156,7 @@ def test_fillvalue(writable_file):
 
 def test_empty_string(writable_file):
     data = np.array(["", "a", "b"], dtype="T")
-    x = writable_file.create_dataset(name(), data=data)
+    x = writable_file.create_dataset(make_name(), data=data)
     np.testing.assert_array_equal(x[:], [b"", b"a", b"b"])
     np.testing.assert_array_equal(x.astype("T")[:], data)
     data[:2] = ["c", ""]
@@ -162,7 +166,7 @@ def test_empty_string(writable_file):
 
 
 def test_astype_nonstring(writable_file):
-    x = writable_file.create_dataset(name(), shape=(2, ), dtype="i8")
+    x = writable_file.create_dataset(make_name(), shape=(2, ), dtype="i8")
     with pytest.raises(TypeError, match="HDF5 string datatype"):
         x.astype("T")
 
@@ -173,7 +177,7 @@ def test_resized_read(writable_file):
     """
     l = ["string1", "string2", "string3"]
     data = np.array(l, dtype='T')
-    d = writable_file.create_dataset(name(), data=data, maxshape=(None,))
+    d = writable_file.create_dataset(make_name(), data=data, maxshape=(None,))
     d.resize((10,))
 
     np.testing.assert_array_equal(d[:], np.array(

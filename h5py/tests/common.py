@@ -57,7 +57,7 @@ class TestCase(ut.TestCase):
     def mktemp(self, suffix='.hdf5', prefix='tmp', dir=None):
         if dir is None:
             dir = self.tempdir
-        return tempfile.mktemp(suffix, name(prefix), dir=dir)
+        return tempfile.mktemp(suffix, make_name(prefix), dir=dir)
 
     def mktemp_mpi(self, comm=None, suffix='.hdf5', prefix='', dir=None):
         if comm is None:
@@ -243,7 +243,7 @@ def subproc_env(d):
 MAIN_THREAD_ID = threading.get_ident()
 
 
-def name(template_or_prefix: str = "foo", /) -> str:
+def make_name(template_or_prefix: str = "foo", /) -> str:
     """Return a static name, to be used e.g. as dataset name.
 
     When running in pytest-run-parallel, append a thread ID to the name.

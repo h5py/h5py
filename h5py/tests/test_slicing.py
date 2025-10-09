@@ -18,7 +18,7 @@
 
 import numpy as np
 
-from .common import TestCase, name
+from .common import TestCase, make_name
 
 import h5py
 from h5py import File, MultiBlockSlice
@@ -40,27 +40,27 @@ class TestSingleElement(BaseSlicing):
 
     def test_single_index(self):
         """ Single-element selection with [index] yields array scalar """
-        dset = self.f.create_dataset(name(), (1,), dtype='i1')
+        dset = self.f.create_dataset(make_name(), (1,), dtype='i1')
         out = dset[0]
         self.assertIsInstance(out, np.int8)
 
     def test_single_null(self):
         """ Single-element selection with [()] yields ndarray """
-        dset = self.f.create_dataset(name(), (1,), dtype='i1')
+        dset = self.f.create_dataset(make_name(), (1,), dtype='i1')
         out = dset[()]
         self.assertIsInstance(out, np.ndarray)
         self.assertEqual(out.shape, (1,))
 
     def test_scalar_index(self):
         """ Slicing with [...] yields scalar ndarray """
-        dset = self.f.create_dataset(name(), shape=(), dtype='f')
+        dset = self.f.create_dataset(make_name(), shape=(), dtype='f')
         out = dset[...]
         self.assertIsInstance(out, np.ndarray)
         self.assertEqual(out.shape, ())
 
     def test_scalar_null(self):
         """ Slicing with [()] yields array scalar """
-        dset = self.f.create_dataset(name(), shape=(), dtype='i1')
+        dset = self.f.create_dataset(make_name(), shape=(), dtype='i1')
         out = dset[()]
         self.assertIsInstance(out, np.int8)
 
@@ -68,7 +68,7 @@ class TestSingleElement(BaseSlicing):
         """ Compound scalar is numpy.void, not tuple (issue 135) """
         dt = np.dtype([('a','i4'),('b','f8')])
         v = np.ones((4,), dtype=dt)
-        dset = self.f.create_dataset(name(), (4,), data=v)
+        dset = self.f.create_dataset(make_name(), (4,), data=v)
         self.assertEqual(dset[0], v[0])
         self.assertIsInstance(dset[0], np.void)
 
@@ -80,16 +80,16 @@ class TestObjectIndex(BaseSlicing):
 
     def test_reference(self):
         """ Indexing a reference dataset returns a h5py.Reference instance """
-        dset = self.f.create_dataset(name(), (1,), dtype=h5py.ref_dtype)
+        dset = self.f.create_dataset(make_name(), (1,), dtype=h5py.ref_dtype)
         dset[0] = self.f.ref
         self.assertEqual(type(dset[0]), h5py.Reference)
 
     def test_regref(self):
         """ Indexing a region reference dataset returns a h5py.RegionReference
         """
-        dset1 = self.f.create_dataset(name("x"), (10,10))
+        dset1 = self.f.create_dataset(make_name("x"), (10,10))
         regref = dset1.regionref[...]
-        dset2 = self.f.create_dataset(name("y"), (1,), dtype=h5py.regionref_dtype)
+        dset2 = self.f.create_dataset(make_name("y"), (1,), dtype=h5py.regionref_dtype)
         dset2[0] = regref
         self.assertEqual(type(dset2[0]), h5py.RegionReference)
 
@@ -97,7 +97,7 @@ class TestObjectIndex(BaseSlicing):
         """ Compound types of which a reference is an element work right """
         dt = np.dtype([('a', 'i'),('b', h5py.ref_dtype)])
 
-        dset = self.f.create_dataset(name(), (1,), dtype=dt)
+        dset = self.f.create_dataset(make_name(), (1,), dtype=dt)
         dset[0] = (42, self.f['/'].ref)
 
         out = dset[0]
@@ -105,14 +105,14 @@ class TestObjectIndex(BaseSlicing):
 
     def test_scalar(self):
         """ Indexing returns a real Python object on scalar datasets """
-        dset = self.f.create_dataset(name(), (), dtype=h5py.ref_dtype)
+        dset = self.f.create_dataset(make_name(), (), dtype=h5py.ref_dtype)
         dset[()] = self.f.ref
         self.assertEqual(type(dset[()]), h5py.Reference)
 
     def test_bytestr(self):
         """ Indexing a byte string dataset returns a real python byte string
         """
-        dset = self.f.create_dataset(name(), (1,), dtype=h5py.string_dtype(encoding='ascii'))
+        dset = self.f.create_dataset(make_name(), (1,), dtype=h5py.string_dtype(encoding='ascii'))
         dset[0] = b"Hello there!"
         self.assertEqual(type(dset[0]), bytes)
 
@@ -138,7 +138,7 @@ class TestSimpleSlicing(TestCase):
     def test_write(self):
         """Assigning to a 1D slice of a 2D dataset
         """
-        dset = self.f.create_dataset(name(), (10, 2))
+        dset = self.f.create_dataset(make_name(), (10, 2))
 
         x = np.zeros((10, 1))
         dset[:, 0] = x[:, 0]
@@ -154,7 +154,7 @@ class TestArraySlicing(BaseSlicing):
     def test_read(self):
         """ Read arrays tack array dimensions onto end of shape tuple """
         dt = np.dtype('(3,)f8')
-        dset = self.f.create_dataset(name(), (10,), dtype=dt)
+        dset = self.f.create_dataset(make_name(), (10,), dtype=dt)
         self.assertEqual(dset.shape, (10,))
         self.assertEqual(dset.dtype, dt)
 
@@ -178,7 +178,7 @@ class TestArraySlicing(BaseSlicing):
         """
         dt = np.dtype('(3,)i')
 
-        dset = self.f.create_dataset(name(), (10,), dtype=dt)
+        dset = self.f.create_dataset(make_name(), (10,), dtype=dt)
 
         with self.assertRaises(TypeError):
             dset[...] = 42
@@ -189,7 +189,7 @@ class TestArraySlicing(BaseSlicing):
         Issue 211.
         """
         dt = np.dtype('(3,)f8')
-        dset = self.f.create_dataset(name(), (10,), dtype=dt)
+        dset = self.f.create_dataset(make_name(), (10,), dtype=dt)
 
         data = np.array([1,2,3.0])
         dset[4] = data
@@ -204,7 +204,7 @@ class TestArraySlicing(BaseSlicing):
         data1 = np.ones((2,), dtype=dt)
         data2 = np.ones((4,5), dtype=dt)
 
-        dset = self.f.create_dataset(name(), (10,9,11), dtype=dt)
+        dset = self.f.create_dataset(make_name(), (10,9,11), dtype=dt)
 
         dset[0,0,2:4] = data1
         self.assertArrayEqual(dset[0,0,2:4], data1)
@@ -219,7 +219,7 @@ class TestArraySlicing(BaseSlicing):
         Issue 211.
         """
         dt = np.dtype('(3,)f8')
-        dset = self.f.create_dataset(name(), (10,), dtype=dt)
+        dset = self.f.create_dataset(make_name(), (10,), dtype=dt)
 
         out = dset[...]
         dset[...] = out
@@ -237,7 +237,7 @@ class TestZeroLengthSlicing(BaseSlicing):
         """ Slice a dataset with a zero in its shape vector
             along the zero-length dimension """
         for i, shape in enumerate([(0,), (0, 3), (0, 2, 1)]):
-            dset = self.f.create_dataset(name(f"x{i}"), shape, dtype=int, maxshape=(None,)*len(shape))
+            dset = self.f.create_dataset(make_name(f"x{i}"), shape, dtype=int, maxshape=(None,)*len(shape))
             self.assertEqual(dset.shape, shape)
             out = dset[...]
             self.assertIsInstance(out, np.ndarray)
@@ -254,7 +254,7 @@ class TestZeroLengthSlicing(BaseSlicing):
         """ Slice a dataset with a zero in its shape vector
             along a non-zero-length dimension """
         for i, shape in enumerate([(3, 0), (1, 2, 0), (2, 0, 1)]):
-            dset = self.f.create_dataset(name(f"x{i}"), shape, dtype=int, maxshape=(None,)*len(shape))
+            dset = self.f.create_dataset(make_name(f"x{i}"), shape, dtype=int, maxshape=(None,)*len(shape))
             self.assertEqual(dset.shape, shape)
             out = dset[:1]
             self.assertIsInstance(out, np.ndarray)
@@ -263,7 +263,7 @@ class TestZeroLengthSlicing(BaseSlicing):
     def test_slice_of_length_zero(self):
         """ Get a slice of length zero from a non-empty dataset """
         for i, shape in enumerate([(3,), (2, 2,), (2,  1, 5)]):
-            dset = self.f.create_dataset(name(f"x{i}"), data=np.zeros(shape, int), maxshape=(None,)*len(shape))
+            dset = self.f.create_dataset(make_name(f"x{i}"), data=np.zeros(shape, int), maxshape=(None,)*len(shape))
             self.assertEqual(dset.shape, shape)
             out = dset[1:1]
             self.assertIsInstance(out, np.ndarray)
@@ -292,7 +292,7 @@ class TestFieldNames(BaseSlicing):
         self.assertArrayEqual(self.dset['a'], self.data['a'])
 
         data = self.data.copy()
-        dset = self.f.create_dataset(name(), data=data)
+        dset = self.f.create_dataset(make_name(), data=data)
         dset['a'] = 42
         data['a'] = 42
         self.assertArrayEqual(dset['a'], data['a'])
@@ -300,7 +300,7 @@ class TestFieldNames(BaseSlicing):
     def test_write(self):
         """ Test write with field selections """
         data = self.data.copy()
-        dset = self.f.create_dataset(name(), data=data)
+        dset = self.f.create_dataset(make_name(), data=data)
 
         data['a'] *= 2
         dset['a'] = data
@@ -316,7 +316,7 @@ class TestFieldNames(BaseSlicing):
     def test_write_noncompound(self):
         """ Test write with non-compound source (single-field) """
         data = self.data.copy()
-        dset = self.f.create_dataset(name(), data=data)
+        dset = self.f.create_dataset(make_name(), data=data)
 
         data['b'] = 1.0
         dset['b'] = 1.0
