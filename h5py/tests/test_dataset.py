@@ -30,7 +30,7 @@ from h5py._hl.base import is_empty_dataspace, product
 from h5py import h5f, h5t
 import h5py
 
-from .common import ut, TestCase, NUMPY_RELEASE_VERSION, is_parallel_test, name
+from .common import ut, TestCase, NUMPY_RELEASE_VERSION, is_main_thread, name
 from .data_files import get_data_file_path
 
 
@@ -1894,7 +1894,7 @@ class TestVlen(BaseDataset):
 
         # Make sure we can close the file.
         self.f.flush()
-        if not is_parallel_test():
+        if is_main_thread():
             self.f.close()
 
     def test_numpy_float16(self):

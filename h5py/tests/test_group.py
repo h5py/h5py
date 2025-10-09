@@ -30,7 +30,7 @@ from h5py import File, Group, SoftLink, HardLink, ExternalLink
 from h5py import Dataset, Datatype
 from h5py import h5t
 from h5py._hl.compat import filename_encode
-from .common import ut, TestCase, name, is_parallel_test
+from .common import ut, TestCase, name, is_main_thread
 
 # If we can't encode unicode filenames, there's not much point failing tests
 # which must fail
@@ -325,7 +325,7 @@ class TestRepr(BaseGroup):
         g.id._close()
         self.assertIsInstance(repr(g), str)
         g = self.f[name()]
-        if not is_parallel_test():
+        if is_main_thread():
             # Closing the file shouldn't break it
             self.f.close()
             self.assertIsInstance(repr(g), str)

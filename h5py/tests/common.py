@@ -267,9 +267,11 @@ def name(template_or_prefix: str = "foo", /) -> str:
         return template_or_prefix + suffix
 
 
-def is_parallel_test() -> bool:
-    """Return True if the test calling this function is likely being executed
-    in a thread pool by pytest-run-parallel; False otherwise.
+def is_main_thread() -> bool:
+    """Return True if the test calling this function is being executed
+    in the main thread; False otherwise.
+    This can be used to detect when a test is running in pytest-run-parallel.
+    that spawns multiple separate threads to run the tests.
     """
     tid = threading.get_ident()
-    return tid != MAIN_THREAD_ID
+    return tid == MAIN_THREAD_ID

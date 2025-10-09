@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from .common import TestCase, is_parallel_test, name
+from .common import TestCase, is_main_thread, name
 from h5py import File
 import h5py
 
@@ -129,7 +129,7 @@ class TestDimensionManager(BaseDataset):
         ds = self.f.create_dataset(name(), (2,3))
         self.assertIsInstance(repr(ds.dims), str)
 
-        if not is_parallel_test():
+        if is_main_thread():
             self.f.close()
             self.assertIsInstance(repr(ds.dims), str)
 
@@ -203,7 +203,7 @@ class TestDimensionsHighLevel(BaseDataset):
         ds = self.f["data"]
         self.assertEqual(repr(ds.dims[2])[1:16], '"x" dimension 2')
 
-        if not is_parallel_test():
+        if is_main_thread():
             self.f.close()
             self.assertIsInstance(repr(ds.dims), str)
 

@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import TestCase, is_parallel_test, name
+from .common import TestCase, is_main_thread, name
 
 from h5py import Datatype
 
@@ -30,7 +30,7 @@ class TestCreation(TestCase):
         self.f[name()] = np.dtype('S10')
         dt = self.f[name()]
         self.assertIsInstance(repr(dt), str)
-        if not is_parallel_test():
+        if is_main_thread():
             self.f.close()
             self.assertIsInstance(repr(dt), str)
 

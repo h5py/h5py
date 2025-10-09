@@ -15,7 +15,7 @@ import os
 import numpy as np
 import h5py
 
-from .common import ut, TestCase, is_parallel_test, name
+from .common import ut, TestCase, is_main_thread, name
 
 
 class TestFilters(TestCase):
@@ -43,7 +43,7 @@ class TestFilters(TestCase):
                               )
 
         self.f.flush()
-        if not is_parallel_test():
+        if is_main_thread():
             self.f.close()
             self.f = h5py.File(self.path, 'r')
 
