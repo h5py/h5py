@@ -37,6 +37,11 @@ class TestCompletions(TestCase):
         # alphabetical order, as opposed to, say, insertion order.
         attrs['b'] = 1
         attrs['a'] = 2
+        self.assertEqual(
+            attrs._ipython_key_completions_(),
+            ['a', 'b']
+        )
+
         attrs['c'] = 3
         self.assertEqual(
             attrs._ipython_key_completions_(),
