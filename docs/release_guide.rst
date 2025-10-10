@@ -24,7 +24,7 @@ Steps to make an h5py release:
 4. Update the version number & commit the changes. The files that need changing
    are:
 
-    - ``setup.py``
+    - ``pyproject.toml``
     - ``h5py/version.py``
     - ``docs/conf.py``
 
