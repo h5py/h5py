@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import TestCase
+from .common import TestCase, is_main_thread, make_name
 
 from h5py import Datatype
 
@@ -27,12 +27,13 @@ class TestCreation(TestCase):
 
     def test_repr(self):
         """ repr() on datatype objects """
-        self.f['foo'] = np.dtype('S10')
-        dt = self.f['foo']
+        name = make_name()
+        self.f[name] = np.dtype('S10')
+        dt = self.f[name]
         self.assertIsInstance(repr(dt), str)
-        self.f.close()
-        self.assertIsInstance(repr(dt), str)
-
+        if is_main_thread():
+            self.f.close()
+            self.assertIsInstance(repr(dt), str)
 
     def test_appropriate_low_level_id(self):
         " Binding a group to a non-TypeID identifier fails with ValueError "

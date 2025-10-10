@@ -1,6 +1,6 @@
 import pytest
 
-from .common import TestCase
+from .common import TestCase, make_name
 from h5py import File
 
 
@@ -15,7 +15,7 @@ class TestVisit(TestCase):
     def test_visit(self):
         fname = self.mktemp()
         fid = File(fname, 'w')
-        fid.create_dataset('foo', (100,), dtype='uint8')
+        fid.create_dataset(make_name(), (100,), dtype='uint8')
         with pytest.raises(SampleException, match='throwing exception'):
             fid.visititems(throwing)
         fid.close()
