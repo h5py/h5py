@@ -18,7 +18,7 @@ New features
   for group objects (:pr:`2611`). This is False by default.
 * Work to better support free-threaded mode in CPython (:pr:`2658`, :pr:`2678`).
   This is not substantially tested yet, but some of the most glaring issues
-  have been resolved. See :ref:`free-threading`.
+  have been resolved. See :ref:`free_threading`.
 
 Breaking Changes and Deprecations
 ---------------------------------
@@ -28,7 +28,7 @@ Breaking Changes and Deprecations
 * The minimum supported version of HDF5 is now 1.10.7, and within the 1.12 series
   the minimum supported version is now 1.12.1 (:pr:`2605`).
 * Timestamps are no longer stored by default for groups (including the root group)
-  if the `track_order` parameter is set (:pr:`2611`). Previously, setting this
+  if the ``track_order`` parameter is set (:pr:`2611`). Previously, setting this
   parameter also caused timestamps to be stored in the file.
 * Pre-emptively fix build issue with Numpy 10 or above (:pr:`2638`).
 
