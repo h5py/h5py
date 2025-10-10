@@ -1,18 +1,18 @@
-What's new in h5py 3.14
+What's new in h5py 3.15
 =======================
 
 New features
 ------------
 
-* :meth:`h5py.Dataset.iter_chunks` accepts slice objects with the ``None`` value
-  for ``slice.start`` and ``slice.stop`` attributes, or integers (:pr:`2657`).
-  Example: ``dset.iter_chunks((slice(None, None), 4))``. This is equivalent to
-  ``dset[:,4]``.
 * Added pre-built packages for Python 3.14 (:pr:`2617`).
 * Added pre-built packages for Windows on ARM devices (:pr:`2653`).
 * Added pre-built packages for Linux with musl libc, such as Alpine Linux, on both
   both ``x86_64`` and ``aarch64`` architectures (:pr:`2632`). See :pep:`656` for
   the details of the ``musllinux`` platform tag.
+* :meth:`h5py.Dataset.iter_chunks` accepts slice objects with the ``None`` value
+  for ``slice.start`` and ``slice.stop`` attributes, or integers (:pr:`2657`).
+  Example: ``dset.iter_chunks((slice(None, None), 4))``. This is equivalent to
+  ``dset[:,4]``.
 * A new `track_times` parameter when creating a group or a file to control
   whether creation, modification, change and access timestamps are stored
   for group objects (:pr:`2611`). This is False by default.
@@ -31,10 +31,6 @@ Breaking Changes and Deprecations
   if the ``track_order`` parameter is set (:pr:`2611`). Previously, setting this
   parameter also caused timestamps to be stored in the file.
 * Pre-emptively fix build issue with Numpy 10 or above (:pr:`2638`).
-
-Exposing HDF5 functions
------------------------
-
 
 Bug fixes
 ---------
