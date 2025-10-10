@@ -1628,19 +1628,20 @@ cdef class PropLAID(PropInstanceID):
 
         Get the external link prefix
         """
-        cdef char* buf = NULL
+        cdef char* cprefix = NULL
         cdef ssize_t size
 
         size = H5Pget_elink_prefix(self.id, NULL, 0)
-        buf = <char*>emalloc(size+1)
-        buf[0] = 0
+        cprefix = <char*>emalloc(size+1)
+        cprefix[0] = 0
         try:
-            H5Pget_elink_prefix(self.id, buf, size+1)
-            pstr = buf
+            # TODO check return size
+            H5Pget_elink_prefix(self.id, cprefix, size+1)
+            prefix = bytes(cprefix)
         finally:
-            efree(buf)
+            efree(cprefix)
 
-        return pstr
+        return prefix
 
 
     @with_phil
