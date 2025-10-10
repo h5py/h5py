@@ -737,8 +737,11 @@ cdef int conv_vlen2ndarray(void* ipt,
         # which can't be used with SimpleNewFromData.
         # Cython doesn't expose NumPy C-API functions
         # like NewFromDescr, so we'll construct this with a Python function.
-        buf = <char[:itemsize * size]> data
-        ndarray = np.frombuffer(buf, dtype=elem_dtype)
+        if size != 0:
+            buf = <char[:itemsize * size]> data
+            ndarray = np.frombuffer(buf, dtype=elem_dtype)
+        else:
+            ndarray = np.empty(0, dtype=elem_dtype)
     else:
         # Compound dtypes containing object fields: frombuffer() refuses these,
         # so we'll fall back to allocating a new array and copying the data in.
