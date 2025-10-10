@@ -685,6 +685,7 @@ class TestUnicode(TestCase):
         try:
             self.assertEqual(fid.filename, fname)
             self.assertIsInstance(fid.filename, str)
+            self.assertIsInstance(fid.filepath, pathlib.Path)
         finally:
             fid.close()
 
@@ -818,6 +819,7 @@ class TestFilename(TestCase):
         try:
             self.assertEqual(fid.filename, fname)
             self.assertIsInstance(fid.filename, str)
+            self.assertIsInstance(fid.filepath, pathlib.Path)
         finally:
             fid.close()
 
@@ -884,9 +886,12 @@ class TestPathlibSupport(TestCase):
             path = pathlib.Path(f)
             with File(path, 'w') as h5f1:
                 pathlib_name = h5f1.filename
+                pathlib_path = h5f1.filepath
             with File(f, 'w') as h5f2:
                 normal_name = h5f2.filename
+                normal_path = h5f2.filepath
             self.assertEqual(pathlib_name, normal_name)
+            self.assertEqual(pathlib_path, normal_path)
 
 
 class TestPickle(TestCase):
