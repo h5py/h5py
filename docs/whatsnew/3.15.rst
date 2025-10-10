@@ -1,0 +1,63 @@
+What's new in h5py 3.14
+=======================
+
+New features
+------------
+
+* :meth:`h5py.Dataset.iter_chunks` accepts slice objects with the ``None`` value
+  for ``slice.start`` and ``slice.stop`` attributes, or integers (:pr:`2657`).
+  Example: ``dset.iter_chunks((slice(None, None), 4))``. This is equivalent to
+  ``dset[:,4]``.
+* Added pre-built packages for Python 3.14 (:pr:`2617`).
+* Added pre-built packages for Windows on ARM devices (:pr:`2653`).
+* Added pre-built packages for Linux with musl libc, such as Alpine Linux, on both
+  both ``x86_64`` and ``aarch64`` architectures (:pr:`2632`). See :pep:`656` for
+  the details of the ``musllinux`` platform tag.
+* A new `track_times` parameter when creating a group or a file to control
+  whether creation, modification, change and access timestamps are stored
+  for group objects (:pr:`2611`). This is False by default.
+* Work to better support free-threaded mode in CPython (:pr:`2658`, :pr:`2678`).
+  This is not substantially tested yet, but some of the most glaring issues
+  have been resolved. See :ref:`free-threading`.
+
+Breaking Changes and Deprecations
+---------------------------------
+
+* Support for Python 3.9 was dropped. Python 3.10 or newer is now required
+  to build or install h5py from this version on (:pr:`2640`).
+* The minimum supported version of HDF5 is now 1.10.7, and within the 1.12 series
+  the minimum supported version is now 1.12.1 (:pr:`2605`).
+* Timestamps are no longer stored by default for groups (including the root group)
+  if the `track_order` parameter is set (:pr:`2611`). Previously, setting this
+  parameter also caused timestamps to be stored in the file.
+* Pre-emptively fix build issue with Numpy 10 or above (:pr:`2638`).
+
+Exposing HDF5 functions
+-----------------------
+
+
+Bug fixes
+---------
+
+* Fixed ``h5py.h5p.PropLAID.get_elink_prefix`` method (:pr:`2712`).
+* Fixed a segfault reading unallocated variable length string data as NumPy
+  variable length strings (:pr:`2630`).
+* Fixed some SyntaxWarnings which might become errors in a future Python version
+  (:pr:`2597`).
+
+Building h5py
+-------------
+
+* The minimum versions build-time Python requirements were updated to
+  ``Cython==3.0.0`` (up from ``0.29.1``, :pr:`2647`), and ``numpy==1.25.0``
+  (down from ``2.0.0``, :pr:`2646`). We still recommend building with numpy 2 or
+  newer whenever possible, this is done to improve support for external package
+  ecosystems, where the system uses the same version of packages for building
+  and installation.
+* Deprecated Cython preproc macros (``DEF``, ``IF``, ``ELIF`` and ``ELSE``)
+  were replaced with build-time ``tempita``-based templating (:pr:`2637`).
+* Some work to support building h5py with HDF5 2.0 development versions
+  (:pr:`2636`).
+* Building h5py using the standard Python mechanisms now uses a custom build
+  backend within the source folder, wrapping setuptools, to avoid the use of the
+  deprecated ``setup_requires`` parameter (:pr:`2659`).

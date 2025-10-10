@@ -23,6 +23,7 @@ work across multiple threads (e.g. read/write to a file and process the data),
 multiple calls to the h5py API will not run in parallel - not even if they operate
 on different datasets or different files.
 
+.. ref:: free-threading
 
 free-threading
 --------------
