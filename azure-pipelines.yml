@@ -90,11 +90,6 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
 
-        # FIXME it was decided to not mark the module as freethreading-compatible
-        # for the time being due to instability concerns.
-        # See https://github.com/h5py/h5py/pull/2650
-        PYTHON_GIL: 0
-
     maxParallel: 4
 
   steps:
