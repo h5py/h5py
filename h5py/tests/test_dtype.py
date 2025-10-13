@@ -141,13 +141,14 @@ def test_write_vlen_length0_compound(writable_file):
     # https://github.com/h5py/h5py/issues/2693
     compound_dtype = np.dtype([('id', 'i4'), ('value', 'f8'), ('name', 'S10')])
     vlen_compound_dtype = h5py.special_dtype(vlen=compound_dtype)
+    arr0 = np.array([(1, 3.14, b'test1'), (2, 2.71, b'test2')], dtype=compound_dtype)
+    arr1 = np.array([], dtype=compound_dtype)
+
     dset = writable_file.create_dataset(
         'vlen_compound_data', shape=(2,), dtype=vlen_compound_dtype
     )
-    arr0 = dset[0] = np.array(
-        [(1, 3.14, b'test1'), (2, 2.71, b'test2')], dtype=compound_dtype
-    )
-    arr1 = dset[1] = np.array([], dtype=compound_dtype)
+    dset[0] = arr0
+    dset[1] = arr1
 
     np.testing.assert_array_equal(dset[0], arr0)  # With data
     np.testing.assert_array_equal(dset[1], arr1)  # Without data
