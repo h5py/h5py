@@ -38,6 +38,8 @@ Bug fixes
 * Fixed ``h5py.h5p.PropLAID.get_elink_prefix`` method (:pr:`2712`).
 * Fixed a segfault reading unallocated variable length string data as NumPy
   variable length strings (:pr:`2630`).
+* Fixed an error reading certain types of :ref:`variable length data <vlen>`
+  where an entry has 0 length (:pr:`2717`).
 * Fixed some SyntaxWarnings which might become errors in a future Python version
   (:pr:`2597`).
 
