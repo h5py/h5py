@@ -127,13 +127,31 @@ class TestVlen(TestCase):
                          h5py.check_enum_dtype(h5py.check_vlen_dtype(dt2)))
 
 
-class TestEmptyVlen(TestCase):
-    def test_write_empty_vlen(self):
-        fname = self.mktemp()
-        with h5py.File(fname, 'w') as f:
-            d = np.rec.fromarrays([[], []], names='a,b', formats='|V16,O')
-            dset = f.create_dataset('test', data=d, dtype=[('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float64))])
-            self.assertEqual(dset.size, 0)
+def test_write_empty_vlen(writable_file):
+    # vlen dtype with no entries
+    d = np.rec.fromarrays([[], []], names='a,b', formats='|V16,O')
+    dset = writable_file.create_dataset(
+        'test', data=d, dtype=[('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float64))]
+    )
+    assert dset.size == 0
+
+
+def test_write_vlen_length0_compound(writable_file):
+    # one entry has variable length 0 (using the variable length)
+    # https://github.com/h5py/h5py/issues/2693
+    compound_dtype = np.dtype([('id', 'i4'), ('value', 'f8'), ('name', 'S10')])
+    vlen_compound_dtype = h5py.special_dtype(vlen=compound_dtype)
+    arr0 = np.array([(1, 3.14, b'test1'), (2, 2.71, b'test2')], dtype=compound_dtype)
+    arr1 = np.array([], dtype=compound_dtype)
+
+    dset = writable_file.create_dataset(
+        'vlen_compound_data', shape=(2,), dtype=vlen_compound_dtype
+    )
+    dset[0] = arr0
+    dset[1] = arr1
+
+    np.testing.assert_array_equal(dset[0], arr0)  # With data
+    np.testing.assert_array_equal(dset[1], arr1)  # Without data
 
 
 class TestExplicitCast(TestCase):
