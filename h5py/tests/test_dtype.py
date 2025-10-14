@@ -131,9 +131,8 @@ class TestVlen(TestCase):
 def test_write_empty_vlen(writable_file):
     # vlen dtype with no entries
     d = np.rec.fromarrays([[], []], names='a,b', formats='|V16,O')
-    dset = writable_file.create_dataset(
-        'test', data=d, dtype=[('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float64))]
-    )
+    dtype = [('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float64))]
+    dset = writable_file.create_dataset(make_name(), data=d, dtype=dtype)
     assert dset.size == 0
 
 
@@ -146,7 +145,7 @@ def test_write_vlen_length0_compound(writable_file):
     arr1 = np.array([], dtype=compound_dtype)
 
     dset = writable_file.create_dataset(
-        'vlen_compound_data', shape=(2,), dtype=vlen_compound_dtype
+        make_name(), shape=(2,), dtype=vlen_compound_dtype
     )
     dset[0] = arr0
     dset[1] = arr1
