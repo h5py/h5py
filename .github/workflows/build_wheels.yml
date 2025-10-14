@@ -72,9 +72,9 @@ jobs:
             arch: AMD64
           - os: windows-11-arm
             arch: ARM64
-          - os: macos-14 # keep in sync with cibuildwheel.overrides
+          - os: macos-14
             arch: arm64
-          - os: macos-15-intel # keep in sync with cibuildwheel.overrides
+          - os: macos-15-intel
             arch: x86_64
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
