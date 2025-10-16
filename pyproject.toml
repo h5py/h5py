@@ -13,7 +13,7 @@ backend-path = ["_custom_build"]
 
 [project]
 name = "h5py"
-version = '3.15.0'
+version = '3.15.1'
 description = "Read and write HDF5 files from Python"
 authors = [
     {name = "Andrew Collette", email = "andrew.collette@gmail.com"},
