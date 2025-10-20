@@ -616,3 +616,36 @@ class TestBoolIndex(TestCase):
         sel = np.s_[[False, True, False, False],:]
         with self.assertRaises(TypeError):
             self.dset[sel]
+
+
+class TestZeroSizeSelectionResizableDataset(TestCase):
+    """
+    Tests for indexing of zero Resizable Datasets
+    see https://github.com/h5py/h5py/issues/2549
+    """
+    def setUp(self):
+        super().setUp()
+        self.dset0 = self.f.create_dataset('x', (0,), maxshape=(None,))
+        self.dset1 = self.f.create_dataset('y', (1,), maxshape=(None,))
+
+    def test_set_with_scalar(self):
+        sel = np.s_[:]
+        self.dset0[sel] = 1
+        self.arr = np.array([], dtype=np.float32)
+        self.assertNumpyBehavior(self.dset0, self.arr, sel)
+
+    def test_set_with_array(self):
+        sel = np.s_[:]
+        with self.assertRaises(TypeError, msg="Can't broadcast (4,) -> (0,)"):
+            self.dset0[sel] = np.arange(4)
+
+    def test_set_zerosel_with_scalar(self):
+        sel = np.s_[0:0]
+        self.dset1[sel] = 1
+        self.arr = np.array([], dtype=np.float32)
+        self.assertNumpyBehavior(self.dset1, self.arr, sel)
+
+    def test_set_zerosel_with_array(self):
+        sel = np.s_[0:0]
+        with self.assertRaises(TypeError, msg="Can't broadcast (4,) -> (0,)"):
+            self.dset1[sel] = np.arange(4)
