@@ -44,8 +44,9 @@
 import sys
 
 import numpy as np
-import h5py
+import pytest
 
+import h5py
 from .common import ut, TestCase
 
 
@@ -616,3 +617,9 @@ class TestBoolIndex(TestCase):
         sel = np.s_[[False, True, False, False],:]
         with self.assertRaises(TypeError):
             self.dset[sel]
+
+
+def test_error_newaxis(writable_file):
+    ds = writable_file.create_dataset('a', data=np.arange(5))
+    with pytest.raises(TypeError, match="newaxis"):
+        ds[np.newaxis, :]
