@@ -1061,11 +1061,11 @@ class Dataset(HLObject):
         # Perform the dataspace selection
         selection = sel.select(self.shape, args, dataset=self)
         # return early on zero-size selection
-        # but not if dataset shape and selection shape are equal
+        # but only if dataset shape and selection shape differ
         # this prevents returning here for zero size datasets
         # where proper errors should be raised later
         # see https://github.com/h5py/h5py/issues/2549
-        if selection.nselect == 0 and not (self.shape == selection.shape):
+        if selection.nselect == 0 and self.shape != selection.shape:
             return
 
         # Broadcast scalars if necessary.
