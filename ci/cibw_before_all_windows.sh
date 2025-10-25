@@ -25,27 +25,12 @@ if [[ "$ARCH" == "ARM64" ]]; then
     export HDF5_VSVERSION="17-arm64"
 elif [[ "$ARCH" == "AMD64" ]]; then
     # Build zlib from source for Windows AMD64
-    mkdir zlib_win_x64
-    curl -sLO https://github.com/madler/zlib/archive/refs/tags/v$ZLIB_VERSION.tar.gz
-    tar -xzf v$ZLIB_VERSION.tar.gz && rm v$ZLIB_VERSION.tar.gz
-    cmake -S zlib-$ZLIB_VERSION -B build -G "Visual Studio 17 2022" \
-    -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX:PATH="$PROJECT_PATH/zlib_win_x64"
-    # Release build
-    cmake --build build --config Release
-    cmake --install build --config Release
-    mv zlib_win_x64/bin zlib-win-x64/bin_release
-    mv zlib_win_x64/lib zlib-win-x64/lib_release
-    # Debug build
-    cmake --build build --config Debug 
-    cmake --install build --config Debug
-    mv zlib_win_x64/bin zlib-win-x64/bin_debug
-    mv zlib_win_x64/lib zlib-win-x64/lib_debug
-    rm -rf zlib-$ZLIB_VERSION build
+    ./ci/get_zlib_amd64.sh $PROJECT_PATH/zlib-win-x64
     
     ZLIB_ROOT="$PROJECT_PATH/zlib-win-x64"
-    EXTRA_PATH="$ZLIB_ROOT/bin_release"
+    EXTRA_PATH="$ZLIB_ROOT/bin"
     export CL="/I$ZLIB_ROOT/include"
-    export LINK="/LIBPATH:$ZLIB_ROOT/lib_release"
+    export LINK="/LIBPATH:$ZLIB_ROOT/lib"
     export HDF5_VSVERSION="17-64"
 else
     echo "Got unexpected arch '$ARCH'"
