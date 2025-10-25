@@ -35,7 +35,7 @@ steps:
 
 - ${{ if eq(parameters.shell, 'cmd') }}:
   - script: |
-      ci\\get_zlib_amd64.sh $(Build.ArtifactStagingDirectory)\\zlib-win-x64
+      ci\\get_zlib_amd64.sh "$(build.BinariesDirectory)\\zlib-win-x64"
       echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-win-x64\bin
       echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\zlib-win-x64\include
       echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\zlib-win-x64\lib
