@@ -3,34 +3,34 @@ Unit test for the low level vds interface for eiger
 https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
 '''
 
-
-from ..common import ut
-import numpy as np
-import h5py as h5
+import os.path as osp
 import tempfile
+
+import numpy as np
+
+import h5py as h5
+from ..common import ut
 
 
 class TestEigerLowLevel(ut.TestCase):
     def setUp(self):
-        self.working_dir = tempfile.mkdtemp()
+        self.working_dir = tempfile.TemporaryDirectory()
         self.fname = ['raw_file_1.h5', 'raw_file_2.h5', 'raw_file_3.h5']
         k = 0
         for outfile in self.fname:
-            filename = self.working_dir + outfile
-            f = h5.File(filename, 'w')
-            f['data'] = np.ones((20, 200, 200))*k
+            filename = osp.join(self.working_dir.name, outfile)
+            with h5.File(filename, 'w') as f:
+                f['data'] = np.ones((20, 200, 200))*k
             k += 1
-            f.close()
 
-        f = h5.File(self.working_dir+'raw_file_4.h5', 'w')
-        f['data'] = np.ones((18, 200, 200))*3
+        with h5.File(osp.join(self.working_dir.name, 'raw_file_4.h5'), 'w') as f:
+            f['data'] = np.ones((18, 200, 200))*3
         self.fname.append('raw_file_4.h5')
-        self.fname = [self.working_dir+ix for ix in self.fname]
-        f.close()
+        self.fname = [osp.join(self.working_dir.name, ix) for ix in self.fname]
 
     def test_eiger_low_level(self):
-        self.outfile = self.working_dir + 'eiger.h5'
-        with h5.File(self.outfile, 'w', libver='latest') as f:
+        outfile = osp.join(self.working_dir.name, 'eiger.h5')
+        with h5.File(outfile, 'w', libver='latest') as f:
             vdset_shape = (78, 200, 200)
             vdset_max_shape = vdset_shape
             virt_dspace = h5.h5s.create_simple(vdset_shape, vdset_max_shape)
@@ -39,11 +39,9 @@ class TestEigerLowLevel(ut.TestCase):
             # Create the source dataset dataspace
             k = 0
             for foo in self.fname:
-                in_data = h5.File(foo, 'r')['data']
-                src_shape = in_data.shape
-                max_src_shape = src_shape
-                in_data.file.close()
-                src_dspace = h5.h5s.create_simple(src_shape, max_src_shape)
+                with h5.File(foo, 'r') as in_f:
+                    src_shape = in_f['data'].shape
+                src_dspace = h5.h5s.create_simple(src_shape, src_shape)
                 # Select the source dataset hyperslab
                 src_dspace.select_hyperslab(start=(0, 0, 0),
                                             stride=(1, 1, 1),
@@ -63,18 +61,15 @@ class TestEigerLowLevel(ut.TestCase):
             h5.h5d.create(f.id, name=b"data", tid=h5.h5t.NATIVE_INT16,
                           space=virt_dspace, dcpl=dcpl)
 
-        f = h5.File(self.outfile, 'r')['data']
-        self.assertEqual(f[10, 100, 10], 0.0)
-        self.assertEqual(f[30, 100, 100], 1.0)
-        self.assertEqual(f[50, 100, 100], 2.0)
-        self.assertEqual(f[70, 100, 100], 3.0)
-        f.file.close()
+        with h5.File(outfile, 'r') as f:
+            d = f['data']
+            self.assertEqual(d[10, 100, 10], 0.0)
+            self.assertEqual(d[30, 100, 100], 1.0)
+            self.assertEqual(d[50, 100, 100], 2.0)
+            self.assertEqual(d[70, 100, 100], 3.0)
 
     def tearDown(self):
-        import os
-        for f in self.fname:
-            os.remove(f)
-        os.remove(self.outfile)
+        self.working_dir.cleanup()
 
 
 if __name__ == "__main__":
@@ -126,9 +121,9 @@ class TestExcaliburLowLevel(ut.TestCase):
                 dset[data_value_index] = excalibur_data.generate_fem_stripe_image(data_value_index*scale)
 
     def setUp(self):
-        self.working_dir = tempfile.mkdtemp()
+        self.working_dir = tempfile.TemporaryDirectory()
         self.fname = ["stripe_%d.h5" % stripe for stripe in range(1,7)]
-        self.fname = [self.working_dir+ix for ix in self.fname]
+        self.fname = [osp.join(self.working_dir.name, ix) for ix in self.fname]
         nframes = 5
         self.edata = ExcaliburData()
         k=0
@@ -139,7 +134,7 @@ class TestExcaliburLowLevel(ut.TestCase):
     def test_excalibur_low_level(self):
 
         excalibur_data = self.edata
-        self.outfile = self.working_dir+'excalibur.h5'
+        outfile = osp.join(self.working_dir.name, 'excalibur.h5')
         vdset_stripe_shape = (1,) + excalibur_data.fem_stripe_dimensions
         vdset_stripe_max_shape = (5, ) + excalibur_data.fem_stripe_dimensions
         vdset_shape = (5,
@@ -151,7 +146,7 @@ class TestExcaliburLowLevel(ut.TestCase):
         vdset_y_offset = 0
 
         # Create the virtual dataset file
-        with h5.File(self.outfile, 'w', libver='latest') as f:
+        with h5.File(outfile, 'w', libver='latest') as f:
 
             # Create the source dataset dataspace
             src_dspace = h5.h5s.create_simple(vdset_stripe_shape, vdset_stripe_max_shape)
@@ -176,25 +171,27 @@ class TestExcaliburLowLevel(ut.TestCase):
                 vdset_y_offset += vdset_stripe_shape[1] + 10
 
             # Create the virtual dataset
-            dset = h5.h5d.create(f.id, name=b"data",
-                                 tid=h5.h5t.NATIVE_INT16, space=virt_dspace, dcpl=dcpl)
+            h5.h5d.create(
+                f.id,
+                name=b"data",
+                tid=h5.h5t.NATIVE_INT16,
+                space=virt_dspace,
+                dcpl=dcpl,
+            )
             assert(f['data'].fillvalue == 0x01)
 
-        f = h5.File(self.outfile,'r')['data']
-        self.assertEqual(f[3,100,0], 0.0)
-        self.assertEqual(f[3,260,0], 1.0)
-        self.assertEqual(f[3,350,0], 3.0)
-        self.assertEqual(f[3,650,0], 6.0)
-        self.assertEqual(f[3,900,0], 9.0)
-        self.assertEqual(f[3,1150,0], 12.0)
-        self.assertEqual(f[3,1450,0], 15.0)
-        f.file.close()
+        with h5.File(outfile,'r') as f:
+            d = f['data']
+            self.assertEqual(d[3,100,0], 0.0)
+            self.assertEqual(d[3,260,0], 1.0)
+            self.assertEqual(d[3,350,0], 3.0)
+            self.assertEqual(d[3,650,0], 6.0)
+            self.assertEqual(d[3,900,0], 9.0)
+            self.assertEqual(d[3,1150,0], 12.0)
+            self.assertEqual(d[3,1450,0], 15.0)
 
     def tearDown(self):
-        import os
-        for f in self.fname:
-            os.remove(f)
-        os.remove(self.outfile)
+        self.working_dir.cleanup()
 
 '''
 Unit test for the low level vds interface for percival
@@ -205,25 +202,24 @@ https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-c
 class TestPercivalLowLevel(ut.TestCase):
 
     def setUp(self):
-        self.working_dir = tempfile.mkdtemp()
+        self.working_dir = tempfile.TemporaryDirectory()
         self.fname = ['raw_file_1.h5','raw_file_2.h5','raw_file_3.h5']
         k = 0
         for outfile in self.fname:
-            filename = self.working_dir + outfile
-            f = h5.File(filename,'w')
-            f['data'] = np.ones((20,200,200))*k
+            filename = osp.join(self.working_dir.name, outfile)
+            with h5.File(filename,'w') as f:
+                f['data'] = np.ones((20,200,200))*k
             k +=1
-            f.close()
 
-        f = h5.File(self.working_dir+'raw_file_4.h5','w')
-        f['data'] = np.ones((19,200,200))*3
+        with h5.File(osp.join(self.working_dir.name, 'raw_file_4.h5'),'w') as f:
+            f['data'] = np.ones((19,200,200))*3
         self.fname.append('raw_file_4.h5')
-        self.fname = [self.working_dir+ix for ix in self.fname]
-        f.close()
+        self.fname = [osp.join(self.working_dir.name, ix) for ix in self.fname]
 
     def test_percival_low_level(self):
-        self.outfile = self.working_dir + 'percival.h5'
-        with h5.File(self.outfile, 'w', libver='latest') as f:
+        outfile = osp.join(self.working_dir.name, 'percival.h5')
+
+        with h5.File(outfile, 'w', libver='latest') as f:
             vdset_shape = (1,200,200)
             num = h5.h5s.UNLIMITED
             vdset_max_shape = (num,)+vdset_shape[1:]
@@ -233,10 +229,9 @@ class TestPercivalLowLevel(ut.TestCase):
             # Create the source dataset dataspace
             k = 0
             for foo in self.fname:
-                in_data = h5.File(foo, 'r')['data']
-                src_shape = in_data.shape
+                with h5.File(foo, 'r') as in_f:
+                    src_shape = in_f['data'].shape
                 max_src_shape = (num,)+src_shape[1:]
-                in_data.file.close()
                 src_dspace = h5.h5s.create_simple(src_shape, max_src_shape)
                 # Select the source dataset hyperslab
                 src_dspace.select_hyperslab(start=(0, 0, 0),
@@ -253,30 +248,34 @@ class TestPercivalLowLevel(ut.TestCase):
                 k+=1
 
             # Create the virtual dataset
-            dset = h5.h5d.create(f.id, name=b"data", tid=h5.h5t.NATIVE_INT16, space=virt_dspace, dcpl=dcpl)
+            h5.h5d.create(
+                f.id,
+                name=b"data",
+                tid=h5.h5t.NATIVE_INT16,
+                space=virt_dspace,
+                dcpl=dcpl,
+            )
 
-            f = h5.File(self.outfile,'r')
+        with h5.File(outfile, 'r') as f:
             sh = f['data'].shape
             line = f['data'][:8,100,100]
-            foo = np.array(2*list(range(4)))
-            f.close()
-            self.assertEqual(sh,(79,200,200),)
-            np.testing.assert_array_equal(line,foo)
+        foo = np.array(2*list(range(4)))
+        self.assertEqual(sh,(79,200,200),)
+        np.testing.assert_array_equal(line,foo)
 
     def tearDown(self):
-        import os
-        for f in self.fname:
-            os.remove(f)
-        os.remove(self.outfile)
+        self.working_dir.cleanup()
 
 
 def test_virtual_prefix(tmp_path):
-    (tmp_path / 'a').mkdir()
-    (tmp_path / 'b').mkdir()
-    src_file = h5.File(tmp_path / 'a' / 'src.h5', 'w')
+    a = tmp_path / 'a'
+    b = tmp_path / 'b'
+    a.mkdir()
+    b.mkdir()
+    src_file = h5.File(a / 'src.h5', 'w')
     src_file['data'] = np.arange(10)
 
-    vds_file = h5.File(tmp_path / 'b' / 'vds.h5', 'w')
+    vds_file = h5.File(b / 'vds.h5', 'w')
     layout = h5.VirtualLayout(shape=(10,), dtype=np.int64)
     layout[:] = h5.VirtualSource('src.h5', 'data', shape=(10,))
     vds_file.create_virtual_dataset('data', layout, fillvalue=-1)
@@ -284,13 +283,16 @@ def test_virtual_prefix(tmp_path):
     # Path doesn't resolve
     np.testing.assert_array_equal(vds_file['data'], np.full(10, fill_value=-1))
 
-    path_a = bytes(tmp_path / 'a')
+    a_bytes = bytes(a)
     dapl = h5.h5p.create(h5.h5p.DATASET_ACCESS)
-    dapl.set_virtual_prefix(path_a)
+    dapl.set_virtual_prefix(a_bytes)
     vds_id = h5.h5d.open(vds_file.id, b'data', dapl=dapl)
     vds = h5.Dataset(vds_id)
 
     # Now it should find the source file and read the data correctly
     np.testing.assert_array_equal(vds[:], np.arange(10))
     # Check that get_virtual_prefix gives back what we put in
-    assert vds.id.get_access_plist().get_virtual_prefix() == path_a
+    assert vds.id.get_access_plist().get_virtual_prefix() == a_bytes
+
+    src_file.close()
+    vds_file.close()

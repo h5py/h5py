@@ -51,6 +51,15 @@ else
             ARCH=$(uname -m)
             ZLIB_VERSION="1.3.1"
 
+            # When compiling HDF5, we should use the minimum across all
+            # Python versions for a given arch.
+            # See cibuildwheel.pypa.io/en/stable/platforms#macos-version-compatibility
+            if [[ "$ARCH" == "arm64" ]]; then
+                export MACOSX_DEPLOYMENT_TARGET="11.0"
+            else
+                export MACOSX_DEPLOYMENT_TARGET="10.9"
+            fi
+
             pushd /tmp
             curl -sLO https://zlib.net/fossils/zlib-$ZLIB_VERSION.tar.gz
             tar xzf zlib-$ZLIB_VERSION.tar.gz

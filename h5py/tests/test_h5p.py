@@ -206,3 +206,28 @@ class TestPL(TestCase):
         # for a single attribute in compact attribute storage.
         cid.set_attr_phase_change(0, 0)
         self.assertEqual((0,0), cid.get_attr_phase_change())
+
+
+def test_proplaid():
+    """Test Link Access Property List"""
+    lapl = h5p.create(h5p.LINK_ACCESS)
+
+    nlinks = 3
+    lapl.set_nlinks(nlinks)
+    assert lapl.get_nlinks() == nlinks
+
+    prefix = b"/prefix"
+    lapl.set_elink_prefix(prefix)
+    assert lapl.get_elink_prefix() == prefix
+
+    flags = h5f.ACC_RDWR & h5f.ACC_SWMR_WRITE
+    lapl.set_elink_acc_flags(flags)
+    assert lapl.get_elink_acc_flags() == flags
+
+    fapl = h5p.create(h5p.FILE_ACCESS)
+    fapl.set_file_locking(False, False)
+    lapl.set_elink_fapl(fapl)
+    assert lapl.get_elink_fapl().get_file_locking() == (False, False)
+
+    fapl.close()
+    lapl.close()
