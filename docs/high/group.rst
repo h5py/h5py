@@ -452,7 +452,7 @@ Reference
             this value should be at least 10 times the number of chunks that can
             fit in rdcc_nbytes bytes. For maximum performance, this value should
             be set approximately 100 times that number of chunks. The default
-            value is 521.
+            value is 8191 since HDF5 2.0 and 521 for all previous versions.
 
     .. method:: require_dataset(name, shape, dtype, exact=False, **kwds)
 

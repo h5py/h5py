@@ -404,26 +404,27 @@ chunk cache*. They apply to all datasets unless specifically changed for each on
   application will access the same data more than once, the value should be set
   closer to 0, and if the application does not, the value should be set closer
   to 1.
-* ``rdcc_nslots`` is the number of chunk slots in
-  the cache for each dataset.  In order to allow the chunks to be looked up
-  quickly in cache, each chunk is assigned a unique hash value that is used to
-  look up the chunk.  The cache contains a simple array of pointers to chunks,
-  which is called a hash table.  A chunk's hash value is simply the index into
-  the hash table of the pointer to that chunk.  While the pointer at this
-  location might instead point to a different chunk or to nothing at all, no
-  other locations in the hash table can contain a pointer to the chunk in
-  question.  Therefore, the library only has to check this one location in the
-  hash table to tell if a chunk is in cache or not.  This also means that if two
-  or more chunks share the same hash value, then only one of those chunks can be
-  in the cache at the same time.  When a chunk is brought into cache and another
-  chunk with the same hash value is already in cache, the second chunk must be
-  evicted first.  Therefore it is very important to make sure that the size of
-  the hash table (which is determined by the ``rdcc_nslots`` parameter) is large
-  enough to minimize the number of hash value collisions.  Due to the hashing
-  strategy, this value should ideally be a prime number.  As a rule of thumb,
-  this value should be at least 10 times the number of chunks that can fit in
-  ``rdcc_nbytes`` bytes. For maximum performance, this value should be set
-  approximately 100 times that number of chunks. The default value is 521.
+* ``rdcc_nslots`` is the number of chunk slots in the cache for each dataset.
+  In order to allow the chunks to be looked up quickly in cache, each chunk is
+  assigned a unique hash value that is used to look up the chunk.  The cache
+  contains a simple array of pointers to chunks, which is called a hash table.
+  A chunk's hash value is simply the index into the hash table of the pointer to
+  that chunk.  While the pointer at this location might instead point to a
+  different chunk or to nothing at all, no other locations in the hash table can
+  contain a pointer to the chunk in question.  Therefore, the library only has
+  to check this one location in the hash table to tell if a chunk is in cache or
+  not.  This also means that if two or more chunks share the same hash value,
+  then only one of those chunks can be in the cache at the same time.  When a
+  chunk is brought into cache and another chunk with the same hash value is
+  already in cache, the second chunk must be evicted first.  Therefore it is
+  very important to make sure that the size of the hash table (which is
+  determined by the ``rdcc_nslots`` parameter) is large enough to minimize the
+  number of hash value collisions.  Due to the hashing strategy, this value
+  should ideally be a prime number.  As a rule of thumb, this value should be at
+  least 10 times the number of chunks that can fit in ``rdcc_nbytes`` bytes. For
+  maximum performance, this value should be set approximately 100 times that
+  number of chunks. The default value is 8191 since HDF5 2.0 and 521 for
+  previous versions.
 
 Chunks and caching are described in greater detail in the `HDF5 documentation
 <https://support.hdfgroup.org/documentation/hdf5-docs/advanced_topics/chunking_in_hdf5.html>`_.
@@ -496,11 +497,13 @@ Reference
     :param swmr:    If ``True`` open the file in single-writer-multiple-reader
                     mode. Only used when mode="r".
     :param rdcc_nbytes:  Total size of the raw data chunk cache in bytes. The
-                    default size is :math:`1024^2` (1 MiB) per dataset.
+                    default size is :math:`1024^2` (1 MiB) per dataset for HDF5
+                    < 2.0 and 8 MiB since HDF5 2.0.
     :param rdcc_w0: Chunk preemption policy for all datasets.  Default value is
                     0.75.
     :param rdcc_nslots:  Number of chunk slots in the raw data chunk cache for
-                    this file.  Default value is 521.
+                    this file.  Default value is 8191 since HDF5 2.0 and 521 for
+                    previous versions.
     :param track_order:  Track dataset/group/attribute creation order under
                     root group if ``True``.  Default is
                     ``h5.get_config().track_order``.
