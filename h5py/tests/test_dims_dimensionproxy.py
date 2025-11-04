@@ -12,11 +12,11 @@
 """
 
 
-from .common import TestCase
+from .common import TestCase, make_name
 
 class TestItems(TestCase):
 
     def test_empty(self):
         """ no dimension scales -> empty list """
-        dset = self.f.create_dataset('x', (10,))
+        dset = self.f.create_dataset(make_name(), (10,))
         self.assertEqual(dset.dims[0].items(), [])

@@ -2,15 +2,17 @@
 Unit test for the high level vds interface for eiger
 https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
 '''
-import numpy as np
-from numpy.testing import assert_array_equal
 import os
 import os.path as osp
 import shutil
 import tempfile
 
+import numpy as np
+from numpy.testing import assert_array_equal
+import pytest
+
 import h5py as h5
-from ..common import ut
+from ..common import ut, make_name
 from ..._hl.vds import vds_support
 
 
@@ -33,7 +35,7 @@ class TestEigerHighLevel(ut.TestCase):
         f.close()
 
     def test_eiger_high_level(self):
-        outfile = osp.join(self.working_dir, 'eiger.h5')
+        outfile = osp.join(self.working_dir, make_name('eiger{}.h5'))
         layout = h5.VirtualLayout(shape=(78, 200, 200), dtype=float)
 
         M_minus_1 = 0
@@ -116,7 +118,7 @@ class TestExcaliburHighLevel(ut.TestCase):
             self.create_excalibur_fem_stripe_datafile(raw_file, nframes, self.edata,k)
 
     def test_excalibur_high_level(self):
-        outfile = osp.join(self.working_dir, 'excalibur.h5')
+        outfile = osp.join(self.working_dir, make_name('excalibur{}.h5'))
         f = h5.File(outfile,'w',libver='latest') # create an output file.
         in_key = 'data' # where is the data at the input?
         in_sh = h5.File(self.fname[0],'r')[in_key].shape # get the input shape
@@ -185,7 +187,7 @@ class TestPercivalHighLevel(ut.TestCase):
         f.close()
 
     def test_percival_high_level(self):
-        outfile = osp.join(self.working_dir,  'percival.h5')
+        outfile = osp.join(self.working_dir,  make_name('percival{}.h5'))
 
         # Virtual layout is a representation of the output dataset
         layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float64)
@@ -206,7 +208,7 @@ class TestPercivalHighLevel(ut.TestCase):
             assert_array_equal(line, foo)
 
     def test_percival_source_from_dataset(self):
-        outfile = osp.join(self.working_dir,  'percival.h5')
+        outfile = osp.join(self.working_dir,  make_name('percival{}.h5'))
 
         # Virtual layout is a representation of the output dataset
         layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float64)
@@ -253,7 +255,7 @@ class SlicingTestCase(ut.TestCase):
             # Fill the second half with places 1, 3, 5... from the source
             layout[n - 1, 50:] = vsource[1:100:2]
 
-        outfile = osp.join(self.tmpdir, 'VDS.h5')
+        outfile = osp.join(self.tmpdir, make_name('VDS{}.h5'))
 
         # Add virtual dataset to output file
         with h5.File(outfile, 'w', libver='latest') as f:
@@ -316,7 +318,7 @@ class IndexingTestCase(ut.TestCase):
         vsource = h5.VirtualSource(filename, 'data', shape=(10,))
         layout[inds] = vsource
 
-        outfile = osp.join(self.tmpdir, 'VDS.h5')
+        outfile = osp.join(self.tmpdir, make_name('VDS{}.h5'))
 
         # Assembly virtual dataset (indexing source)
         layout2 = h5.VirtualLayout((6,), 'i4')
@@ -379,6 +381,7 @@ class RelativeLinkTestCase(ut.TestCase):
         layout[1] = vsource2
         f.create_virtual_dataset('virtual', layout)
 
+    @pytest.mark.thread_unsafe(reason="Renames shared files")
     def test_relative_vds(self):
         with h5.File(self.f2) as f:
             data = f['virtual'][:]
@@ -449,7 +452,9 @@ class VDSUnlimitedTestCase(ut.TestCase):
             comp1,
             np.full(shape=(10, 1), fill_value=0)
         ))
-        with h5.File(self.path, "a") as f:
+        fname = osp.join(self.tmpdir, make_name("resize2{}.h5"))
+        shutil.copyfile(self.path, fname)
+        with h5.File(fname, "a") as f:
             source_dset = f['source']
             virtual_dset = f['virtual']
             np.testing.assert_array_equal(comp1, virtual_dset)
@@ -463,10 +468,11 @@ class VDSUnlimitedTestCase(ut.TestCase):
 
 
 def test_no_mappings(writable_file):
-    with writable_file.build_virtual_dataset("foo", (10, 20), np.int32):
+    name = make_name()
+    with writable_file.build_virtual_dataset(name, (10, 20), np.int32):
         pass
 
-    dset = writable_file['foo']
+    dset = writable_file[name]
     assert dset.is_virtual
     assert dset.virtual_sources() == []
     np.testing.assert_array_equal(dset[()], np.zeros((10, 20), np.int32))

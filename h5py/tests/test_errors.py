@@ -12,7 +12,11 @@
 """
 
 import threading
+
+import pytest
+
 import h5py
+from .common import make_name
 
 
 def _access_not_existing_object(filename):
@@ -24,6 +28,7 @@ def _access_not_existing_object(filename):
             pass
 
 
+@pytest.mark.thread_unsafe(reason="Changes global state")
 def test_unsilence_errors(tmp_path, capfd):
     """Check that HDF5 errors can be muted/unmuted from h5py"""
     filename = tmp_path / 'test.h5'
@@ -53,7 +58,7 @@ def test_thread_hdf5_silence_error_membership(tmp_path, capfd):
     No console messages should be shown from membership tests
     """
     th = threading.Thread(target=_access_not_existing_object,
-                          args=(tmp_path / 'test.h5',))
+                          args=(tmp_path / make_name("{}.h5"),))
     th.start()
     th.join()
 
@@ -68,7 +73,7 @@ def test_thread_hdf5_silence_error_attr(tmp_path, capfd):
     No console messages should be shown for non-existing attributes
     """
     def test():
-        with h5py.File(tmp_path/'test.h5', 'w') as newfile:
+        with h5py.File(tmp_path/make_name("{}.h5"), 'w') as newfile:
             newfile['newdata'] = [1, 2, 3]
             try:
                 nonexistent_attr = newfile['newdata'].attrs['nonexistent_attr']

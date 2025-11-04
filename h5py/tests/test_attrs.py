@@ -19,7 +19,7 @@ import numpy as np
 
 from collections.abc import MutableMapping
 
-from .common import TestCase
+from .common import TestCase, make_name
 
 import h5py
 from h5py import File
@@ -43,7 +43,7 @@ class TestRepr(TestCase):
     """
 
     def test_repr(self):
-        grp = self.f.create_group('grp')
+        grp = self.f.create_group(make_name())
         grp.attrs.create('att', 1)
         self.assertIsInstance(repr(grp.attrs), str)
         grp.id.close()
@@ -58,77 +58,88 @@ class TestAccess(BaseAttrs):
 
     def test_create(self):
         """ Attribute creation by direct assignment """
-        self.f.attrs['a'] = 4.0
-        self.assertEqual(list(self.f.attrs.keys()), ['a'])
-        self.assertEqual(self.f.attrs['a'], 4.0)
+        name = make_name()
+        self.f.attrs[name] = 4.0
+        assert name in self.f.attrs
+        self.assertEqual(self.f.attrs[name], 4.0)
 
     def test_create_2(self):
         """ Attribute creation by create() method """
-        self.f.attrs.create('a', 4.0)
-        self.assertEqual(list(self.f.attrs.keys()), ['a'])
-        self.assertEqual(self.f.attrs['a'], 4.0)
+        name = make_name()
+        self.f.attrs.create(name, 4.0)
+        assert name in self.f.attrs
+        self.assertEqual(self.f.attrs[name], 4.0)
 
     def test_modify(self):
         """ Attributes are modified by direct assignment"""
-        self.f.attrs['a'] = 3
-        self.assertEqual(list(self.f.attrs.keys()), ['a'])
-        self.assertEqual(self.f.attrs['a'], 3)
-        self.f.attrs['a'] = 4
-        self.assertEqual(list(self.f.attrs.keys()), ['a'])
-        self.assertEqual(self.f.attrs['a'], 4)
+        name = make_name()
+        self.f.attrs[name] = 3
+        assert name in self.f.attrs
+        self.assertEqual(self.f.attrs[name], 3)
+        self.f.attrs[name] = 4
+        self.assertEqual(self.f.attrs[name], 4)
 
     def test_modify_2(self):
         """ Attributes are modified by modify() method """
-        self.f.attrs.modify('a',3)
-        self.assertEqual(list(self.f.attrs.keys()), ['a'])
-        self.assertEqual(self.f.attrs['a'], 3)
+        a = make_name("a")
+        b = make_name("b")
 
-        self.f.attrs.modify('a', 4)
-        self.assertEqual(list(self.f.attrs.keys()), ['a'])
-        self.assertEqual(self.f.attrs['a'], 4)
+        self.f.attrs.modify(a, 3)
+        assert a in self.f.attrs
+        self.assertEqual(self.f.attrs[a], 3)
+
+        self.f.attrs.modify(a, 4)
+        assert a in self.f.attrs
+        self.assertEqual(self.f.attrs[a], 4)
 
         # If the attribute doesn't exist, create new
-        self.f.attrs.modify('b', 5)
-        self.assertEqual(list(self.f.attrs.keys()), ['a', 'b'])
-        self.assertEqual(self.f.attrs['a'], 4)
-        self.assertEqual(self.f.attrs['b'], 5)
+        self.f.attrs.modify(b, 5)
+        assert a in self.f.attrs
+        assert b in self.f.attrs
+        self.assertEqual(self.f.attrs[a], 4)
+        self.assertEqual(self.f.attrs[b], 5)
 
         # Shape of new value is incompatible with the previous
         new_value = np.arange(5)
         with self.assertRaises(TypeError):
-            self.f.attrs.modify('b', new_value)
+            self.f.attrs.modify(b, new_value)
 
     def test_overwrite(self):
         """ Attributes are silently overwritten """
-        self.f.attrs['a'] = 4.0
-        self.f.attrs['a'] = 5.0
-        self.assertEqual(self.f.attrs['a'], 5.0)
+        name = make_name()
+        self.f.attrs[name] = 4.0
+        self.f.attrs[name] = 5.0
+        self.assertEqual(self.f.attrs[name], 5.0)
 
     def test_rank(self):
         """ Attribute rank is preserved """
-        self.f.attrs['a'] = (4.0, 5.0)
-        self.assertEqual(self.f.attrs['a'].shape, (2,))
-        self.assertArrayEqual(self.f.attrs['a'], np.array((4.0,5.0)))
+        name = make_name()
+        self.f.attrs[name] = (4.0, 5.0)
+        self.assertEqual(self.f.attrs[name].shape, (2,))
+        self.assertArrayEqual(self.f.attrs[name], np.array((4.0,5.0)))
 
     def test_single(self):
         """ Attributes of shape (1,) don't become scalars """
-        self.f.attrs['a'] = np.ones((1,))
-        out = self.f.attrs['a']
+        name = make_name()
+        self.f.attrs[name] = np.ones((1,))
+        out = self.f.attrs[name]
         self.assertEqual(out.shape, (1,))
         self.assertEqual(out[()], 1)
 
     def test_access_exc(self):
         """ Attempt to access missing item raises KeyError """
         with self.assertRaises(KeyError):
-            self.f.attrs['a']
+            self.f.attrs['notexist']
 
     def test_get_id(self):
-        self.f.attrs['a'] = 4.0
-        aid = self.f.attrs.get_id('a')
+        name = make_name()
+        self.f.attrs[name] = 4.0
+        aid = self.f.attrs.get_id(name)
         assert isinstance(aid, h5a.AttrID)
 
         with self.assertRaises(KeyError):
-            self.f.attrs.get_id('b')
+            self.f.attrs.get_id("notexist")
+
 
 class TestDelete(BaseAttrs):
 
@@ -138,15 +149,16 @@ class TestDelete(BaseAttrs):
 
     def test_delete(self):
         """ Deletion via "del" """
-        self.f.attrs['a'] = 4.0
-        self.assertIn('a', self.f.attrs)
-        del self.f.attrs['a']
-        self.assertNotIn('a', self.f.attrs)
+        name = make_name()
+        self.f.attrs[name] = 4.0
+        self.assertIn(name, self.f.attrs)
+        del self.f.attrs[name]
+        self.assertNotIn(name, self.f.attrs)
 
     def test_delete_exc(self):
         """ Attempt to delete missing item raises KeyError """
         with self.assertRaises(KeyError):
-            del self.f.attrs['a']
+            del self.f.attrs['notexist']
 
 
 class TestUnicode(BaseAttrs):
@@ -157,20 +169,21 @@ class TestUnicode(BaseAttrs):
 
     def test_ascii(self):
         """ Access via pure-ASCII byte string """
-        self.f.attrs[b"ascii"] = 42
-        out = self.f.attrs[b"ascii"]
+        name = make_name("ascii").encode("ascii")
+        self.f.attrs[name] = 42
+        out = self.f.attrs[name]
         self.assertEqual(out, 42)
 
     def test_raw(self):
         """ Access via non-ASCII byte string """
-        name = b"non-ascii\xfe"
+        name = make_name("non-ascii\xfe").encode("utf-8")
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)
 
     def test_unicode(self):
         """ Access via Unicode string with non-ascii characters """
-        name = "Omega" + chr(0x03A9)
+        name = make_name("Omega" + chr(0x03A9))
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)
@@ -185,12 +198,14 @@ class TestCreate(BaseAttrs):
     def test_named(self):
         """ Attributes created from named types link to the source type object
         """
-        self.f['type'] = np.dtype('u8')
-        self.f.attrs.create('x', 42, dtype=self.f['type'])
-        self.assertEqual(self.f.attrs['x'], 42)
-        aid = h5a.open(self.f.id, b'x')
+        t = make_name("t")
+        x = make_name("x")
+        self.f[t] = np.dtype('u8')
+        self.f.attrs.create(x, 42, dtype=self.f[t])
+        self.assertEqual(self.f.attrs[x], 42)
+        aid = h5a.open(self.f.id, x.encode('utf-8'))
         htype = aid.get_type()
-        htype2 = self.f['type'].id
+        htype2 = self.f[t].id
         self.assertEqual(htype, htype2)
         self.assertTrue(htype.committed())
 
@@ -198,11 +213,12 @@ class TestCreate(BaseAttrs):
         # https://github.com/h5py/h5py/issues/1540
         """ Create attribute with h5py.Empty value
         """
-        self.f.attrs.create('empty', h5py.Empty('f'))
-        self.assertEqual(self.f.attrs['empty'], h5py.Empty('f'))
+        name = make_name()
+        self.f.attrs.create(name, h5py.Empty('f'))
+        self.assertEqual(self.f.attrs[name], h5py.Empty('f'))
 
-        self.f.attrs.create('empty', h5py.Empty(None))
-        self.assertEqual(self.f.attrs['empty'], h5py.Empty(None))
+        self.f.attrs.create(name, h5py.Empty(None))
+        self.assertEqual(self.f.attrs[name], h5py.Empty(None))
 
 class TestMutableMapping(BaseAttrs):
     '''Tests if the registration of AttributeManager as a MutableMapping
@@ -224,23 +240,25 @@ class TestMutableMapping(BaseAttrs):
 
 class TestVlen(BaseAttrs):
     def test_vlen(self):
+        name = make_name()
         a = np.array([np.arange(3), np.arange(4)],
             dtype=h5t.vlen_dtype(int))
-        self.f.attrs['a'] = a
-        self.assertArrayEqual(self.f.attrs['a'][0], a[0])
+        self.f.attrs[name] = a
+        self.assertArrayEqual(self.f.attrs[name][0], a[0])
 
     def test_vlen_s1(self):
+        name = make_name()
         dt = h5py.vlen_dtype(np.dtype('S1'))
         a = np.empty((1,), dtype=dt)
         a[0] = np.array([b'a', b'b'], dtype='S1')
 
-        self.f.attrs.create('test', a)
-        self.assertArrayEqual(self.f.attrs['test'][0], a[0])
+        self.f.attrs.create(name, a)
+        self.assertArrayEqual(self.f.attrs[name][0], a[0])
 
 
 class TestTrackOrder(BaseAttrs):
     def fill_attrs(self, track_order):
-        attrs = self.f.create_group('test', track_order=track_order).attrs
+        attrs = self.f.create_group(make_name(), track_order=track_order).attrs
         for i in range(100):
             attrs[str(i)] = i
         return attrs
@@ -256,15 +274,12 @@ class TestTrackOrder(BaseAttrs):
         self.assertEqual(list(attrs),
                          sorted([str(i) for i in range(100)]))
 
-    def fill_attrs2(self, track_order):
-        group = self.f.create_group('test', track_order=track_order)
-        for i in range(12):
-            group.attrs[str(i)] = i
-        return group
-
     def test_track_order_overwrite_delete(self):
         # issue 1385
-        group = self.fill_attrs2(track_order=True)  # creation order
+        group = self.f.create_group(make_name(), track_order=True)
+        for i in range(12):
+            group.attrs[str(i)] = i
+
         self.assertEqual(group.attrs["11"], 11)
         # overwrite attribute
         group.attrs['11'] = 42.0
@@ -278,8 +293,9 @@ class TestTrackOrder(BaseAttrs):
 class TestDatatype(BaseAttrs):
 
     def test_datatype(self):
-        self.f['foo'] = np.dtype('f')
-        dt = self.f['foo']
+        name = make_name()
+        self.f[name] = np.dtype('f')
+        dt = self.f[name]
         self.assertEqual(list(dt.attrs.keys()), [])
         dt.attrs.create('a', 4.0)
         self.assertEqual(list(dt.attrs.keys()), ['a'])
@@ -287,13 +303,14 @@ class TestDatatype(BaseAttrs):
 
 def test_python_int_uint64(writable_file):
     f = writable_file
+    name = make_name()
     data = [np.iinfo(np.int64).max, np.iinfo(np.int64).max + 1]
 
     # Check creating a new attribute
-    f.attrs.create('a', data, dtype=np.uint64)
-    assert f.attrs['a'].dtype == np.dtype(np.uint64)
-    np.testing.assert_array_equal(f.attrs['a'], np.array(data, dtype=np.uint64))
+    f.attrs.create(name, data, dtype=np.uint64)
+    assert f.attrs[name].dtype == np.dtype(np.uint64)
+    np.testing.assert_array_equal(f.attrs[name], np.array(data, dtype=np.uint64))
 
     # Check modifying an existing attribute
-    f.attrs.modify('a', data)
-    np.testing.assert_array_equal(f.attrs['a'], np.array(data, dtype=np.uint64))
+    f.attrs.modify(name, data)
+    np.testing.assert_array_equal(f.attrs[name], np.array(data, dtype=np.uint64))
