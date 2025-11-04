@@ -40,8 +40,8 @@ Steps to make an h5py release:
     git tag 3.14.0  # <-- change this
     git push --tags
 
-8. Download the artifacts: ``gh release download 3.14.0 -D dist/``
-9. Upload to PyPI: ``twine upload dist/h5py-3.14.0*`` - this requires a token
-    from PyPI, which must be `supplied to twine <https://twine.readthedocs.io/en/stable/#configuration>`_.
-10. Close the GitHub milestone for this release and open one for the next
+8. Check that the release is correctly published to PyPI after the tag-triggered
+   CI job completes.
+
+9. Close the GitHub milestone for this release and open one for the next
     version.
