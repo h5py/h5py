@@ -7,6 +7,7 @@ if [[ "$1" == "" ]] ; then
     exit 1
 fi
 PROJECT_PATH="$1"
+ZLIB_VERSION="1.3.1"
 
 if [[ "$ARCH" == "ARM64" ]]; then
     #Use vcpkg for Windows ARM64, since Nuget\Chocolatey doesn't provide zlib package for Windows ARM64
@@ -23,12 +24,13 @@ if [[ "$ARCH" == "ARM64" ]]; then
     export LINK="/LIBPATH:$ZLIB_ROOT/lib"
     export HDF5_VSVERSION="17-arm64"
 elif [[ "$ARCH" == "AMD64" ]]; then
-    # NuGet for Windows x64
-    nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
-    ZLIB_ROOT="$PROJECT_PATH/zlib-msvc-x64/build/native"
-    EXTRA_PATH="$ZLIB_ROOT/bin_release"
+    # Build zlib from source for Windows AMD64
+    ./ci/get_zlib_amd64.sh $PROJECT_PATH/zlib-win-x64
+
+    ZLIB_ROOT="$PROJECT_PATH/zlib-win-x64"
+    EXTRA_PATH="$ZLIB_ROOT/bin"
     export CL="/I$ZLIB_ROOT/include"
-    export LINK="/LIBPATH:$ZLIB_ROOT/lib_release"
+    export LINK="/LIBPATH:$ZLIB_ROOT/lib"
     export HDF5_VSVERSION="17-64"
 else
     echo "Got unexpected arch '$ARCH'"

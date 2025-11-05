@@ -148,7 +148,6 @@ jobs:
     - template: ci/azure-pipelines-steps.yml
       parameters:
         platform: windows
-        installer: nuget
         shell: cmd
 
 - job: 'macOS'
