@@ -8,14 +8,17 @@ import os
 import os.path as osp
 import shutil
 import tempfile
+import pytest
 
 import h5py as h5
 from ..common import ut
 from ..._hl.vds import vds_support
 
 
-@ut.skipUnless(vds_support,
-               'VDS requires HDF5 >= 1.9.233')
+@pytest.mark.skipif(
+    not vds_support,
+    reason='VDS requires HDF5 >= 1.9.233',
+)
 class TestEigerHighLevel(ut.TestCase):
     def setUp(self):
         self.working_dir = tempfile.mkdtemp()
@@ -94,8 +97,10 @@ class ExcaliburData:
         return dset
 
 
-@ut.skipUnless(vds_support,
-               'VDS requires HDF5 >= 1.9.233')
+@pytest.mark.skipif(
+    not vds_support,
+    reason='VDS requires HDF5 >= 1.9.233',
+)
 class TestExcaliburHighLevel(ut.TestCase):
     def create_excalibur_fem_stripe_datafile(self, fname, nframes, excalibur_data,scale):
         shape = (nframes,) + excalibur_data.fem_stripe_dimensions
@@ -163,8 +168,10 @@ https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-c
 '''
 
 
-@ut.skipUnless(vds_support,
-               'VDS requires HDF5 >= 1.9.233')
+@pytest.mark.skipif(
+    not vds_support,
+    reason='VDS requires HDF5 >= 1.9.233',
+)
 class TestPercivalHighLevel(ut.TestCase):
 
     def setUp(self):
@@ -229,8 +236,10 @@ class TestPercivalHighLevel(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.working_dir)
 
-@ut.skipUnless(vds_support,
-               'VDS requires HDF5 >= 1.9.233')
+@pytest.mark.skipif(
+    not vds_support,
+    reason='VDS requires HDF5 >= 1.9.233',
+)
 class SlicingTestCase(ut.TestCase):
 
     def setUp(self):
@@ -295,8 +304,10 @@ class SlicingTestCase(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
-@ut.skipUnless(vds_support,
-               'VDS requires HDF5 >= 1.9.233')
+@pytest.mark.skipif(
+    not vds_support,
+    reason='VDS requires HDF5 >= 1.9.233'
+)
 class IndexingTestCase(ut.TestCase):
 
     def setUp(self):
@@ -347,8 +358,10 @@ class IndexingTestCase(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
-@ut.skipUnless(vds_support,
-               'VDS requires HDF5 >= 1.9.233')
+@pytest.mark.skipif(
+    not vds_support,
+    reason='VDS requires HDF5 >= 1.9.233',
+)
 class RelativeLinkTestCase(ut.TestCase):
 
     def setUp(self):
@@ -417,8 +430,10 @@ class RelativeLinkBuildVDSTestCase(RelativeLinkTestCase):
             layout[0] = h5.VirtualSource(self.f1, 'data', shape=(10,))
             layout[1] = h5.VirtualSource(self.f2, 'data', shape=(10,))
 
-@ut.skipUnless(vds_support,
-               'VDS requires HDF5 >= 1.9.233')
+@pytest.mark.skipif(
+    not vds_support,
+    reason='VDS requires HDF5 >= 1.9.233',
+)
 class VDSUnlimitedTestCase(ut.TestCase):
 
     def setUp(self):

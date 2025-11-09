@@ -45,9 +45,10 @@ import sys
 
 import numpy as np
 import pytest
+import h5py
 
 import h5py
-from .common import ut, TestCase
+from .common import TestCase
 
 
 class TestEmpty(TestCase):
@@ -582,7 +583,10 @@ class TestVeryLargeArray(TestCase):
         TestCase.setUp(self)
         self.dset = self.f.create_dataset('x', shape=(2**15, 2**16))
 
-    @ut.skipIf(sys.maxsize < 2**31, 'Maximum integer size >= 2**31 required')
+    @pytest.mark.skipif(
+        sys.maxsize < 2**31,
+        reason='Maximum integer size >= 2**31 required',
+    )
     def test_size(self):
         self.assertEqual(self.dset.size, 2**31)
 

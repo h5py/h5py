@@ -5,13 +5,14 @@
 from itertools import count
 import platform
 import numpy as np
+import pytest
 import h5py
 try:
     import tables
 except ImportError:
     tables = None
 
-from .common import ut, TestCase
+from .common import TestCase
 
 UNSUPPORTED_LONG_DOUBLE = ('i386', 'i486', 'i586', 'i686', 'ppc64le')
 UNSUPPORTED_LONG_DOUBLE_TYPES = ('float96', 'float128', 'complex192',
@@ -403,7 +404,7 @@ class TestDateTime(TestCase):
                     self.assertArrayEqual(arr, dset)
                     self.assertEqual(arr.dtype, dset.dtype)
 
-@ut.skipUnless(tables is not None, 'tables is required')
+@pytest.mark.skipif(not tables is not None, reason='tables is required')
 class TestBitfield(TestCase):
 
     """
