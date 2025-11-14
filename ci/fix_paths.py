@@ -29,7 +29,7 @@ def main():
             if arch in ("arm64", "aarch64"):
                 f = pjoin(zlib_root, 'bin', 'zlib1.dll')
             elif arch in ("amd64", "x86_64"):
-                f = pjoin(zlib_root, 'bin_release', 'zlib.dll')
+                f = pjoin(zlib_root, 'bin', 'zlib.dll')
             else:
                 raise RuntimeError(f"Unexpected architecture detected: {platform.machine()=}")
             copy(f, pjoin(sitepackagesdir, 'h5py', basename(f)))

@@ -113,20 +113,22 @@ class TestCache(TestCase):
         MiB = 1024 * 1024
         if h5py.version.hdf5_version_tuple < (2, 0, 0):
             self.dflt_chunk_cache = MiB
+            self.dflt_chunk_nslots = 521
         else:
             self.dflt_chunk_cache = 8 * MiB
+            self.dflt_chunk_nslots = 8191
 
     def test_defaults(self):
         fname = self.mktemp()
         f = h5py.File(fname, 'w')
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
-                         [0, 521, self.dflt_chunk_cache, 0.75])
+                         [0, self.dflt_chunk_nslots, self.dflt_chunk_cache, 0.75])
 
     def test_nbytes(self):
         fname = self.mktemp()
         f = h5py.File(fname, 'w', rdcc_nbytes=1024)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
-                         [0, 521, 1024, 0.75])
+                         [0, self.dflt_chunk_nslots, 1024, 0.75])
 
     def test_nslots(self):
         fname = self.mktemp()
@@ -138,7 +140,7 @@ class TestCache(TestCase):
         fname = self.mktemp()
         f = h5py.File(fname, 'w', rdcc_w0=0.25)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
-                         [0, 521, self.dflt_chunk_cache, 0.25])
+                         [0, self.dflt_chunk_nslots, self.dflt_chunk_cache, 0.25])
 
 
 class TestFileObj(TestCase):

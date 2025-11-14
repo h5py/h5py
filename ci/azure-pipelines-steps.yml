@@ -33,17 +33,15 @@ steps:
   #    prerelease: true
   #  condition: and(succeeded(), eq(variables['python.version'], 'Pre'))
 
-- ${{ if eq(parameters.installer, 'nuget') }}:
-  - task: NuGetToolInstaller@0
-    displayName: 'Use latest available Nuget'
+- ${{ if eq(parameters.platform, 'windows') }}:
+  - bash: |
+      ci/get_zlib_amd64.sh "$(build.BinariesDirectory)/zlib-win-x64"
+      echo "##vso[task.prependpath]$(build.BinariesDirectory)/zlib-win-x64/bin"
+      echo "##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)/zlib-win-x64/include"
+      echo "##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)/zlib-win-x64/lib"
+      echo "##vso[task.setvariable variable=ZLIB_ROOT]$(build.BinariesDirectory)/zlib-win-x64"
+    displayName: "Build zlib from source"
 
-  - script: |
-      nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
-      echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-msvc-x64\build\native\bin_release
-      echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\zlib-msvc-x64\build\native\include
-      echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\zlib-msvc-x64\build\native\lib_release
-      echo ##vso[task.setvariable variable=ZLIB_ROOT]$(build.BinariesDirectory)\zlib-msvc-x64\build\native
-    displayName: 'Install nuget dependencies'
 - ${{ if eq(parameters.installer, 'brew') }}:
   - script: |
       brew install pkg-config hdf5 ccache open-mpi
