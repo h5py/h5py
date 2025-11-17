@@ -624,6 +624,6 @@ class TestBoolIndex(TestCase):
 
 
 def test_error_newaxis(writable_file):
-    ds = writable_file.create_dataset('a', data=np.arange(5))
+    ds = writable_file.create_dataset(make_name(), data=np.arange(5))
     with pytest.raises(TypeError, match="newaxis"):
         ds[np.newaxis, :]
