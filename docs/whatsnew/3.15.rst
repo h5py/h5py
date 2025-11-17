@@ -59,3 +59,14 @@ Building h5py
 * Building h5py using the standard Python mechanisms now uses a custom build
   backend within the source folder, wrapping setuptools, to avoid the use of the
   deprecated ``setup_requires`` parameter (:pr:`2659`).
+
+3.15.1 bug fix release
+----------------------
+
+* Pre-built MacOS packages are compatible with older versions of MacOS again,
+  back to 11.0 for ARM and 10.15 for Intel (:pr:`2722`). This also appears to
+  fix some mysterious regressions on newer versions of MacOS, although we don't
+  fully understand why.
+
+This change only affects the packages we provide on PyPI. There was also a small
+change to a test, but downstream packagers can ignore this release.

@@ -835,6 +835,9 @@ class Dataset(HLObject):
         """
         args = args if isinstance(args, tuple) else (args,)
 
+        if any(a is None for a in args):  # 'None in args' would fail on arrays
+            raise TypeError("Indexing with None (or np.newaxis) is not supported")
+
         if self._fast_read_ok and (new_dtype is None):
             try:
                 return self._fast_reader.read(args)
