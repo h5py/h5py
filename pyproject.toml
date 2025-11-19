@@ -128,9 +128,6 @@ wheels = [
 skip = [
     "cp310-win_arm64", # Skipped due to unavailability of Python binary and NumPy for Win-ARM64
 ]
-enable = [
-    "cpython-freethreading",  # Build cp313t wheels
-]
 
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
