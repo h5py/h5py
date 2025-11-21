@@ -201,10 +201,7 @@ class h5py_build_ext(build_ext):
         }
         compiler_directives = {}
         if Version(cython_version) >= Version("3.1.0b1"):
-            # TODO it was decided to not mark the module as freethreading-compatible
-            # for the time being due to instability concerns.
-            # See https://github.com/h5py/h5py/pull/2650
-            compiler_directives["freethreading_compatible"] = False
+            compiler_directives["freethreading_compatible"] = True
 
         # Run Cython
         print("Executing cythonize()")

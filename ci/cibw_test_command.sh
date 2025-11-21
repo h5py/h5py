@@ -13,13 +13,6 @@ echo "WHEEL_PATH=$WHEEL_PATH"
 
 export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])) + ('t' if (sys.version_info>=(3,13) and sys.implementation.name=='cpython' and not sys._is_gil_enabled()) else ''))")
 
-if [[ "$PYVER" == *t ]]; then
-    # TODO it was decided to not mark the module as freethreading-compatible
-    # for the time being due to instability concerns.
-    # See https://github.com/h5py/h5py/pull/2650
-    export PYTHON_GIL="0"
-fi
-
 ENVLIST="py$PYVER-test-mindeps"
 if [[ "$ONLY_MINDEPS_TESTS" != "1" ]] ; then
     ENVLIST="$ENVLIST,py$PYVER-test-deps,py$PYVER-test-deps-pre"
