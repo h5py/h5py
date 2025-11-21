@@ -12,6 +12,7 @@ import os
 import shutil
 import inspect
 import tempfile
+import threading
 import subprocess
 from contextlib import contextmanager
 from functools import wraps
@@ -19,7 +20,7 @@ from functools import wraps
 import numpy as np
 from numpy.lib.recfunctions import repack_fields
 import h5py
-
+from h5py._objects import phil
 import unittest as ut
 
 
@@ -53,10 +54,10 @@ class TestCase(ut.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.tempdir)
 
-    def mktemp(self, suffix='.hdf5', prefix='', dir=None):
+    def mktemp(self, suffix='.hdf5', prefix='tmp', dir=None):
         if dir is None:
             dir = self.tempdir
-        return tempfile.mktemp(suffix, prefix, dir=dir)
+        return tempfile.mktemp(suffix, make_name(prefix), dir=dir)
 
     def mktemp_mpi(self, comm=None, suffix='.hdf5', prefix='', dir=None):
         if comm is None:
@@ -167,16 +168,17 @@ class TestCase(ut.TestCase):
             self.assertArrayEqual(dset[s], arr_result)
 
             if not skip_fast_reader:
-                self.assertArrayEqual(
-                    dset._fast_reader.read(s_fast),
-                    arr_result,
-                )
+                with phil:
+                    self.assertArrayEqual(
+                        dset._fast_reader.read(s_fast),
+                        arr_result,
+                    )
         else:
             with self.assertRaises(exc):
                 dset[s]
 
             if not skip_fast_reader:
-                with self.assertRaises(exc):
+                with self.assertRaises(exc), phil:
                     dset._fast_reader.read(s_fast)
 
 NUMPY_RELEASE_VERSION = tuple([int(i) for i in np.__version__.split(".")[0:2]])
@@ -209,11 +211,11 @@ def insubprocess(f):
         for c in "/\\,:.":
             insub = insub.replace(c, "_")
         defined = os.environ.get(insub, None)
-        # fork process
         if defined:
+            # We're already running in a subprocess
             return f(request, *args, **kwargs)
         else:
-            os.environ[insub] = '1'
+            # Spawn a new interpreter and run pytest in it
             env = os.environ.copy()
             env[insub] = '1'
             env.update(getattr(f, 'subproc_env', {}))
@@ -236,3 +238,40 @@ def subproc_env(d):
         return f
 
     return decorator
+
+
+MAIN_THREAD_ID = threading.get_ident()
+
+
+def make_name(template_or_prefix: str = "foo", /) -> str:
+    """Return a static name, to be used e.g. as dataset name.
+
+    When running in pytest-run-parallel, append a thread ID to the name.
+    This allows running tests on shared resources, e.g. two threads can attempt to write
+    to separate datasets on the same File at the same time (even though the actual
+    writes will be serialized by the `phil` lock).
+
+    Calling this function twice from the same thread will return the same name.
+
+    Parameters
+    ----------
+    template_or_prefix
+        Either a prefix to which potentially append the thread ID, or a template
+        containing exactly one "{}" to be replaced with the thread ID.
+    """
+    tid = threading.get_ident()
+    suffix = "" if tid == MAIN_THREAD_ID else f"-{tid}"
+    if "{}" in template_or_prefix:
+        return template_or_prefix.format(suffix)
+    else:
+        return template_or_prefix + suffix
+
+
+def is_main_thread() -> bool:
+    """Return True if the test calling this function is being executed
+    in the main thread; False otherwise.
+    This can be used to detect when a test is running in pytest-run-parallel.
+    that spawns multiple separate threads to run the tests.
+    """
+    tid = threading.get_ident()
+    return tid == MAIN_THREAD_ID
