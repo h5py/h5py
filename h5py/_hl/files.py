@@ -14,6 +14,7 @@
 import inspect
 import os
 import sys
+from pathlib import Path
 from warnings import warn
 
 from .compat import filename_decode, filename_encode
@@ -297,9 +298,15 @@ class File(Group):
 
     @property
     @with_phil
-    def filename(self):
+    def filename(self) -> str:
         """File name on disk"""
         return filename_decode(h5f.get_name(self.id))
+
+    @property
+    @with_phil
+    def filepath(self) -> Path:
+        """File path on disk"""
+        return Path(self.filename).resolve()
 
     @property
     @with_phil
