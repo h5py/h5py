@@ -3,7 +3,7 @@ import numpy
 import numpy.testing
 import pytest
 
-from .common import ut, TestCase
+from .common import TestCase
 
 
 class TestWriteDirectChunk(TestCase):
@@ -32,7 +32,10 @@ class TestWriteDirectChunk(TestCase):
                 numpy.testing.assert_array_equal(array[i], read_data)
 
 
-@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+@pytest.mark.skipif(
+    'gzip' not in h5py.filters.encode,
+    reason="DEFLATE is not installed",
+)
 class TestReadDirectChunk(TestCase):
     def test_read_compressed_offsets(self):
 

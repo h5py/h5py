@@ -25,7 +25,7 @@ import pytest
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-from .common import ut, TestCase
+from .common import TestCase
 from .data_files import get_data_file_path
 from h5py import File, Dataset
 from h5py._hl.base import is_empty_dataspace, product
@@ -119,7 +119,10 @@ class TestCreateShape(BaseDataset):
             pytest.xfail("Storage of long double deactivated on %s" % platform.machine())
         self.assertEqual(dset.dtype, np.longdouble)
 
-    @ut.skipIf(not hasattr(np, "complex256"), "No support for complex256")
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"),
+        reason="No support for complex256",
+    )
     def test_complex256(self):
         """ Confirm that the default dtype is float """
         dset = self.f.create_dataset('foo', (63,),
@@ -508,7 +511,10 @@ class TestFillTime(BaseDataset):
         self.assertEqual(dset[0], 4.0)
         self.assertEqual(dset[7], 4.0)
 
-    @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+    @pytest.mark.skipif(
+        'gzip' not in h5py.filters.encode,
+        reason="DEFLATE is not installed",
+    )
     def test_compressed_default(self):
         """ Fill time is IFSET for compressed dataset (chunked) """
         dset = self.f.create_dataset('foo', (10,), compression='gzip',
@@ -612,7 +618,10 @@ class TestCreateNamedType(BaseDataset):
         self.assertTrue(dset.id.get_type().committed())
 
 
-@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+@pytest.mark.skipif(
+    'gzip' not in h5py.filters.encode,
+    reason="DEFLATE is not installed",
+)
 class TestCreateGzip(BaseDataset):
 
     """
@@ -657,7 +666,10 @@ class TestCreateGzip(BaseDataset):
                                   compression_opts=14)
 
 
-@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+@pytest.mark.skipif(
+    'gzip' not in h5py.filters.encode,
+    reason="DEFLATE is not installed",
+)
 class TestCreateCompressionNumber(BaseDataset):
 
     """
@@ -697,7 +709,10 @@ class TestCreateCompressionNumber(BaseDataset):
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
 
-@ut.skipIf('lzf' not in h5py.filters.encode, "LZF is not installed")
+@pytest.mark.skipif(
+    'lzf' not in h5py.filters.encode,
+    reason="LZF is not installed",
+)
 class TestCreateLZF(BaseDataset):
 
     """
@@ -727,7 +742,10 @@ class TestCreateLZF(BaseDataset):
                                   compression_opts=4)
 
 
-@ut.skipIf('szip' not in h5py.filters.encode, "SZIP is not installed")
+@pytest.mark.skipif(
+    'szip' not in h5py.filters.encode,
+    reason="SZIP is not installed",
+)
 class TestCreateSZIP(BaseDataset):
 
     """
@@ -740,7 +758,10 @@ class TestCreateSZIP(BaseDataset):
                                      compression_opts=('ec', 16))
 
 
-@ut.skipIf('shuffle' not in h5py.filters.encode, "SHUFFLE is not installed")
+@pytest.mark.skipif(
+    'shuffle' not in h5py.filters.encode,
+    reason="SHUFFLE is not installed",
+)
 class TestCreateShuffle(BaseDataset):
 
     """
@@ -753,7 +774,10 @@ class TestCreateShuffle(BaseDataset):
         self.assertTrue(dset.shuffle)
 
 
-@ut.skipIf('fletcher32' not in h5py.filters.encode, "FLETCHER32 is not installed")
+@pytest.mark.skipif(
+    'fletcher32' not in h5py.filters.encode,
+    reason="FLETCHER32 is not installed",
+)
 class TestCreateFletcher32(BaseDataset):
     """
         Feature: Datasets can use the fletcher32 filter
@@ -765,7 +789,10 @@ class TestCreateFletcher32(BaseDataset):
         self.assertTrue(dset.fletcher32)
 
 
-@ut.skipIf('scaleoffset' not in h5py.filters.encode, "SCALEOFFSET is not installed")
+@pytest.mark.skipif(
+    'scaleoffset' not in h5py.filters.encode,
+    reason="SCALEOFFSET is not installed",
+)
 class TestCreateScaleOffset(BaseDataset):
     """
         Feature: Datasets can use the scale/offset filter
@@ -1624,7 +1651,10 @@ class TestFloats(BaseDataset):
         dset[...] = data
         self.assertArrayEqual(dset[...], data)
 
-    @ut.skipUnless(hasattr(np, 'float16'), "NumPy float16 support required")
+    @pytest.mark.skipif(
+        not hasattr(np, 'float16'),
+        reason="NumPy float16 support required",
+    )
     def test_mini(self):
         """ Mini-floats round trip """
         self._exectest(np.dtype('float16'))
@@ -1955,9 +1985,11 @@ def test_get_chunk_details():
         assert si.size > 0
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 12, 3) or
-               (h5py.version.hdf5_version_tuple >= (1, 10, 10) and h5py.version.hdf5_version_tuple < (1, 10, 99)),
-               "chunk iteration requires  HDF5 1.10.10 and later 1.10, or 1.12.3 and later")
+@pytest.mark.skipif(
+    h5py.version.hdf5_version_tuple < (1, 12, 3) and
+    (h5py.version.hdf5_version_tuple < (1, 10, 10) or h5py.version.hdf5_version_tuple >= (1, 10, 99)),
+    reason="chunk iteration requires HDF5 1.10.10 and later 1.10, or 1.12.3 and later",
+)
 def test_chunk_iter():
     """H5Dchunk_iter() for chunk information"""
     from io import BytesIO
