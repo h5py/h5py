@@ -19,7 +19,7 @@
 
 import numpy as np
 import os
-import os.path
+from pathlib import Path
 from tempfile import mkdtemp
 
 from collections.abc import MutableMapping
@@ -882,6 +882,7 @@ class TestExternalLinks(TestCase):
         el = ExternalLink('foo.hdf5', '/foo')
         self.assertEqual(el.filename, 'foo.hdf5')
         self.assertEqual(el.path, '/foo')
+        self.assertEqual(el.filepath, Path(el.path, el.filename).resolve())
 
     def test_erepr(self):
         """ External link repr """

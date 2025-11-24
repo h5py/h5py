@@ -12,6 +12,7 @@
 """
 
 from contextlib import contextmanager
+from pathlib import Path
 import posixpath as pp
 import numpy
 
@@ -793,16 +794,21 @@ class ExternalLink:
     """
 
     @property
-    def path(self):
+    def path(self) -> str:
         """ Soft link path, i.e. the part inside the HDF5 file. """
         return self._path
 
     @property
-    def filename(self):
-        """ Path to the external HDF5 file in the filesystem. """
+    def filename(self) -> str:
+        """ Path to the external HDF5 file in the filesystem (as a str)"""
         return self._filename
 
-    def __init__(self, filename, path):
+    @property
+    def filepath(self) -> Path:
+        """ Path to the external HDF5 file in the filesystem. """
+        return Path(self._path, self._filename).resolve()
+
+    def __init__(self, filename: str, path: str) -> None:
         self._filename = filename_decode(filename_encode(filename))
         self._path = path
 

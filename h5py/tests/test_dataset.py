@@ -903,8 +903,8 @@ class TestExternal(BaseDataset):
             contents = fid.read()
         assert contents == testdata.tobytes()
 
-        efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
-        parent = pathlib.Path(self.f.filename).parent.as_posix()
+        efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).resolve().as_posix()
+        parent = self.f.filepath.parent.as_posix()
         assert efile_prefix == parent
 
     def test_contents_efile_prefix(self):
