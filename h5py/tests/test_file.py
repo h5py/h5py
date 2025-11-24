@@ -24,7 +24,7 @@ from hashlib import sha256
 
 import pytest
 
-from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
+from .common import TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py._hl.files import direct_vfd
 from h5py import File
 import h5py
@@ -323,7 +323,10 @@ class TestDrivers(TestCase):
         include MPI drivers (see bottom).
     """
 
-    @ut.skipUnless(os.name == 'posix', "Stdio driver is supported on posix")
+    @pytest.mark.skipif(
+        os.name != 'posix',
+        reason="Stdio driver is supported on posix",
+    )
     def test_stdio(self):
         """ Stdio driver is supported on posix """
         fid = File(self.mktemp(), 'w', driver='stdio')
@@ -337,9 +340,13 @@ class TestDrivers(TestCase):
         self.assertEqual(fid.driver, 'stdio')
         fid.close()
 
-    @ut.skipUnless(direct_vfd,
-                   "DIRECT driver is supported on Linux if hdf5 is "
-                   "built with the appriorate flags.")
+    @pytest.mark.skipif(
+        not direct_vfd,
+        reason=(
+            "DIRECT driver is supported on Linux if hdf5 is "
+            "built with the appriorate flags."
+        ),
+    )
     def test_direct(self):
         """ DIRECT driver is supported on Linux"""
         fid = File(self.mktemp(), 'w', driver='direct')
@@ -387,7 +394,7 @@ class TestDrivers(TestCase):
                 assert actual_block_size == block_size
                 assert actual_cbuf_size == actual_cbuf_size
 
-    @ut.skipUnless(os.name == 'posix', "Sec2 driver is supported on posix")
+    @pytest.mark.skipif(os.name != 'posix', reason="Sec2 driver is supported on posix")
     def test_sec2(self):
         """ Sec2 driver is supported on posix """
         fid = File(self.mktemp(), 'w', driver='sec2')
@@ -524,24 +531,30 @@ class TestNewLibver(TestCase):
         self.assertEqual(f.libver, ('v110', self.latest))
         f.close()
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 11, 4),
-               'Requires HDF5 1.11.4 or later')
+    @pytest.mark.skipif(
+        h5py.version.hdf5_version_tuple < (1, 11, 4),
+        reason='Requires HDF5 1.11.4 or later',
+    )
     def test_single_v112(self):
         """ Opening with "v112" libver arg """
         f = File(self.mktemp(), 'w', libver='v112')
         self.assertEqual(f.libver, ('v112', self.latest))
         f.close()
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 14, 0),
-               'Requires HDF5 1.14 or later')
+    @pytest.mark.skipif(
+        h5py.version.hdf5_version_tuple < (1, 14, 0),
+        reason='Requires HDF5 1.14 or later',
+    )
     def test_single_v114(self):
         """ Opening with "v114" libver arg """
         f = File(self.mktemp(), 'w', libver='v114')
         self.assertEqual(f.libver, ('v114', self.latest))
         f.close()
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (2, 0, 0),
-               'Requires HDF5 2.0 or later')
+    @pytest.mark.skipif(
+        h5py.version.hdf5_version_tuple < (2, 0, 0),
+        reason='Requires HDF5 2.0 or later',
+    )
     def test_single_v200(self):
         """ Opening with "v200" libver arg """
         f = File(self.mktemp(), 'w', libver='v200')
@@ -670,7 +683,7 @@ class TestContextManager(TestCase):
         self.assertTrue(not fid)
 
 
-@ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
+@pytest.mark.skipif(not UNICODE_FILENAMES, reason="Filesystem unicode support required")
 class TestUnicode(TestCase):
 
     """

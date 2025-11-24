@@ -14,8 +14,9 @@
 import os
 import numpy as np
 import h5py
+import pytest
 
-from .common import ut, TestCase
+from .common import TestCase
 
 
 class TestFilters(TestCase):
@@ -25,7 +26,10 @@ class TestFilters(TestCase):
         self.path = self.mktemp()
         self.f = h5py.File(self.path, 'w')
 
-    @ut.skipUnless(h5py.h5z.filter_avail(h5py.h5z.FILTER_SZIP), 'szip filter required')
+    @pytest.mark.skipif(
+        not h5py.h5z.filter_avail(h5py.h5z.FILTER_SZIP),
+        reason='szip filter required',
+    )
     def test_wr_szip_fletcher32_64bit(self):
         """ test combination of szip, fletcher32, and 64bit arrays
 
@@ -61,7 +65,10 @@ class TestFilters(TestCase):
                                   )
 
 
-@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+@pytest.mark.skipif(
+    'gzip' not in h5py.filters.encode,
+    reason="DEFLATE is not installed",
+)
 def test_filter_ref_obj(writable_file):
     gzip8 = h5py.filters.Gzip(level=8)
     # **kwargs unpacking (compatible with earlier h5py versions)
@@ -85,7 +92,10 @@ def test_filter_ref_obj_eq():
     assert gzip8 != h5py.filters.Gzip(level=7)
 
 
-@ut.skipIf(not os.getenv('H5PY_TEST_CHECK_FILTERS'),  "H5PY_TEST_CHECK_FILTERS not set")
+@pytest.mark.skipif(
+    'H5PY_TEST_CHECK_FILTERS' not in os.environ,
+    reason="H5PY_TEST_CHECK_FILTERS not set",
+)
 def test_filters_available():
     assert 'gzip' in h5py.filters.decode
     assert 'gzip' in h5py.filters.encode

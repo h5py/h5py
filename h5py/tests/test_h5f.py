@@ -11,10 +11,11 @@ import tempfile
 import shutil
 import os
 import numpy as np
+import pytest
 from h5py import File, special_dtype
 from h5py._hl.files import direct_vfd
 
-from .common import ut, TestCase
+from .common import TestCase
 
 
 class TestFileID(TestCase):
@@ -34,9 +35,13 @@ class TestFileID(TestCase):
         finally:
             shutil.rmtree(dn_tmp)
 
-    @ut.skipUnless(direct_vfd,
-                   "DIRECT driver is supported on Linux if hdf5 is "
-                   "built with the appriorate flags.")
+    @pytest.mark.skipif(
+        not direct_vfd,
+        reason=(
+            "DIRECT driver is supported on Linux if hdf5 is "
+            "built with the appriorate flags."
+        ),
+    )
     def test_descriptor_direct(self):
         dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.test_descriptor_direct')
         fn_h5 = os.path.join(dn_tmp, 'test.h5')

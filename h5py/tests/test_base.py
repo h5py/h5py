@@ -15,11 +15,13 @@
 
 from h5py import File
 from h5py._hl.base import is_hdf5, Empty
-from .common import ut, TestCase, UNICODE_FILENAMES
+from .common import TestCase, UNICODE_FILENAMES
 
 import numpy as np
 import os
 import tempfile
+import pytest
+
 
 class BaseTest(TestCase):
 
@@ -125,7 +127,10 @@ class TestRepr(BaseTest):
         self.assertNotEqual(Empty(dtype='i'), data)
         self._check_type(data)
 
-    @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
+    @pytest.mark.skipif(
+        not UNICODE_FILENAMES,
+        reason="Filesystem unicode support required",
+    )
     def test_file(self):
         """ File object repr() with unicode """
         fname = tempfile.mktemp(self.USTRING+'.hdf5')

@@ -21,10 +21,11 @@ import numpy as np
 import os
 import os.path
 from tempfile import mkdtemp
+import pytest
 
 from collections.abc import MutableMapping
 
-from .common import ut, TestCase
+from .common import TestCase
 import h5py
 from h5py import File, Group, SoftLink, HardLink, ExternalLink
 from h5py import Dataset, Datatype
@@ -921,7 +922,7 @@ class TestExternalLinks(TestCase):
         f2.close()
         self.assertFalse(f2)
 
-    @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
+    @pytest.mark.skipif(NO_FS_UNICODE, reason="No unicode filename support")
     def test_unicode_encode(self):
         """
         Check that external links encode unicode filenames properly
@@ -932,7 +933,7 @@ class TestExternalLinks(TestCase):
             ext_file.create_group('external')
         self.f['ext'] = ExternalLink(ext_filename, '/external')
 
-    @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
+    @pytest.mark.skipif(NO_FS_UNICODE, reason="No unicode filename support")
     def test_unicode_decode(self):
         """
         Check that external links decode unicode filenames properly
