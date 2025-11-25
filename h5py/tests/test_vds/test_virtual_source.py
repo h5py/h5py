@@ -1,4 +1,4 @@
-from ..common import ut
+from ..common import ut, make_name
 import h5py as h5
 import numpy as np
 
@@ -141,7 +141,7 @@ class TestVirtualSource(ut.TestCase):
         self.assertEqual(dataset.maxshape, (30,))
 
     def test_extra_args(self):
-        with h5.File(name='f1', driver='core',
+        with h5.File(make_name("f1{}.h5"), driver='core',
                      backing_store=False, mode='w') as ftest:
             ftest['a'] = [1, 2, 3]
             a = ftest['a']

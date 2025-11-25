@@ -19,7 +19,7 @@ from .common import ut, TestCase
 
 class TestFileID(TestCase):
     def test_descriptor_core(self):
-        with File('TestFileID.test_descriptor_core', driver='core',
+        with File(self.mktemp(), driver='core',
                   backing_store=False, mode='x') as f:
             assert isinstance(f.id.get_vfd_handle(), int)
 

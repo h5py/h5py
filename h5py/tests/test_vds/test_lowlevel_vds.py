@@ -9,7 +9,7 @@ import tempfile
 import numpy as np
 
 import h5py as h5
-from ..common import ut
+from ..common import ut, make_name
 
 
 class TestEigerLowLevel(ut.TestCase):
@@ -29,7 +29,7 @@ class TestEigerLowLevel(ut.TestCase):
         self.fname = [osp.join(self.working_dir.name, ix) for ix in self.fname]
 
     def test_eiger_low_level(self):
-        outfile = osp.join(self.working_dir.name, 'eiger.h5')
+        outfile = osp.join(self.working_dir.name, make_name('eiger{}.h5'))
         with h5.File(outfile, 'w', libver='latest') as f:
             vdset_shape = (78, 200, 200)
             vdset_max_shape = vdset_shape
@@ -134,7 +134,7 @@ class TestExcaliburLowLevel(ut.TestCase):
     def test_excalibur_low_level(self):
 
         excalibur_data = self.edata
-        outfile = osp.join(self.working_dir.name, 'excalibur.h5')
+        outfile = osp.join(self.working_dir.name, make_name('excalibur{}.h5'))
         vdset_stripe_shape = (1,) + excalibur_data.fem_stripe_dimensions
         vdset_stripe_max_shape = (5, ) + excalibur_data.fem_stripe_dimensions
         vdset_shape = (5,
@@ -217,7 +217,7 @@ class TestPercivalLowLevel(ut.TestCase):
         self.fname = [osp.join(self.working_dir.name, ix) for ix in self.fname]
 
     def test_percival_low_level(self):
-        outfile = osp.join(self.working_dir.name, 'percival.h5')
+        outfile = osp.join(self.working_dir.name, make_name('percival{}.h5'))
 
         with h5.File(outfile, 'w', libver='latest') as f:
             vdset_shape = (1,200,200)
@@ -268,8 +268,8 @@ class TestPercivalLowLevel(ut.TestCase):
 
 
 def test_virtual_prefix(tmp_path):
-    a = tmp_path / 'a'
-    b = tmp_path / 'b'
+    a = tmp_path / make_name('a')
+    b = tmp_path / make_name('b')
     a.mkdir()
     b.mkdir()
     src_file = h5.File(a / 'src.h5', 'w')
