@@ -24,7 +24,7 @@ from hashlib import sha256
 
 import pytest
 
-from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
+from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile, make_name
 from h5py._hl.files import direct_vfd
 from h5py import File
 import h5py
@@ -177,11 +177,15 @@ class TestSpaceStrategy(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'w', fs_strategy="invalid")
 
-        dset = fid.create_dataset('foo', (100,), dtype='uint8')
+        x = make_name("x")
+        y = make_name("y")
+        z = make_name("z")
+
+        dset = fid.create_dataset(x, (100,), dtype='uint8')
         dset[...] = 1
-        dset = fid.create_dataset('bar', (100,), dtype='uint8')
+        dset = fid.create_dataset(y, (100,), dtype='uint8')
         dset[...] = 1
-        del fid['foo']
+        del fid[x]
         fid.close()
 
         fid = File(fname, 'a')
@@ -191,7 +195,7 @@ class TestSpaceStrategy(TestCase):
         assert(fs_strat[1] == True)
         assert(fs_strat[2] == 100)
 
-        dset = fid.create_dataset('foo2', (100,), dtype='uint8')
+        dset = fid.create_dataset(z, (100,), dtype='uint8')
         dset[...] = 1
         fid.close()
 
@@ -931,7 +935,7 @@ class TestMPI:
         from mpi4py import MPI
 
         f = File(mpi_file_name, 'w', driver='mpio', comm=MPI.COMM_WORLD)
-        f.create_group("test")
+        f.create_group(make_name())
         f.close()
         f.close()
 
@@ -972,7 +976,7 @@ class TestFileLocking:
 
     def test_reopen(self, tmp_path):
         """Test file locking when opening twice the same file"""
-        fname = tmp_path / "test.h5"
+        fname = tmp_path / make_name("test{}.h5")
 
         with h5py.File(fname, mode="w", locking=True) as f:
             f.flush()
@@ -996,14 +1000,14 @@ class TestFileLocking:
 
     def test_unsupported_locking(self, tmp_path):
         """Test with erroneous file locking value"""
-        fname = tmp_path / "test.h5"
+        fname = tmp_path / make_name("test{}.h5")
         with pytest.raises(ValueError):
             with h5py.File(fname, mode="r", locking='unsupported-value') as h5f_read:
                 pass
 
     def test_multiprocess(self, tmp_path):
         """Test file locking option from different concurrent processes"""
-        fname = tmp_path / "test.h5"
+        fname = tmp_path / make_name("test{}.h5")
 
         def open_in_subprocess(filename, mode, locking):
             """Open HDF5 file in a subprocess and return True on success"""
@@ -1050,8 +1054,8 @@ f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
 )
 def test_file_locking_external_link(tmp_path, locking_arg, file_locking_props):
     """Test that same file locking is used for external link"""
-    fname_main = tmp_path / "test_main.h5"
-    fname_elink = tmp_path / "test_linked.h5"
+    fname_main = tmp_path / make_name("test_main{}.h5")
+    fname_elink = tmp_path / make_name("test_linked{}.h5")
 
     # Create test files
     with h5py.File(fname_elink, "w") as f:
@@ -1069,13 +1073,13 @@ def test_file_locking_external_link(tmp_path, locking_arg, file_locking_props):
         assert elink_locking_info == file_locking_props
 
 
-def test_close_gc(writable_file):
+def test_close_gc(tmp_path):
     # https://github.com/h5py/h5py/issues/1852
-    for i in range(100):
-        writable_file[str(i)] = []
+    filename = tmp_path / make_name("test{}.h5")
 
-    filename = writable_file.filename
-    writable_file.close()
+    with h5py.File(filename, 'w') as f:
+        for i in range(100):
+            f[str(i)] = []
 
     # Ensure that Python's garbage collection doesn't interfere with closing
     # a file. Try a few times - the problem is not 100% consistent, but
@@ -1089,15 +1093,18 @@ def test_close_gc(writable_file):
 
 @pytest.mark.slow
 def test_reproducible_file(tmp_path):
+    x = make_name("x")
+    y = make_name("y")
+
     def write(path):
         with File(path, 'w', track_order=True) as hf:
-            g = hf.create_group("group", track_order=True)
-            g.create_dataset("dset", shape=10, dtype='f4')
+            g = hf.create_group(x, track_order=True)
+            g.create_dataset(y, shape=10, dtype='f4')
 
-    f1 = tmp_path / "f1.h5"
+    f1 = tmp_path / make_name("f1{}.h5")
     write(f1)
     time.sleep(1.1)  # Ensure any timestamps are different
-    f2 = tmp_path / "f2.h5"
+    f2 = tmp_path / make_name("f2{}.h5")
     write(f2)
 
     assert sha256(f1.read_bytes()).hexdigest() == sha256(f2.read_bytes()).hexdigest()

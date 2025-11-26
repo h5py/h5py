@@ -1,4 +1,6 @@
 import numpy as np
+import pytest
+
 import h5py
 
 from .common import TestCase
@@ -44,6 +46,8 @@ class TestDatasetSwmrRead(TestCase):
             self.f.swmr_mode = False
         self.assertTrue(self.f.swmr_mode)
 
+
+@pytest.mark.thread_unsafe(reason="Can't enable global SWMR flag twice")
 class TestDatasetSwmrWrite(TestCase):
     """ Testing SWMR functions when reading a dataset.
     Skip this test if the HDF5 library does not have the SWMR features.

@@ -16,7 +16,7 @@ import h5py
 import h5py._hl.selections as sel
 import h5py._hl.selections2 as sel2
 
-from .common import TestCase
+from .common import TestCase, make_name
 
 class BaseSelection(TestCase):
     def setUp(self):
@@ -88,7 +88,7 @@ class TestScalarSliceRules(BaseSelection):
         with self.assertRaises(ValueError):
             shape, selection = sel2.read_selections_scalar(self.dsid, (1,))
 
-        dsid = self.f.create_dataset('y', (1,)).id
+        dsid = self.f.create_dataset(make_name(), (1,)).id
         with self.assertRaises(RuntimeError):
             shape, selection = sel2.read_selections_scalar(dsid, (1,))
 
@@ -98,7 +98,7 @@ class TestSelection(BaseSelection):
     """
 
     def test_selection(self):
-        dset = self.f.create_dataset('dset', (100,100))
+        dset = self.f.create_dataset(make_name(), (100,100))
         regref = dset.regionref[0:100, 0:100]
 
         # args is list, return a FancySelection

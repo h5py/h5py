@@ -11,7 +11,7 @@ try:
 except ImportError:
     tables = None
 
-from .common import ut, TestCase
+from .common import ut, TestCase, make_name
 
 UNSUPPORTED_LONG_DOUBLE = ('i386', 'i486', 'i586', 'i686', 'ppc64le')
 UNSUPPORTED_LONG_DOUBLE_TYPES = ('float96', 'float128', 'complex192',
@@ -30,13 +30,13 @@ class TestVlen(TestCase):
             self.assertArrayEqual(d, a, message, precision)
 
     def test_compound(self):
-
+        name = make_name()
         fields = []
         fields.append(('field_1', h5py.string_dtype()))
         fields.append(('field_2', np.int32))
         dt = np.dtype(fields)
-        self.f['mytype'] = np.dtype(dt)
-        dt_out = self.f['mytype'].dtype.fields['field_1'][0]
+        self.f[name] = np.dtype(dt)
+        dt_out = self.f[name].dtype.fields['field_1'][0]
         string_inf = h5py.check_string_dtype(dt_out)
         self.assertEqual(string_inf.encoding, 'utf-8')
 
@@ -50,33 +50,34 @@ class TestVlen(TestCase):
         dt_vb = np.dtype([
             ('foo', vidt),
             ('logical', bool)])
-        vb = f.create_dataset('dt_vb', shape=(4,), dtype=dt_vb)
+        n_dt_vb = make_name("dt_vb")
+        vb = f.create_dataset(n_dt_vb, shape=(4,), dtype=dt_vb)
         data = np.array([(a([1, 2, 3]), True),
                          (a([1    ]), False),
                          (a([1, 5  ]), True),
                          (a([],), False), ],
                      dtype=dt_vb)
         vb[:] = data
-        actual = f['dt_vb'][:]
+        actual = f[n_dt_vb][:]
         self.assertVlenArrayEqual(data['foo'], actual['foo'])
         self.assertArrayEqual(data['logical'], actual['logical'])
 
         dt_vv = np.dtype([
             ('foo', vidt),
             ('bar', vidt)])
-        f.create_dataset('dt_vv', shape=(4,), dtype=dt_vv)
+        f.create_dataset(make_name("dt_vv"), shape=(4,), dtype=dt_vv)
 
         dt_vvb = np.dtype([
             ('foo', vidt),
             ('bar', vidt),
             ('logical', bool)])
-        vvb = f.create_dataset('dt_vvb', shape=(2,), dtype=dt_vvb)
+        vvb = f.create_dataset(make_name("dt_vvb"), shape=(2,), dtype=dt_vvb)
 
         dt_bvv = np.dtype([
             ('logical', bool),
             ('foo', vidt),
             ('bar', vidt)])
-        bvv = f.create_dataset('dt_bvv', shape=(2,), dtype=dt_bvv)
+        bvv = f.create_dataset(make_name("dt_bvv"), shape=(2,), dtype=dt_bvv)
         data = np.array([(True, a([1, 2, 3]), a([1, 2])),
                          (False, a([]), a([2, 4, 6])), ],
                          dtype=bvv)
@@ -98,7 +99,7 @@ class TestVlen(TestCase):
             ('foo', vidt),
             ('bar', vidt),
             ('switch', eidt)])
-        vve = f.create_dataset('dt_vve', shape=(2,), dtype=dt_vve)
+        vve = f.create_dataset(make_name(), shape=(2,), dtype=dt_vve)
         data = np.array([(a([1, 2, 3]), a([1, 2]), 1),
                          (a([]), a([2, 4, 6]), 0), ],
                          dtype=dt_vve)
@@ -130,9 +131,8 @@ class TestVlen(TestCase):
 def test_write_empty_vlen(writable_file):
     # vlen dtype with no entries
     d = np.rec.fromarrays([[], []], names='a,b', formats='|V16,O')
-    dset = writable_file.create_dataset(
-        'test', data=d, dtype=[('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float64))]
-    )
+    dtype = [('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float64))]
+    dset = writable_file.create_dataset(make_name(), data=d, dtype=dtype)
     assert dset.size == 0
 
 
@@ -145,7 +145,7 @@ def test_write_vlen_length0_compound(writable_file):
     arr1 = np.array([], dtype=compound_dtype)
 
     dset = writable_file.create_dataset(
-        'vlen_compound_data', shape=(2,), dtype=vlen_compound_dtype
+        make_name(), shape=(2,), dtype=vlen_compound_dtype
     )
     dset[0] = arr0
     dset[1] = arr1
@@ -526,7 +526,7 @@ class TestBitfield(TestCase):
 def test_opaque(writable_file):
     # opaque without an h5py tag corresponds to numpy void dtypes
     arr = np.zeros(3, dtype='V2')
-    ds = writable_file.create_dataset('v', data=arr)
+    ds = writable_file.create_dataset(make_name(), data=arr)
     assert isinstance(ds.id.get_type(), h5py.h5t.TypeOpaqueID)
     assert ds.id.get_type().get_size() == 2
     np.testing.assert_array_equal(ds[:], arr)
