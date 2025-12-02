@@ -12,9 +12,9 @@
 """
 
 from contextlib import contextmanager
+from typing import Literal
 import posixpath as pp
 import numpy
-
 
 from .compat import filename_decode, filename_encode
 
@@ -24,6 +24,17 @@ from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
 from .vds import vds_support
+
+
+def set_fapl_file_locking(fapl, locking: Literal["true", "false", "best-effort"] | bool):
+    if locking in ("false", False):
+        fapl.set_file_locking(False, ignore_when_disabled=False)
+    elif locking in ("true", True):
+        fapl.set_file_locking(True, ignore_when_disabled=False)
+    elif locking == "best-effort":
+        fapl.set_file_locking(True, ignore_when_disabled=True)
+    else:
+        raise ValueError(f"Unsupported locking value: {locking}")
 
 
 class Group(HLObject, MutableMappingHDF5):

@@ -19,7 +19,7 @@ from warnings import warn
 from .compat import filename_decode, filename_encode
 
 from .base import phil, with_phil
-from .group import Group
+from .group import Group, set_fapl_file_locking
 from .. import h5, h5f, h5p, h5i, h5fd, _objects
 from .. import version
 
@@ -151,14 +151,7 @@ def make_fapl(
         plist.set_meta_block_size(int(meta_block_size))
 
     if locking is not None:
-        if locking in ("false", False):
-            plist.set_file_locking(False, ignore_when_disabled=False)
-        elif locking in ("true", True):
-            plist.set_file_locking(True, ignore_when_disabled=False)
-        elif locking == "best-effort":
-            plist.set_file_locking(True, ignore_when_disabled=True)
-        else:
-            raise ValueError(f"Unsupported locking value: {locking}")
+        set_fapl_file_locking(plist, locking)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
