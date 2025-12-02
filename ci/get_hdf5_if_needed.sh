@@ -13,7 +13,7 @@ else
         echo "Building serial"
     else
         echo "Building with MPI"
-        EXTRA_MPI_FLAGS="--enable-parallel --enable-shared"
+        EXTRA_MPI_FLAGS=(-D "HDF5_ENABLE_PARALLEL=ON")
     fi
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -25,7 +25,7 @@ else
         # Test with the direct file driver on Linux. This setting does not
         # affect the HDF5 bundled in Linux wheels - that is built into a Docker
         # image from a separate repository.
-        ENABLE_DIRECT_VFD="--enable-direct-vfd"
+        ENABLE_DIRECT_VFD=(-D "HDF5_ENABLE_DIRECT_VFD=ON")
     fi
 
     if [ -f $HDF5_DIR/lib/$lib_name ]; then
@@ -71,7 +71,9 @@ else
 
             export LD_LIBRARY_PATH="$HDF5_DIR/lib:${LD_LIBRARY_PATH}"
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
-            ZLIB_ARG="--with-zlib=$HDF5_DIR"
+            ZLIB_ARGS=(-D "ZLIB_LIBRARY=$HDF5_DIR/lib/zlib.lib"
+                       -D "ZLIB_INCLUDE_DIR=$HDF5_DIR/include"
+                       -D "ZLIB_USE_EXTERNAL=OFF")
         fi
 
         pushd /tmp
@@ -82,15 +84,18 @@ else
 
         pushd hdf5-$HDF5_VERSION
 
-        ./configure --prefix="$HDF5_DIR" \
-            ${ZLIB_ARG} \
-            ${EXTRA_MPI_FLAGS} \
-            ${BUILD_MODE} \
-            ${ENABLE_DIRECT_VFD} \
-            --enable-tests=no
+        cmake -S . -B build \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_INSTALL_PREFIX="$HDF5_DIR" \
+            -D HDF5_BUILD_EXAMPLES=OFF \
+            -D HDF5_BUILD_TOOLS=OFF \
+            -D HDF5_BUILD_UTILS=OFF \
+            "${ZLIB_ARGS[@]}" \
+            "${EXTRA_MPI_FLAGS[@]}" \
+            "${ENABLE_DIRECT_VFD[@]}"
 
-        make -j "$NPROC"
-        make install
+        make -C build -j "$NPROC"
+        make -C build install
         popd
         popd
 
