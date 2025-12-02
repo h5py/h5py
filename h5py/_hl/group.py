@@ -18,7 +18,7 @@ import numpy
 
 from .compat import filename_decode, filename_encode
 
-from .. import h5, h5g, h5i, h5o, h5r, h5t, h5l, h5p
+from .. import h5, h5f, h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
@@ -35,6 +35,48 @@ def set_fapl_file_locking(fapl, locking: Literal["true", "false", "best-effort"]
         fapl.set_file_locking(True, ignore_when_disabled=True)
     else:
         raise ValueError(f"Unsupported locking value: {locking}")
+
+
+def make_lapl(
+    file,
+    elink_mode: Literal["r", "r+"] | None = None,
+    elink_swmr: bool | None = None,
+    elink_locking: Literal["true", "false", "best-effort"] | bool | None = None,
+) -> h5p.PropLAID | None:
+    """Set up a link access property list"""
+    if elink_mode is None and elink_swmr is None and elink_locking is None:
+        return None
+
+    if file.mode == "r" and elink_mode == "r+":
+        raise ValueError("Opening external links in write mode from a file opened in read-only mode is not supported")
+
+    lapl = h5p.create(h5p.LINK_ACCESS)
+
+    if elink_mode is not None or elink_swmr is not None:
+        mode = file.mode if elink_mode is None else elink_mode
+        swmr_mode = file.swmr_mode if elink_swmr is None else elink_swmr
+
+        if file.mode == "r+" and file.swmr_mode and (mode != "r+" or not swmr_mode):
+            raise ValueError("Changing external links access mode from a file opened in SWMR write mode is not supported")
+
+        if mode == "r":
+            flags = h5f.ACC_RDONLY
+            if swmr_mode:
+                flags |= h5f.ACC_SWMR_READ
+        elif mode == "r+":
+            flags = h5f.ACC_RDWR
+            if swmr_mode:
+                flags |= h5f.ACC_SWMR_WRITE
+        else:
+            raise RuntimeError(f"Unsupported link access mode: {mode}")
+        lapl.set_elink_acc_flags(flags)
+
+    if elink_locking is not None:
+        fapl = file.id.get_access_plist()
+        set_fapl_file_locking(fapl, elink_locking)
+        lapl.set_elink_fapl(fapl)
+
+    return lapl
 
 
 class Group(HLObject, MutableMappingHDF5):
@@ -366,16 +408,20 @@ class Group(HLObject, MutableMappingHDF5):
                 raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
             return grp
 
-    @with_phil
     def __getitem__(self, name):
         """ Open an object in the file """
+        return self._get(name)
 
+    @with_phil
+    def _get(self, name, lapl=None):
         if isinstance(name, h5r.Reference):
             oid = h5r.dereference(name, self.id)
             if oid is None:
                 raise ValueError("Invalid HDF5 object reference")
         elif isinstance(name, (bytes, str)):
-            oid = h5o.open(self.id, self._e(name), lapl=self._lapl)
+            if lapl is None:
+                lapl = self._lapl
+            oid = h5o.open(self.id, self._e(name), lapl=lapl)
         else:
             raise TypeError("Accessing a group is done with bytes or str, "
                             "not {}".format(type(name)))
@@ -390,7 +436,16 @@ class Group(HLObject, MutableMappingHDF5):
         else:
             raise TypeError("Unknown object type")
 
-    def get(self, name, default=None, getclass=False, getlink=False):
+    def get(
+        self,
+        name,
+        default=None,
+        getclass=False,
+        getlink=False,
+        elink_mode: Literal["r", "r+"] | None = None,
+        elink_locking: Literal["true", "false", "best-effort"] | bool | None = None,
+        elink_swmr: bool | None = None,
+    ):
         """ Retrieve an item or other information.
 
         "name" given only:
@@ -408,6 +463,32 @@ class Group(HLObject, MutableMappingHDF5):
             Return HardLink, SoftLink and ExternalLink classes.  Return
             "default" if nothing with that name exists.
 
+        "elink_mode":
+            External links access mode:
+
+            - "r": Read-only
+            - "r+": Read/write
+            - None (default): Use current file access mode
+
+        "elink_locking":
+            External links file locking behavior:
+
+            - None (default)     --  Use the current file locking
+            - False (or "false") --  Disable file locking
+            - True (or "true")   --  Enable file locking
+            - "best-effort"      --  Enable file locking but ignore some errors
+
+            .. warning::
+
+                The HDF5_USE_FILE_LOCKING environment variable can override
+                this parameter.
+
+        "elink_swmr":
+            External link SWMR read mode.
+            Set to True only when elink_mode = 'r' and
+            current file is not opened in SWMR write mode.
+            By default, use current file SWMR mode.
+
         Example:
 
         >>> cls = group.get('foo', getclass=True)
@@ -416,9 +497,14 @@ class Group(HLObject, MutableMappingHDF5):
         # pylint: disable=arguments-differ
 
         with phil:
+            if elink_mode is None and elink_swmr is None and elink_locking is None:
+                lapl = self._lapl
+            else:
+                lapl = make_lapl(self.file, elink_mode, elink_swmr, elink_locking)
+
             if not (getclass or getlink):
                 try:
-                    return self[name]
+                    return self._get(name, lapl)
                 except KeyError:
                     return default
 
@@ -426,7 +512,7 @@ class Group(HLObject, MutableMappingHDF5):
                 return default
 
             elif getclass and not getlink:
-                typecode = h5o.get_info(self.id, self._e(name), lapl=self._lapl).type
+                typecode = h5o.get_info(self.id, self._e(name), lapl=lapl).type
 
                 try:
                     return {h5o.TYPE_GROUP: Group,
@@ -436,18 +522,18 @@ class Group(HLObject, MutableMappingHDF5):
                     raise TypeError("Unknown object type") from exc
 
             elif getlink:
-                typecode = self.id.links.get_info(self._e(name), lapl=self._lapl).type
+                typecode = self.id.links.get_info(self._e(name), lapl=lapl).type
 
                 if typecode == h5l.TYPE_SOFT:
                     if getclass:
                         return SoftLink
-                    linkbytes = self.id.links.get_val(self._e(name), lapl=self._lapl)
+                    linkbytes = self.id.links.get_val(self._e(name), lapl=lapl)
                     return SoftLink(self._d(linkbytes))
 
                 elif typecode == h5l.TYPE_EXTERNAL:
                     if getclass:
                         return ExternalLink
-                    filebytes, linkbytes = self.id.links.get_val(self._e(name), lapl=self._lapl)
+                    filebytes, linkbytes = self.id.links.get_val(self._e(name), lapl=lapl)
                     return ExternalLink(
                         filename_decode(filebytes), self._d(linkbytes)
                     )

@@ -246,6 +246,28 @@ Reference
                         :class:`SoftLink` or :class:`ExternalLink` instance.
                         If ``getclass`` is also True, returns the corresponding
                         Link class without instantiating it.
+        :param elink_mode: External links access mode:
+
+            - "r": Read-only
+            - "r+": Read/write
+            - None (default): Use current file access mode
+
+        :param elink_locking: External links file locking behavior:
+
+            - None (default)     --  Use the current file locking
+            - False (or "false") --  Disable file locking
+            - True (or "true")   --  Enable file locking
+            - "best-effort"      --  Enable file locking but ignore some errors
+
+            .. warning::
+
+                The HDF5_USE_FILE_LOCKING environment variable can override
+                this parameter.
+
+        :param elink_swmr: External link SWMR read mode.
+                           Set to True only when elink_mode = 'r' and
+                           current file is not opened in SWMR write mode.
+                           By default, use current file SWMR mode.
 
     .. method:: visit(callable)
 
