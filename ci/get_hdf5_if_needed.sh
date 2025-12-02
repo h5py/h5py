@@ -87,6 +87,7 @@ else
         cmake -S . -B build \
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_INSTALL_PREFIX="$HDF5_DIR" \
+            -D BUILD_TESTING=OFF \
             -D HDF5_BUILD_EXAMPLES=OFF \
             -D HDF5_BUILD_TOOLS=OFF \
             -D HDF5_BUILD_UTILS=OFF \
