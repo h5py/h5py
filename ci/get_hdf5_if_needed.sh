@@ -74,6 +74,8 @@ else
             ZLIB_ARGS=(-D "ZLIB_LIBRARY=$HDF5_DIR/lib/zlib.lib"
                        -D "ZLIB_INCLUDE_DIR=$HDF5_DIR/include"
                        -D "ZLIB_USE_EXTERNAL=OFF")
+        else
+          ZLIB_ARGS=(-D "HDF5_ENABLE_ZLIB_SUPPORT=ON")
         fi
 
         pushd /tmp
