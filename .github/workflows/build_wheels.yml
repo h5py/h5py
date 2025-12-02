@@ -41,10 +41,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         persist-credentials: false
-    - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: 3.13
     - name: Build sdist
@@ -77,7 +77,7 @@ jobs:
           - os: macos-15-intel
             arch: x86_64
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
           persist-credentials: false
@@ -95,7 +95,7 @@ jobs:
         # When preparing to upload a release, always build HDF5 to avoid potential
         # cache-poisoning attacks.
         if: ${{ runner.os == 'Windows' && github.ref_type != 'tag' && github.event_name != 'schedule' }}
-      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: 3.12
         if: runner.os == 'Windows'
@@ -147,7 +147,7 @@ jobs:
             cibw_before_build: pip install --only-binary ':all:' 'numpy==2.0.0' 'Cython==3.0.0' 'setuptools==77.0.1' 'pkgconfig==1.5.5'
             label: 'cython-min + numpy 2.0'
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
           persist-credentials: false
@@ -206,7 +206,7 @@ jobs:
 
       # If it's a tag, create a Github release
       - name: Upload to GitHub releases
-        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
         with:
           draft: false
