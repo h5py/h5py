@@ -71,9 +71,8 @@ else
 
             export LD_LIBRARY_PATH="$HDF5_DIR/lib:${LD_LIBRARY_PATH}"
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
-            ZLIB_ARGS=(-D "ZLIB_LIBRARY=$HDF5_DIR/lib/zlib.lib"
-                       -D "ZLIB_INCLUDE_DIR=$HDF5_DIR/include"
-                       -D "ZLIB_USE_EXTERNAL=OFF")
+            ZLIB_ARGS=(-D "HDF5_ENABLE_ZLIB_SUPPORT=ON"
+                       -D "ZLIB_ROOT=$HDF5_DIR")
         else
           ZLIB_ARGS=(-D "HDF5_ENABLE_ZLIB_SUPPORT=ON")
         fi
