@@ -73,7 +73,7 @@ def replace_class(istr):
 const_exclude = ['HDF5', 'API', 'H5', 'H5A', 'H5D', 'H5F', 'H5P', 'H5Z', 'INT',
                  'UINT', 'STRING', 'LONG', 'PHIL', 'GIL', 'TUPLE', 'LIST',
                  'FORTRAN', 'BOOL', 'NULL', 'NOT', 'SZIP']
-const_exclude = ["%s(?:\W|$)" % x for x in const_exclude]
+const_exclude = [r"%s(?:\W|$)" % x for x in const_exclude]
 const_exclude = "|".join(const_exclude)
 
 const_expr = re.compile(r"""
@@ -216,7 +216,7 @@ def setup(spx):
             line = replace_constant(line, mod)
             line = replace_module(line)
             line = replace_class(line)
-            line = line.replace('**kwds', '\*\*kwds').replace('*args','\*args')
+            line = line.replace('**kwds', r'\*\*kwds').replace('*args', r'\*args')
             lines.append(line)
 
 
