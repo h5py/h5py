@@ -14,6 +14,7 @@
 import inspect
 import os
 import sys
+from typing import Literal
 from warnings import warn
 
 from .compat import filename_decode, filename_encode
@@ -113,6 +114,62 @@ def registered_drivers():
     return frozenset(_drivers)
 
 
+def _set_file_locking(fapl, locking: Literal["true", "false", "best-effort"] | bool):
+    if locking in ("false", False):
+        fapl.set_file_locking(False, ignore_when_disabled=False)
+    elif locking in ("true", True):
+        fapl.set_file_locking(True, ignore_when_disabled=False)
+    elif locking == "best-effort":
+        fapl.set_file_locking(True, ignore_when_disabled=True)
+    else:
+        raise ValueError(f"Unsupported locking value: {locking}")
+
+
+def make_lapl(
+    fid: h5f.FileID,
+    elink_mode: Literal["r", "r+"] | None = None,
+    elink_swmr: bool | None = None,
+    elink_locking: Literal["true", "false", "best-effort"] | bool | None = None,
+) -> h5p.PropLAID | None:
+    """Set up a link access property list"""
+    if elink_mode is None and elink_swmr is None and elink_locking is None:
+        return None
+
+    file_mode = "r+" if fid.get_intent() & (h5f.ACC_RDWR | h5f.ACC_SWMR_WRITE) else "r"
+    file_swmr = bool(fid.get_intent() & (h5f.ACC_SWMR_READ | h5f.ACC_SWMR_WRITE))
+
+    if file_mode == "r" and elink_mode == "r+":
+        raise ValueError("Opening external links in write mode from a file opened in read-only mode is not supported")
+
+    lapl = h5p.create(h5p.LINK_ACCESS)
+
+    if elink_mode is not None or elink_swmr is not None:
+        mode = file_mode if elink_mode is None else elink_mode
+        swmr_mode = file_swmr if elink_swmr is None else elink_swmr
+
+        if file_mode == "r+" and file_swmr and (mode != "r+" or not swmr_mode):
+            raise ValueError("Changing external links access mode from a file opened in SWMR write mode is not supported")
+
+        if mode == "r":
+            flags = h5f.ACC_RDONLY
+            if swmr_mode:
+                flags |= h5f.ACC_SWMR_READ
+        elif mode == "r+":
+            flags = h5f.ACC_RDWR
+            if swmr_mode:
+                flags |= h5f.ACC_SWMR_WRITE
+        else:
+            raise RuntimeError(f"Unsupported link access mode: {mode}")
+        lapl.set_elink_acc_flags(flags)
+
+    if elink_locking is not None:
+        fapl = fid.get_access_plist()
+        _set_file_locking(fapl, elink_locking)
+        lapl.set_elink_fapl(fapl)
+
+    return lapl
+
+
 def make_fapl(
     driver, libver=None, rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
     locking=None, page_buf_size=None, min_meta_keep=0, min_raw_keep=0,
@@ -151,14 +208,7 @@ def make_fapl(
         plist.set_meta_block_size(int(meta_block_size))
 
     if locking is not None:
-        if locking in ("false", False):
-            plist.set_file_locking(False, ignore_when_disabled=False)
-        elif locking in ("true", True):
-            plist.set_file_locking(True, ignore_when_disabled=False)
-        elif locking == "best-effort":
-            plist.set_file_locking(True, ignore_when_disabled=True)
-        else:
-            raise ValueError(f"Unsupported locking value: {locking}")
+        _set_file_locking(plist, locking)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
@@ -384,7 +434,7 @@ class File(Group):
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
                  page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
                  alignment_threshold=1, alignment_interval=1, meta_block_size=None,
-                 *, track_times=False, **kwds):
+                 *, track_times=False, elink_mode=None, elink_swmr=None, elink_locking=None, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -503,6 +553,31 @@ class File(Group):
             Set the current minimum size, in bytes, of new metadata block allocations.
             See https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga8822e3dedc8e1414f20871a87d533cb1
 
+        elink_mode
+            External links access mode:
+
+            - "r": Read-only
+            - "r+": Read/write
+            - None (default): Use current file access mode
+
+        elink_swmr
+            External link SWMR read mode.
+            Set to True only when elink_mode = 'r' and current file is not opened in SWMR write mode.
+            By default, use current file SWMR mode.
+
+        elink_locking
+            External links file locking behavior:
+
+            - None (default)     --  Use the current file locking
+            - False (or "false") --  Disable file locking
+            - True (or "true")   --  Enable file locking
+            - "best-effort"      --  Enable file locking but ignore some errors
+
+            .. warning::
+
+                The HDF5_USE_FILE_LOCKING environment variable can override
+                this parameter.
+
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -570,7 +645,8 @@ class File(Group):
             else:
                 self._libver = (libver, 'latest')
 
-        super().__init__(fid)
+        lapl = make_lapl(fid, elink_mode, elink_swmr, elink_locking)
+        super().__init__(fid, lapl)
 
     _in_memory_file_counter = 0
 

@@ -31,13 +31,20 @@ class Group(HLObject, MutableMappingHDF5):
     """ Represents an HDF5 group.
     """
 
-    def __init__(self, bind):
+    def __init__(self, bind, lapl=None):
         """ Create a new Group object by binding to a low-level GroupID.
         """
+        self.__lapl = lapl
         with phil:
             if not isinstance(bind, h5g.GroupID):
                 raise ValueError("%s is not a GroupID" % bind)
             super().__init__(bind)
+
+    @property
+    def _lapl(self):
+        """ Fetch the link access property list appropriate for this object
+        """
+        return super()._lapl if self.__lapl is None else self.__lapl
 
     def create_group(self, name, track_order=None, *, track_times=False):
         """ Create and return a new subgroup.
@@ -69,7 +76,7 @@ class Group(HLObject, MutableMappingHDF5):
             else:
                 raise TypeError("track_times must be either True, False, or None")
             gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
-            return Group(gid)
+            return Group(gid, self._lapl)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
         """ Create a new HDF5 dataset
@@ -371,7 +378,7 @@ class Group(HLObject, MutableMappingHDF5):
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
-            return Group(oid)
+            return Group(oid, self._lapl)
         elif otype == h5i.DATASET:
             return dataset.Dataset(oid, readonly=(self.file.mode == 'r'))
         elif otype == h5i.DATATYPE:
