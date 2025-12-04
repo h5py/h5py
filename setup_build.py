@@ -108,14 +108,7 @@ class h5py_build_ext(build_ext):
             settings['library_dirs'].extend(config.msmpi_lib_dirs)
             settings['libraries'].append('msmpi')
 
-        try:
-            numpy_includes = numpy.get_include()
-        except AttributeError:
-            # if numpy is not installed get the headers from the .egg directory
-            import numpy.core
-            numpy_includes = os.path.join(os.path.dirname(numpy.core.__file__), 'include')
-
-        settings['include_dirs'] += [numpy_includes]
+        settings['include_dirs'] += [numpy.get_include()]
         if config.mpi:
             import mpi4py
             settings['include_dirs'] += [mpi4py.get_include()]
