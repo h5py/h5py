@@ -101,7 +101,7 @@ check-readme = [
     "twine>=6.1.0",
 ]
 docs = [
-    "sphinx>=7.4.7, <9",
+    "sphinx>=7.4.7",
 ]
 lint = [
     "pre-commit>=4.2.0",
