@@ -1073,6 +1073,87 @@ def test_file_locking_external_link(tmp_path, locking_arg, file_locking_props):
         assert elink_locking_info == file_locking_props
 
 
+class TestExternalLinkArguments:
+
+    def _create_files(self, tmp_path):
+        external_filepath = tmp_path / make_name("external{}.h5")
+        main_filepath = tmp_path / make_name("main{}.h5")
+
+        with h5py.File(external_filepath, "w", libver="latest") as external_file:
+            external_file.create_group("/group")
+            external_file["/group/data"] = 1, 2, 3
+
+        with h5py.File(main_filepath, "w", libver="latest") as main_file:
+            main_file["/external"] = h5py.ExternalLink(str(external_filepath), "/group")
+
+        return main_filepath
+
+    def test_elink_mode(self, tmp_path):
+        """Check that external links are opened in read-only mode"""
+        main_filepath = self._create_files(tmp_path)
+
+        with h5py.File(main_filepath, "a", elink_mode="r") as main_file:
+            with pytest.raises(ValueError):
+                main_file.create_dataset("/external/new_data", data=1)
+
+            ext_group = main_file["external"]
+            assert ext_group.file.mode == "r"
+            with pytest.raises(ValueError):
+                ext_group['new_data'] = 1  # Writing fails
+
+    def test_elink_mode_exception(self, tmp_path):
+        """Check that external links opened in write mode from read-only file fails"""
+        main_filepath = self._create_files(tmp_path)
+
+        with pytest.raises(ValueError):
+            h5py.File(main_filepath, "r", elink_mode="r+")
+
+    @pytest.mark.parametrize("file_swmr", (False, True))
+    @pytest.mark.parametrize("elink_swmr", (False, True))
+    def test_elink_swmr_from_ro_file(self, tmp_path, file_swmr, elink_swmr):
+        """Check that external links are opened with custom read-only SWMR mode"""
+        main_filepath = self._create_files(tmp_path)
+
+        with h5py.File(main_filepath, "r", swmr=file_swmr, elink_swmr=elink_swmr) as main_file:
+            ext_group = main_file["external"]
+            assert ext_group.file.mode == "r"
+            assert ext_group.file.swmr_mode == elink_swmr
+
+    @pytest.mark.parametrize("elink_swmr", (False, True))
+    def test_elink_swmr_from_rw_file(self, tmp_path, elink_swmr):
+        """Check that external links are opened with custom read-only SWMR mode"""
+        main_filepath = self._create_files(tmp_path)
+
+        with h5py.File(main_filepath, "a", elink_mode="r", elink_swmr=elink_swmr) as main_file:
+            ext_group = main_file["external"]
+            assert ext_group.file.mode == "r"
+            assert ext_group.file.swmr_mode == elink_swmr
+
+    @pytest.mark.parametrize("file_locking", (False, True, "best-effort"))
+    @pytest.mark.parametrize(
+        "elink_locking,file_locking_props",
+        [
+            (False, (0, 0)),
+            (True, (1, 0)),
+            ("best-effort", (1, 1)),
+        ]
+    )
+    def test_elink_locking_arg(self, tmp_path, file_locking, elink_locking, file_locking_props):
+        """Check that external links are opened with custom file locking"""
+        main_filepath = self._create_files(tmp_path)
+
+        with h5py.File(main_filepath, "r", locking=file_locking, elink_locking=elink_locking) as main_file:
+            cls = main_file.get("/external/data", getclass=True)
+            assert cls is h5py.Dataset
+
+            link = main_file.get("/external/data", getlink=True)
+            assert isinstance(link, h5py.HardLink)
+
+            ext_group = main_file["external"]
+            access_plist = ext_group.file.id.get_access_plist()
+            assert access_plist.get_file_locking() == file_locking_props
+
+
 def test_close_gc(tmp_path):
     # https://github.com/h5py/h5py/issues/1852
     filename = tmp_path / make_name("test{}.h5")
