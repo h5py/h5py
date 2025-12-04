@@ -73,6 +73,9 @@ if sys.platform.startswith('win'):
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
 
+def version_tuple(dunder_version: str) -> tuple[int, int, int]:
+    v = Version(dunder_version)
+    return (v.major, v.minor, v.micro)
 
 class h5py_build_ext(build_ext):
 
@@ -138,7 +141,7 @@ class h5py_build_ext(build_ext):
         settings['define_macros'].append(('NPY_TARGET_VERSION', 'NPY_1_21_API_VERSION'))
         extensions = [cls._make_extension(m, settings) for m in MODULES]
 
-        if int(numpy.__version__.split('.')[0]) >= 2:
+        if Version(numpy.__version__).major >= 2:
             # Enable NumPy 2.0 C API for modules that require it.
             # NUMPY2_MODULES will not be importable when NumPy 1.x is installed.
             settings['define_macros'].append(('NPY_TARGET_VERSION', 'NPY_2_0_API_VERSION'))
@@ -192,7 +195,7 @@ class h5py_build_ext(build_ext):
             "VOL_MIN_HDF5_VERSION": (1, 11, 5),
             "COMPLEX256_SUPPORT": complex256_support,
             "NUMPY_BUILD_VERSION": numpy.__version__,
-            "NUMPY_BUILD_VERSION_TUPLE": tuple(int(x) for x in numpy.__version__.split('.')[:3]),
+            "NUMPY_BUILD_VERSION_TUPLE": version_tuple(numpy.__version__),
             "CYTHON_BUILD_VERSION": cython_version,
             "PLATFORM_SYSTEM": platform.system(),
             "OBJECTS_USE_LOCKING": True,
