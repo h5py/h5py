@@ -45,7 +45,7 @@ class TestFileAlignment(TestCase):
             else:
                 raise RuntimeError("Data was all found to be aligned to 4096")
 
-    @pytest.mark.parallel_threads(2)  # Quite slow otherwise
+    @pytest.mark.parallel_threads_limit(2)  # Quite slow otherwise
     def test_alignment_set_above_threshold(self):
         # 2022/01/19 hmaarrfk
         # UnitTest (TestCase) doesn't play well with pytest parametrization.

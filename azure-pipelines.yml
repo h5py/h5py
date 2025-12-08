@@ -96,6 +96,13 @@ jobs:
         HDF5_VERSION: 1.14.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
+      py314t-concurrency:  # Runs pytest-run-parallel
+        python.version: '3.14'
+        python.architecture: 'x64-freethreaded'
+        TOXENV: py314t-test-concurrency
+        HDF5_VERSION: 1.14.6
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
 
     maxParallel: 4
 
