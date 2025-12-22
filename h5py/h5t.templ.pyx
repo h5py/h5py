@@ -1642,80 +1642,45 @@ cdef TypeID _c_complex(cnp.dtype dt):
     cdef size_t size, off_r, off_i
     cdef size_t length = dt.itemsize
     cdef char byteorder = dt.byteorder
-    ### {{if HDF5_VERSION >= (2, 0, 0)}}
-    cdef TypeComplexID tid_cmplx
-    ### {{endif}}
 
-    if cfg.native_complex:
-        # A native HDF5 datatype
-        ### {{if HDF5_VERSION >= (2, 0, 0)}}
-        if length == 8:
-            if byteorder == c'<':
-                tid_cmplx = COMPLEX_IEEE_F32LE
-            elif byteorder == c'>':
-                tid_cmplx = COMPLEX_IEEE_F32BE
-            else:
-                tid_cmplx = NATIVE_FLOAT_COMPLEX
-        elif length == 16:
-            if byteorder == c'<':
-                tid_cmplx = COMPLEX_IEEE_F64LE
-            elif byteorder == c'>':
-                tid_cmplx = COMPLEX_IEEE_F64BE
-            else:
-                tid_cmplx = NATIVE_DOUBLE_COMPLEX
-        elif length == 32:
-            ### {{if COMPLEX256_SUPPORT}}
-            tid_cmplx = NATIVE_LDOUBLE_COMPLEX
-            ### {{else}}
-            raise TypeError("Illegal length %d for complex dtype" % length)
-            ### {{endif}}
+    # A two-field HDF5 compound (field names depend on cfg)
+    if length == 8:
+        size = h5py_size_n64
+        off_r = h5py_offset_n64_real
+        off_i = h5py_offset_n64_imag
+        if byteorder == c'<':
+            tid_sub = H5T_IEEE_F32LE
+        elif byteorder == c'>':
+            tid_sub = H5T_IEEE_F32BE
         else:
-            raise TypeError("Illegal length %d for complex dtype" % length)
-
-        return tid_cmplx.copy()
+            tid_sub = H5T_NATIVE_FLOAT
+    elif length == 16:
+        size = h5py_size_n128
+        off_r = h5py_offset_n128_real
+        off_i = h5py_offset_n128_imag
+        if byteorder == c'<':
+            tid_sub = H5T_IEEE_F64LE
+        elif byteorder == c'>':
+            tid_sub = H5T_IEEE_F64BE
+        else:
+            tid_sub = H5T_NATIVE_DOUBLE
+    elif length == 32:
+        ### {{if COMPLEX256_SUPPORT}}
+        size = h5py_size_n256
+        off_r = h5py_offset_n256_real
+        off_i = h5py_offset_n256_imag
+        tid_sub = H5T_NATIVE_LDOUBLE
         ### {{else}}
-        raise TypeError("Need HDF5 >= 2.0 for native complex number dtypes")
+        raise TypeError("Illegal length %d for complex dtype" % length)
         ### {{endif}}
-
     else:
-        # A two-field HDF5 compound (field names depend on cfg)
-        if length == 8:
-            size = h5py_size_n64
-            off_r = h5py_offset_n64_real
-            off_i = h5py_offset_n64_imag
-            if byteorder == c'<':
-                tid_sub = H5T_IEEE_F32LE
-            elif byteorder == c'>':
-                tid_sub = H5T_IEEE_F32BE
-            else:
-                tid_sub = H5T_NATIVE_FLOAT
-        elif length == 16:
-            size = h5py_size_n128
-            off_r = h5py_offset_n128_real
-            off_i = h5py_offset_n128_imag
-            if byteorder == c'<':
-                tid_sub = H5T_IEEE_F64LE
-            elif byteorder == c'>':
-                tid_sub = H5T_IEEE_F64BE
-            else:
-                tid_sub = H5T_NATIVE_DOUBLE
-        elif length == 32:
-            ### {{if COMPLEX256_SUPPORT}}
-            size = h5py_size_n256
-            off_r = h5py_offset_n256_real
-            off_i = h5py_offset_n256_imag
-            tid_sub = H5T_NATIVE_LDOUBLE
-            ### {{else}}
-            raise TypeError("Illegal length %d for complex dtype" % length)
-            ### {{endif}}
-        else:
-            raise TypeError("Illegal length %d for complex dtype" % length)
+        raise TypeError("Illegal length %d for complex dtype" % length)
 
-        tid = H5Tcreate(H5T_COMPOUND, size)
-        H5Tinsert(tid, cfg._r_name, off_r, tid_sub)
-        H5Tinsert(tid, cfg._i_name, off_i, tid_sub)
+    tid = H5Tcreate(H5T_COMPOUND, size)
+    H5Tinsert(tid, cfg._r_name, off_r, tid_sub)
+    H5Tinsert(tid, cfg._i_name, off_i, tid_sub)
 
-        return TypeCompoundID(tid)
+    return TypeCompoundID(tid)
 
 
 cdef TypeCompoundID _c_compound(cnp.dtype dt, int logical, int aligned):
