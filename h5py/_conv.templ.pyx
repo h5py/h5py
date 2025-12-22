@@ -905,6 +905,7 @@ cdef herr_t uint2bitfield(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
+#
 
 cpdef int register_converters() except -1:
     cdef:
