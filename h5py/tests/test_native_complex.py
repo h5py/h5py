@@ -113,16 +113,17 @@ def test_default_create(writable_file):
 
 def test_explicit_create(writable_file):
     """Explicitly use native complex datatype to create datasets & attributes"""
-    for h5_dt, np_dt in [
-        (h5t.COMPLEX_IEEE_F32LE, np.dtype("<c8")),
-        (h5t.COMPLEX_IEEE_F32BE, np.dtype(">c8")),
-        (h5t.COMPLEX_IEEE_F64LE, np.dtype("<c16")),
-        (h5t.COMPLEX_IEEE_F64BE, np.dtype(">c16")),
-        (h5t.NATIVE_FLOAT_COMPLEX, np.dtype("=c8")),
-        (h5t.NATIVE_DOUBLE_COMPLEX, np.dtype("=c16")),
+    for h5_dt, np_dt_s in [
+        (h5t.COMPLEX_IEEE_F32LE, "<c8"),
+        (h5t.COMPLEX_IEEE_F32BE, ">c8"),
+        (h5t.COMPLEX_IEEE_F64LE, "<c16"),
+        (h5t.COMPLEX_IEEE_F64BE, ">c16"),
+        (h5t.NATIVE_FLOAT_COMPLEX, "=c8"),
+        (h5t.NATIVE_DOUBLE_COMPLEX, "=c16"),
     ]:
+        np_dt = np.dtype(np_dt_s)
         complex_array = (np.random.rand(100) + 1j * np.random.rand(100)).astype(np_dt)
-        ds = writable_file.create_dataset(str(np_dt), (100,), dtype=h5py.Datatype(h5_dt))
+        ds = writable_file.create_dataset(np_dt_s, (100,), dtype=h5py.Datatype(h5_dt))
         ds[:] = complex_array
         c = np.array(1.9 + 1j * 6.7, dtype=np_dt)
         ds.attrs.create("c", c, dtype=h5py.Datatype(h5_dt))
