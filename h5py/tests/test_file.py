@@ -1023,8 +1023,8 @@ class TestFileLocking:
             ex.submit(open_in_subprocess, fname, mode="w", locking=True).result()
 
 
-def open_in_subprocess(*args, **kwargs):
-    """Open and close HDF5 file in a subprocess"""
+def open_and_close(*args, **kwargs):
+    """Open and close HDF5 file, for use in a subprocess"""
     with File(*args, **kwargs):
         pass
 
