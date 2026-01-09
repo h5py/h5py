@@ -1020,7 +1020,7 @@ class TestFileLocking:
             File(fname, mode="r", locking=False) as f,
         ):
             # Opening in write mode with locking is expected to work
-            ex.submit(open_in_subprocess, fname, mode="w", locking=True).result()
+            ex.submit(open_and_close, fname, mode="w", locking=True).result()
 
 
 def open_and_close(*args, **kwargs):
