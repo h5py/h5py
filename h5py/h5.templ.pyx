@@ -120,6 +120,11 @@ cdef class H5PYConfig:
     def read_byte_strings(self):
         """ Returns a context manager which forces all strings to be returned
         as byte strings. """
+        warn(
+            "h5py.get_config().read_byte_strings is deprecated, "
+            "and no longer has any effect.",
+            category=H5pyDeprecationWarning,
+        )
         with phil:
             return self._bytestrings
 
