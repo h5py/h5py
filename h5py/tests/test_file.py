@@ -1020,7 +1020,8 @@ class TestFileLocking:
             File(fname, mode="r", locking=False) as f,
         ):
             # Opening in write mode with locking is expected to work
-            ex.submit(open_and_close, fname, mode="w", locking=True).result()
+            future = ex.submit(open_and_close, fname, mode="w", locking=True)
+            future.result(timeout=10)
 
 
 def open_and_close(*args, **kwargs):
