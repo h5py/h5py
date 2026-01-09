@@ -13,13 +13,14 @@
     Tests all aspects of File objects, including their creation.
 """
 
+import multiprocessing
 import os
 import stat
 import pickle
 import tempfile
 import time
-import subprocess
 import sys
+from concurrent.futures import ProcessPoolExecutor
 from hashlib import sha256
 
 import pytest
@@ -1009,31 +1010,24 @@ class TestFileLocking:
         """Test file locking option from different concurrent processes"""
         fname = tmp_path / make_name("test{}.h5")
 
-        def open_in_subprocess(filename, mode, locking):
-            """Open HDF5 file in a subprocess and return True on success"""
-            h5py_import_dir = str(pathlib.Path(h5py.__file__).parent.parent)
-
-            process = subprocess.run(
-                [
-                    sys.executable,
-                    "-c",
-                    f"""
-import sys
-sys.path.insert(0, {h5py_import_dir!r})
-import h5py
-f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
-                    """,
-                ],
-                capture_output=True)
-            return process.returncode == 0 and not process.stderr
-
         # Create test file
-        with h5py.File(fname, mode="w", locking=True) as f:
+        with File(fname, mode="w", locking=True) as f:
             f["data"] = 1
 
-        with h5py.File(fname, mode="r", locking=False) as f:
+        ctx = multiprocessing.get_context("spawn")
+        with (
+            ProcessPoolExecutor(mp_context=ctx, max_workers=1) as ex,
+            File(fname, mode="r", locking=False) as f,
+        ):
             # Opening in write mode with locking is expected to work
-            assert open_in_subprocess(fname, mode="w", locking=True)
+            future = ex.submit(open_and_close, fname, mode="w", locking=True)
+            future.result(timeout=10)
+
+
+def open_and_close(*args, **kwargs):
+    """Open and close HDF5 file, for use in a subprocess"""
+    with File(*args, **kwargs):
+        pass
 
 
 @pytest.mark.skipif(
