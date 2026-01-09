@@ -912,12 +912,10 @@ cdef herr_t uint2bitfield(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 #   datatype. In h5py 3.x, numpy complex dtypes are presented to HDF5 as compound
 #   to preserve existing behaviour. We expect to switch this in h5py 4.0.
 
-cdef inline int check_compound_complex(hid_t tid, size_t member_size) with gil:
+cdef inline int check_compound_complex(hid_t tid, size_t member_size):
     if (
             H5Tget_class(tid) == H5T_COMPOUND
             and H5Tget_nmembers(tid) == 2
-            and H5Tget_member_name(tid, 0) == cfg._r_name
-            and H5Tget_member_name(tid, 1) == cfg._i_name
             and H5Tget_member_class(tid, 0) == H5T_FLOAT
             and H5Tget_member_class(tid, 1) == H5T_FLOAT
             and H5Tget_size(H5Tget_member_type(tid, 0)) == member_size
