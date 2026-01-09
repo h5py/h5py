@@ -31,15 +31,22 @@ arch = platform.machine().lower()
 CI_DIR = dirname(abspath(__file__))
 
 CMAKE_CONFIGURE_CMD = [
-    "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
-    "-DHDF5_BUILD_CPP_LIB=OFF", "-DHDF5_BUILD_HL_LIB=ON",
-    "-DHDF5_BUILD_TOOLS:BOOL=OFF", "-DBUILD_TESTING:BOOL=OFF",
+    "cmake",
+    "-DBUILD_SHARED_LIBS:BOOL=ON",
+    "-DBUILD_STATIC_LIBS:BOOL=OFF",
+    "-DBUILD_TESTING:BOOL=OFF",
+    "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
+    "-DHDF5_BUILD_EXAMPLES:BOOL=OFF"
+    "-DHDF5_BUILD_HL_LIB=ON",
+    "-DHDF5_BUILD_TOOLS:BOOL=OFF",
+    "-DHDF5_BUILD_UTILS:BOOL=OFF",
+
 ]
 if ZLIB_ROOT:
     if arch in ("arm64", "aarch64"):
         # ZLIB includes based on vcpkg layout
         CMAKE_CONFIGURE_CMD += [
-            "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
+            "-DHDF5_ENABLE_ZLIB_SUPPORT=ON",
             f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
             f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib\\zlib.lib",
             f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\debug\\lib\\zlibd.lib",
@@ -47,7 +54,7 @@ if ZLIB_ROOT:
     elif arch in ("amd64", "x86_64"):
         ## ZLIB includes based on source build layout
         CMAKE_CONFIGURE_CMD += [
-            "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
+            "-DHDF5_ENABLE_ZLIB_SUPPORT=ON",
             f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
             f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib\\zlib.lib",
         ]
