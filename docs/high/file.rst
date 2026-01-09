@@ -550,6 +550,27 @@ Reference
             details, see :ref:`file_alignment`.
     :param meta_block_size: Determines the current minimum size, in bytes, of
             new metadata block allocations. See :ref:`file_meta_block_size`.
+    :param elink_mode: External links access mode:
+
+            - "r": Read-only
+            - "r+": Read/write
+            - None (default): Use current file access mode
+
+    :param elink_swmr: External link SWMR read mode.
+            Set to True only when elink_mode = 'r' and current file is not opened in SWMR write mode.
+            By default, use current file SWMR mode.
+    :param elink_locking: External links file locking behavior:
+
+            - None (default)     --  Use the current file locking
+            - False (or "false") --  Disable file locking
+            - True (or "true")   --  Enable file locking
+            - "best-effort"      --  Enable file locking but ignore some errors
+
+            .. warning::
+
+                The HDF5_USE_FILE_LOCKING environment variable can override
+                this parameter.
+
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
     .. classmethod:: in_memory(file_image=None, block_size=64*1024, **kwargs)
