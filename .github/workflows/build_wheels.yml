@@ -41,10 +41,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         persist-credentials: false
-    - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: 3.13
     - name: Build sdist
@@ -52,7 +52,7 @@ jobs:
         pipx run build --sdist
         pipx run twine check --strict dist/*
     - name: Upload sdist
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: sdist
         path: dist/*.tar.gz
@@ -77,7 +77,7 @@ jobs:
           - os: macos-15-intel
             arch: x86_64
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
           persist-credentials: false
@@ -88,14 +88,14 @@ jobs:
 
       # Windows HDF5
       - name: Cache built HDF5 (Windows)
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('ci/cibw_before_all_windows.sh', 'ci/get_hdf5_win.py') }}
           path: cache/hdf5
         # When preparing to upload a release, always build HDF5 to avoid potential
         # cache-poisoning attacks.
         if: ${{ runner.os == 'Windows' && github.ref_type != 'tag' && github.event_name != 'schedule' }}
-      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: 3.12
         if: runner.os == 'Windows'
@@ -106,7 +106,7 @@ jobs:
 
       # macOS HDF5
       - name: Cache built HDF5 (Mac)
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('ci/cibw_before_all_macos.sh', 'ci/get_hdf5_if_needed.sh') }}
           path: cache/hdf5
@@ -126,7 +126,7 @@ jobs:
         if: runner.os == 'Windows'
 
       # And upload the results
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
@@ -147,7 +147,7 @@ jobs:
             cibw_before_build: pip install --only-binary ':all:' 'numpy==2.0.0' 'Cython==3.0.0' 'setuptools==77.0.1' 'pkgconfig==1.5.5'
             label: 'cython-min + numpy 2.0'
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
           persist-credentials: false
@@ -183,13 +183,13 @@ jobs:
         shell: bash -el {0}
     steps:
       - name: Download sdist
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: sdist
           path: dist
         if: github.repository_owner == 'h5py' && github.event_name == 'push' && github.ref_type == 'tag'
       - name: Download wheels
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: cibw-wheels-*
           merge-multiple: true
@@ -198,7 +198,7 @@ jobs:
 
       # If it's a scheduled run, it was built with nightly NumPy, push to scientific-python:
       - name: Upload wheels to Anaconda Cloud as nightlies
-        uses: scientific-python/upload-nightly-action@b36e8c0c10dbcfd2e05bf95f17ef8c14fd708dbf # 0.6.2
+        uses: scientific-python/upload-nightly-action@5748273c71e2d8d3a61f3a11a16421c8954f9ecf # 0.6.3
         with:
           artifacts_path: dist
           anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
@@ -206,7 +206,7 @@ jobs:
 
       # If it's a tag, create a Github release
       - name: Upload to GitHub releases
-        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
         with:
           draft: false

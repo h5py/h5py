@@ -482,6 +482,7 @@ cdef class DatasetID(ObjectID):
         """
         H5Drefresh(self.id)
 
+    @with_phil
     def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None):
         """ (offsets, data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
@@ -530,6 +531,7 @@ cdef class DatasetID(ObjectID):
                 H5Sclose(space_id)
 
 
+    @with_phil
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def read_direct_chunk(self, offsets, PropID dxpl=None, unsigned char[::1] out=None):

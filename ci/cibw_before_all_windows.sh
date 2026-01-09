@@ -41,7 +41,7 @@ export PATH="$PATH:$EXTRA_PATH"
 export ZLIB_ROOT
 
 # HDF5
-export HDF5_VERSION="1.14.6"
+export HDF5_VERSION="2.0.0"
 export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION"
 
 pip install requests
