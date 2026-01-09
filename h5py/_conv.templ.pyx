@@ -912,7 +912,7 @@ cdef herr_t uint2bitfield(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 #   datatype. In h5py 3.x, numpy complex dtypes are presented to HDF5 as compound
 #   to preserve existing behaviour. We expect to switch this in h5py 4.0.
 
-cdef inline int check_compound_complex(hid_t tid, size_t member_size):
+cdef inline int check_compound_complex(hid_t tid, size_t member_size, H5T_order_t order):
     if (
             H5Tget_class(tid) == H5T_COMPOUND
             and H5Tget_nmembers(tid) == 2
@@ -922,6 +922,8 @@ cdef inline int check_compound_complex(hid_t tid, size_t member_size):
             and H5Tget_size(H5Tget_member_type(tid, 1)) == member_size
             and H5Tget_member_offset(tid, 0) == 0
             and H5Tget_member_offset(tid, 1) == <int>member_size
+            and H5Tget_order(H5Tget_member_type(tid, 0)) == order
+            and H5Tget_order(H5Tget_member_type(tid, 1)) == order
     ):
         return 1
     return 0
@@ -945,7 +947,7 @@ cdef herr_t complex2compound(hid_t src_id,
         if H5Tget_class(src_id) != H5T_COMPLEX:
             return -2
         member_size = H5Tget_size(src_id) // 2
-        if not check_compound_complex(dst_id, member_size):
+        if not check_compound_complex(dst_id, member_size, H5Tget_order(src_id)):
             return -2
         # Not calling log_convert_registered() here - logging requires the GIL,
         # but this function can be called without it.
@@ -979,7 +981,7 @@ cdef herr_t compound2complex(hid_t src_id,
         if H5Tget_class(dst_id) != H5T_COMPLEX:
             return -2
         member_size = H5Tget_size(dst_id) // 2
-        if not check_compound_complex(src_id, member_size):
+        if not check_compound_complex(src_id, member_size, H5Tget_order(dst_id)):
             return -2
         # Not calling log_convert_registered() here - logging requires the GIL,
         # but this function can be called without it.
