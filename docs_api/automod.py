@@ -1,8 +1,3 @@
-
-"""
-    Requires patched version of autodoc.py
-    http://bugs.python.org/issue3422
-"""
 import re
 from functools import partial
 
