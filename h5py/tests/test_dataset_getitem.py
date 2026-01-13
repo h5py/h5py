@@ -627,3 +627,20 @@ def test_error_newaxis(writable_file):
     ds = writable_file.create_dataset(make_name(), data=np.arange(5))
     with pytest.raises(TypeError, match="newaxis"):
         ds[np.newaxis, :]
+
+
+def test_bool_selection_1d(writable_file):
+    """https://github.com/h5py/h5py/issues/2674"""
+    int_arr = np.arange(9).reshape(3, 3)
+    writable_file['integers'] = int_arr
+    str_arr = np.array([s.encode() for s in 'abcdefghi'], dtype=object).reshape(3, 3)
+    writable_file['strings'] = str_arr
+
+    sel = np.array([True, False, True])
+    int_dset = writable_file['integers']
+    np.testing.assert_array_equal(int_dset[sel], int_arr[sel])
+    np.testing.assert_array_equal(int_dset[sel, :], int_arr[sel, :])
+
+    str_dset = writable_file['strings']
+    np.testing.assert_array_equal(str_dset[sel], str_arr[sel])
+    np.testing.assert_array_equal(str_dset[sel, :], str_arr[sel, :])
