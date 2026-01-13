@@ -530,3 +530,22 @@ def test_opaque(writable_file):
     assert isinstance(ds.id.get_type(), h5py.h5t.TypeOpaqueID)
     assert ds.id.get_type().get_size() == 2
     np.testing.assert_array_equal(ds[:], arr)
+
+
+def test_create_bitfield(writable_file):
+    data = np.arange(12, dtype=np.uint16)
+    ds = writable_file.create_dataset(
+        'b1', dtype=h5py.Datatype(h5py.h5t.STD_B16LE), shape=(12,)
+    )
+    ds[:] = data
+    assert isinstance(ds.id.get_type(), h5py.h5t.TypeBitfieldID)
+    assert ds.id.get_type().get_size() == 2
+    np.testing.assert_array_equal(ds[:], data)
+
+    ds2 = writable_file.create_dataset(
+        'b2', dtype=h5py.h5t.STD_B16LE, shape=(12,)
+    )
+    ds2[:] = data
+    assert isinstance(ds2.id.get_type(), h5py.h5t.TypeBitfieldID)
+    assert ds2.id.get_type().get_size() == 2
+    np.testing.assert_array_equal(ds2[:], data)
