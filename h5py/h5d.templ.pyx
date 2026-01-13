@@ -534,6 +534,7 @@ cdef class DatasetID(ObjectID):
     @with_phil
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @with_phil
     def read_direct_chunk(self, offsets, PropID dxpl=None, unsigned char[::1] out=None):
         """ (offsets, PropID dxpl=None, out=None)
 
