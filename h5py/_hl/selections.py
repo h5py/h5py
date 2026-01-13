@@ -60,9 +60,12 @@ def select(shape, args, dataset=None):
             return arg
 
         elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
-            if arg.shape != shape:
+            if arg.shape == shape:
+                return PointSelection.from_mask(arg)
+            # Allow 1D boolean array on the 1st dim
+            elif arg.shape != shape[:1]:
                 raise TypeError("Boolean indexing array has incompatible shape")
-            return PointSelection.from_mask(arg)
+
 
         elif isinstance(arg, h5r.RegionReference):
             if dataset is None:
