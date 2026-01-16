@@ -57,7 +57,7 @@ class TestRepr(BaseDataset):
     @pytest.mark.thread_unsafe
     def test_repr_closed(self):
         """ repr() works on live and dead datasets """
-        ds = self.f.create_dataset(make_name(), (4,))
+        ds = self.f.create_dataset(make_name(), (4,), dtype="f4")
         self.f.close()
         assert repr(ds) == '<Closed HDF5 dataset>'
 
@@ -74,40 +74,40 @@ class TestCreateShape(BaseDataset):
 
     def test_create_scalar(self):
         """ Create a scalar dataset """
-        dset = self.f.create_dataset(make_name(), ())
+        dset = self.f.create_dataset(make_name(), (), dtype='f4')
         self.assertEqual(dset.shape, ())
 
     def test_create_simple(self):
         """ Create a size-1 dataset """
-        dset = self.f.create_dataset(make_name(), (1,))
+        dset = self.f.create_dataset(make_name(), (1,), dtype='f4')
         self.assertEqual(dset.shape, (1,))
 
     def test_create_integer(self):
         """ Create a size-1 dataset with integer shape"""
-        dset = self.f.create_dataset(make_name(), 1)
+        dset = self.f.create_dataset(make_name(), 1, dtype='f4')
         self.assertEqual(dset.shape, (1,))
 
     def test_create_extended_1d(self):
         """ Create an extended dataset with tuple shape """
-        dset = self.f.create_dataset(make_name(), (63,))
+        dset = self.f.create_dataset(make_name(), (63,), dtype='f4')
         self.assertEqual(dset.shape, (63,))
         self.assertEqual(dset.size, 63)
 
     def test_create_extended_2d(self):
         """ Create an extended dataset with 2 dimensions """
-        dset = self.f.create_dataset(make_name(), (6, 10))
+        dset = self.f.create_dataset(make_name(), (6, 10), dtype='f4')
         self.assertEqual(dset.shape, (6, 10))
         self.assertEqual(dset.size, (60))
 
     def test_create_integer_extended(self):
         """ Create an extended dataset with integer shape """
-        dset = self.f.create_dataset(make_name(), 63)
+        dset = self.f.create_dataset(make_name(), 63, dtype='f4')
         self.assertEqual(dset.shape, (63,))
         self.assertEqual(dset.size, 63)
 
     def test_default_dtype(self):
         """ Confirm that the default dtype is float """
-        dset = self.f.create_dataset(make_name(), (63,))
+        dset = self.f.create_dataset(make_name(), (63,), dtype='f4')
         self.assertEqual(dset.dtype, np.dtype('=f4'))
 
     def test_missing_shape(self):
@@ -130,10 +130,10 @@ class TestCreateShape(BaseDataset):
         self.assertEqual(dset.dtype, np.dtype('complex256'))
 
     def test_name_bytes(self):
-        dset = self.f.create_dataset(make_name("foo").encode('utf-8'), (1,))
+        dset = self.f.create_dataset(make_name("foo").encode('utf-8'), (1,), dtype='f4')
         self.assertEqual(dset.shape, (1,))
 
-        dset2 = self.f.create_dataset((make_name("bar{}/baz")).encode('utf-8'), (2,))
+        dset2 = self.f.create_dataset((make_name("bar{}/baz")).encode('utf-8'), (2,), dtype='f4')
         self.assertEqual(dset2.shape, (2,))
 
 class TestCreateData(BaseDataset):
@@ -420,32 +420,32 @@ class TestCreateChunked(BaseDataset):
 
     def test_create_chunks(self):
         """ Create via chunks tuple """
-        dset = self.f.create_dataset(make_name(), shape=(100,), chunks=(10,))
+        dset = self.f.create_dataset(make_name(), shape=(100,), chunks=(10,), dtype='f4')
         self.assertEqual(dset.chunks, (10,))
 
     def test_create_chunks_integer(self):
         """ Create via chunks integer """
-        dset = self.f.create_dataset(make_name(), shape=(100,), chunks=10)
+        dset = self.f.create_dataset(make_name(), shape=(100,), chunks=10, dtype='f4')
         self.assertEqual(dset.chunks, (10,))
 
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
         with self.assertRaises(ValueError):
-            self.f.create_dataset(make_name(), shape=(100,), chunks=(200,))
+            self.f.create_dataset(make_name(), shape=(100,), chunks=(200,), dtype='f4')
 
     def test_chunks_false(self):
         """ Chunked format required for given storage options """
         with self.assertRaises(ValueError):
-            self.f.create_dataset(make_name(), shape=(10,), maxshape=100, chunks=False)
+            self.f.create_dataset(make_name(), shape=(10,), maxshape=100, chunks=False, dtype='f4')
 
     def test_chunks_scalar(self):
         """ Attempting to create chunked scalar dataset raises TypeError """
         with self.assertRaises(TypeError):
-            self.f.create_dataset(make_name(), shape=(), chunks=(50,))
+            self.f.create_dataset(make_name(), shape=(), chunks=(50,), dtype='f4')
 
     def test_auto_chunks(self):
         """ Auto-chunking of datasets """
-        dset = self.f.create_dataset(make_name(), shape=(20, 100), chunks=True)
+        dset = self.f.create_dataset(make_name(), shape=(20, 100), chunks=True, dtype='f4')
         self.assertIsInstance(dset.chunks, tuple)
         self.assertEqual(len(dset.chunks), 2)
 
@@ -488,19 +488,19 @@ class TestCreateFillvalue(BaseDataset):
 
     def test_create_fillval(self):
         """ Fill value is reflected in dataset contents """
-        dset = self.f.create_dataset(make_name(), (10,), fillvalue=4.0)
+        dset = self.f.create_dataset(make_name(), (10,), fillvalue=4.0, dtype='f4')
         self.assertEqual(dset[0], 4.0)
         self.assertEqual(dset[7], 4.0)
 
     def test_property(self):
         """ Fill value is recoverable via property """
-        dset = self.f.create_dataset(make_name(), (10,), fillvalue=3.0)
+        dset = self.f.create_dataset(make_name(), (10,), fillvalue=3.0, dtype='f4')
         self.assertEqual(dset.fillvalue, 3.0)
         self.assertNotIsInstance(dset.fillvalue, np.ndarray)
 
     def test_property_none(self):
         """ .fillvalue property works correctly if not set """
-        dset = self.f.create_dataset(make_name(), (10,))
+        dset = self.f.create_dataset(make_name(), (10,), dtype='f4')
         self.assertEqual(dset.fillvalue, 0)
 
     def test_compound(self):
@@ -526,7 +526,7 @@ class TestFillTime(BaseDataset):
 
     def test_fill_time_default(self):
         """ Fill time default to IFSET """
-        dset = self.f.create_dataset(make_name(), (10,), fillvalue=4.0)
+        dset = self.f.create_dataset(make_name(), (10,), 'f4', fillvalue=4.0)
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
         self.assertEqual(dset[0], 4.0)
@@ -535,7 +535,7 @@ class TestFillTime(BaseDataset):
     @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
     def test_compressed_default(self):
         """ Fill time is IFSET for compressed dataset (chunked) """
-        dset = self.f.create_dataset(make_name(), (10,), compression='gzip',
+        dset = self.f.create_dataset(make_name(), (10,), "f4", compression='gzip',
                                      fillvalue=4.0)
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
@@ -544,7 +544,7 @@ class TestFillTime(BaseDataset):
 
     def test_fill_time_never(self):
         """ Fill time set to NEVER """
-        dset = self.f.create_dataset(make_name(), (10,), fillvalue=4.0,
+        dset = self.f.create_dataset(make_name(), (10,), "f4", fillvalue=4.0,
                                      fill_time='never')
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_NEVER)
@@ -554,14 +554,14 @@ class TestFillTime(BaseDataset):
 
     def test_fill_time_alloc(self):
         """ Fill time explicitly set to ALLOC """
-        dset = self.f.create_dataset(make_name(), (10,), fillvalue=4.0,
+        dset = self.f.create_dataset(make_name(), (10,), "f4",  fillvalue=4.0,
                                      fill_time='alloc')
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_ALLOC)
 
     def test_fill_time_ifset(self):
         """ Fill time explicitly set to IFSET """
-        dset = self.f.create_dataset(make_name(), (10,), chunks=(2,), fillvalue=4.0,
+        dset = self.f.create_dataset(make_name(), (10,), 'f4', chunks=(2,), fillvalue=4.0,
                                      fill_time='ifset')
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
@@ -569,16 +569,16 @@ class TestFillTime(BaseDataset):
     def test_invalid_fill_time(self):
         """ Choice of fill_time is 'alloc', 'never', 'ifset' """
         with self.assertRaises(ValueError):
-            dset = self.f.create_dataset(make_name(), (10,), fill_time='fill_bad')
+            dset = self.f.create_dataset(make_name(), (10,), 'f4', fill_time='fill_bad')
 
     def test_non_str_fill_time(self):
         """ fill_time must be a string """
         with self.assertRaises(ValueError):
-            dset = self.f.create_dataset(make_name(), (10,), fill_time=2)
+            dset = self.f.create_dataset(make_name(), (10,), 'f4', fill_time=2)
 
     def test_resize_chunk_fill_time_default(self):
         """ The resize dataset will be filled (by default fill value 0) """
-        dset = self.f.create_dataset(make_name(), (50, ), maxshape=(100, ),
+        dset = self.f.create_dataset(make_name(), (50, ), 'f4', maxshape=(100, ),
                                      chunks=(5, ))
         plist = dset.id.get_create_plist()
         self.assertEqual(plist.get_fill_time(), h5py.h5d.FILL_TIME_IFSET)
@@ -590,7 +590,7 @@ class TestFillTime(BaseDataset):
 
     def test_resize_chunk_fill_time_never(self):
         """ The resize dataset won't be filled """
-        dset = self.f.create_dataset(make_name(), (50, ), maxshape=(100, ),
+        dset = self.f.create_dataset(make_name(), (50, ), 'f4', maxshape=(100, ),
                                      fillvalue=4.0, fill_time='never',
                                      chunks=(5, ))
         plist = dset.id.get_create_plist()
@@ -647,14 +647,14 @@ class TestCreateGzip(BaseDataset):
 
     def test_gzip(self):
         """ Create with explicit gzip options """
-        dset = self.f.create_dataset(make_name(), (20, 30), compression='gzip',
+        dset = self.f.create_dataset(make_name(), (20, 30), 'f4', compression='gzip',
                                      compression_opts=9)
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 9)
 
     def test_gzip_implicit(self):
         """ Create with implicit gzip level (level 4) """
-        dset = self.f.create_dataset(make_name(), (20, 30), compression='gzip')
+        dset = self.f.create_dataset(make_name(), (20, 30), 'f4', compression='gzip')
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 4)
 
@@ -662,7 +662,7 @@ class TestCreateGzip(BaseDataset):
     def test_gzip_number(self):
         """ Create with gzip level by specifying integer """
         name = make_name()
-        dset = self.f.create_dataset(name, (20, 30), compression=7)
+        dset = self.f.create_dataset(name, (20, 30), 'f4', compression=7)
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 7)
 
@@ -670,7 +670,7 @@ class TestCreateGzip(BaseDataset):
         try:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
             with self.assertRaises(ValueError):
-                dset = self.f.create_dataset(name, (20, 30), compression=7)
+                dset = self.f.create_dataset(name, (20, 30), 'f4', compression=7)
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
@@ -678,11 +678,11 @@ class TestCreateGzip(BaseDataset):
         """ Illegal gzip level (explicit or implicit) raises ValueError """
         name = make_name()
         with self.assertRaises((ValueError, RuntimeError)):
-            self.f.create_dataset(name, (20, 30), compression=14)
+            self.f.create_dataset(name, (20, 30), 'f4', compression=14)
         with self.assertRaises(ValueError):
-            self.f.create_dataset(name, (20, 30), compression=-4)
+            self.f.create_dataset(name, (20, 30), 'f4', compression=-4)
         with self.assertRaises(ValueError):
-            self.f.create_dataset(name, (20, 30), compression='gzip',
+            self.f.create_dataset(name, (20, 30), 'f4', compression='gzip',
                                   compression_opts=14)
 
 
@@ -698,7 +698,7 @@ class TestCreateCompressionNumber(BaseDataset):
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
-            dset = self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE, compression_opts=(7,))
+            dset = self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE, compression_opts=(7,), dtype='f4')
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
@@ -709,11 +709,11 @@ class TestCreateCompressionNumber(BaseDataset):
     def test_compression_number_invalid(self):
         """ Create with invalid compression numbers  """
         with self.assertRaises(ValueError) as e:
-            self.f.create_dataset('foo', (20, 30), compression=-999)
+            self.f.create_dataset('foo', (20, 30), compression=-999, dtype='f4')
         self.assertIn("Invalid filter", str(e.exception))
 
         with self.assertRaises(ValueError) as e:
-            self.f.create_dataset('foo', (20, 30), compression=100)
+            self.f.create_dataset('foo', (20, 30), compression=100, dtype='f4')
         self.assertIn("Unknown compression", str(e.exception))
 
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
@@ -722,7 +722,7 @@ class TestCreateCompressionNumber(BaseDataset):
 
             # Using gzip compression requires a compression level specified in compression_opts
             with self.assertRaises(IndexError):
-                self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE)
+                self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE, dtype='f4')
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
@@ -736,7 +736,7 @@ class TestCreateLZF(BaseDataset):
 
     def test_lzf_sparse(self):
         """ Create with explicit lzf (empty chunks)"""
-        dset = self.f.create_dataset(make_name(), (20, 30), compression='lzf')
+        dset = self.f.create_dataset(make_name(), (20, 30), compression='lzf', dtype='f4')
         self.assertEqual(dset.compression, 'lzf')
         self.assertEqual(dset.compression_opts, None)
 
@@ -756,7 +756,7 @@ class TestCreateLZF(BaseDataset):
     def test_lzf_exc(self):
         """ Giving lzf options raises ValueError """
         with self.assertRaises(ValueError):
-            self.f.create_dataset(make_name(), (20, 30), compression='lzf',
+            self.f.create_dataset(make_name(), (20, 30), 'f4', compression='lzf',
                                   compression_opts=4)
 
 
@@ -769,7 +769,7 @@ class TestCreateSZIP(BaseDataset):
 
     def test_szip(self):
         """ Create with explicit szip """
-        dset = self.f.create_dataset(make_name(), (20, 30), compression='szip',
+        dset = self.f.create_dataset(make_name(), (20, 30), 'f4', compression='szip',
                                      compression_opts=('ec', 16))
 
 
@@ -782,7 +782,7 @@ class TestCreateShuffle(BaseDataset):
 
     def test_shuffle(self):
         """ Enable shuffle filter """
-        dset = self.f.create_dataset(make_name(), (20, 30), shuffle=True)
+        dset = self.f.create_dataset(make_name(), (20, 30), shuffle=True, dtype='f4')
         self.assertTrue(dset.shuffle)
 
 
@@ -794,7 +794,7 @@ class TestCreateFletcher32(BaseDataset):
 
     def test_fletcher32(self):
         """ Enable fletcher32 filter """
-        dset = self.f.create_dataset(make_name(), (20, 30), fletcher32=True)
+        dset = self.f.create_dataset(make_name(), (20, 30), fletcher32=True, dtype='f4')
         self.assertTrue(dset.fletcher32)
 
 
@@ -974,12 +974,12 @@ class TestExternal(BaseDataset):
     def test_name_str(self):
         """ External argument may be a file name str only """
 
-        self.f.create_dataset(make_name(), (6, 100), external=self.mktemp())
+        self.f.create_dataset(make_name(), (6, 100), external=self.mktemp(), dtype='f4')
 
     def test_name_path(self):
         """ External argument may be a file name path only """
 
-        self.f.create_dataset(make_name(), (6, 100),
+        self.f.create_dataset(make_name(), (6, 100), 'f4',
                               external=pathlib.Path(self.mktemp()))
 
     def test_iter_multi(self):
@@ -988,7 +988,7 @@ class TestExternal(BaseDataset):
         ext_file = self.mktemp()
         N = 100
         external = iter((ext_file, x * 1000, 1000) for x in range(N))
-        dset = self.f.create_dataset(make_name(), (6, 100), external=external)
+        dset = self.f.create_dataset(make_name(), (6, 100), external=external, dtype='f4')
         assert len(dset.external) == N
 
     def test_invalid(self):
@@ -1007,7 +1007,7 @@ class TestExternal(BaseDataset):
             (TypeError, [(ext_file, 0, "h5f.UNLIMITED")]),
         ]:
             with self.assertRaises(exc_type):
-                self.f.create_dataset(make_name(), shape, external=external)
+                self.f.create_dataset(make_name(), shape, external=external, dtype='f4')
 
     def test_create_expandable(self):
         """ Create expandable external dataset """
@@ -1015,8 +1015,9 @@ class TestExternal(BaseDataset):
         ext_file = self.mktemp()
         shape = (128, 64)
         maxshape = (None, 64)
-        exp_dset = self.f.create_dataset(make_name(), shape=shape, maxshape=maxshape,
-                                         external=ext_file)
+        exp_dset = self.f.create_dataset(
+            make_name(), shape, 'f4', maxshape=maxshape, external=ext_file
+        )
         assert exp_dset.chunks is None
         assert exp_dset.shape == shape
         assert exp_dset.maxshape == maxshape
@@ -1107,24 +1108,24 @@ class TestCreateLike(BaseDataset):
     def test_maxshape(self):
         """ Test when other.maxshape != other.shape """
 
-        other = self.f.create_dataset(make_name("x"), (10,), maxshape=20)
+        other = self.f.create_dataset(make_name("x"), (10,), maxshape=20, dtype='f4')
         similar = self.f.create_dataset_like(make_name("y"), other)
         self.assertEqual(similar.shape, (10,))
         self.assertEqual(similar.maxshape, (20,))
 
 class TestChunkIterator(BaseDataset):
     def test_no_chunks(self):
-        dset = self.f.create_dataset(make_name(), ())
+        dset = self.f.create_dataset(make_name(), (), dtype='f4')
         with self.assertRaises(TypeError):
             dset.iter_chunks()
 
     def test_rank_mismatch(self):
-        dset = self.f.create_dataset(make_name(), shape=(100,), chunks=(32,))
+        dset = self.f.create_dataset(make_name(), shape=(100,), chunks=(32,), dtype='f4')
         with self.assertRaises(ValueError):
             dset.iter_chunks((slice(19,67), 9))
 
     def test_1d(self):
-        dset = self.f.create_dataset(make_name(), (100,), chunks=(32,))
+        dset = self.f.create_dataset(make_name(), (100,), chunks=(32,), dtype='f4')
         expected = ((slice(0,32,1),), (slice(32,64,1),), (slice(64,96,1),),
             (slice(96,100,1),))
         self.assertEqual(list(dset.iter_chunks()), list(expected))
@@ -1136,7 +1137,7 @@ class TestChunkIterator(BaseDataset):
         self.assertEqual(list(dset.iter_chunks(np.s_[96])), list(expected))
 
     def test_2d(self):
-        dset = self.f.create_dataset(make_name(), (100,100), chunks=(32,64))
+        dset = self.f.create_dataset(make_name(), (100,100), chunks=(32,64), dtype='f4')
         expected = (
             (slice(0, 32, 1), slice(0, 64, 1)),
             (slice(0, 32, 1), slice(64, 100, 1)),
@@ -1164,7 +1165,7 @@ class TestChunkIterator(BaseDataset):
         self.assertEqual(list(dset.iter_chunks(np.s_[96,19:67])), list(expected))
 
     def test_2d_partial_slice(self):
-        dset = self.f.create_dataset(make_name(), (5,5), chunks=(2,2))
+        dset = self.f.create_dataset(make_name(), (5,5), chunks=(2,2), dtype='f4')
         expected = ((slice(3, 4, 1), slice(3, 4, 1)),
                    (slice(3, 4, 1), slice(4, 5, 1)),
                    (slice(4, 5, 1), slice(3, 4, 1)),
@@ -1182,24 +1183,24 @@ class TestResize(BaseDataset):
 
     def test_create(self):
         """ Create dataset with "maxshape" """
-        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60), dtype='f4')
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20, 60))
 
     def test_create_1D_integer_maxshape_tuple(self):
         """ Create dataset with "maxshape" using tuple shape and integer maxshape"""
-        dset = self.f.create_dataset(make_name(), (20,), maxshape=20)
+        dset = self.f.create_dataset(make_name(), (20,), maxshape=20, dtype='f4')
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20,))
 
     def test_create_1D_integer_maxshape_integer(self):
         """ Create dataset with "maxshape" using integer shape and integer maxshape"""
-        dset = self.f.create_dataset(make_name(), 20, maxshape=20)
+        dset = self.f.create_dataset(make_name(), 20, maxshape=20, dtype='f4')
         self.assertEqual(dset.maxshape, (20,))
 
     def test_resize(self):
         """ Datasets may be resized up to maxshape """
-        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60), dtype='f4')
         self.assertEqual(dset.shape, (20, 30))
         dset.resize((20, 50))
         self.assertEqual(dset.shape, (20, 50))
@@ -1208,38 +1209,38 @@ class TestResize(BaseDataset):
 
     def test_resize_1D(self):
         """ Datasets may be resized up to maxshape using integer maxshape"""
-        dset = self.f.create_dataset(make_name(), 20, maxshape=40)
+        dset = self.f.create_dataset(make_name(), 20, maxshape=40, dtype='f4')
         self.assertEqual(dset.shape, (20,))
         dset.resize((30,))
         self.assertEqual(dset.shape, (30,))
 
     def test_resize_over(self):
         """ Resizing past maxshape triggers an exception """
-        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60), dtype='f4')
         with self.assertRaises(Exception):
             dset.resize((20, 70))
 
     def test_resize_nonchunked(self):
         """ Resizing non-chunked dataset raises TypeError """
-        dset = self.f.create_dataset(make_name(), (20, 30))
+        dset = self.f.create_dataset(make_name(), (20, 30), dtype='f4')
         with self.assertRaises(TypeError):
             dset.resize((20, 60))
 
     def test_resize_axis(self):
         """ Resize specified axis """
-        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60), dtype='f4')
         dset.resize(50, axis=1)
         self.assertEqual(dset.shape, (20, 50))
 
     def test_axis_exc(self):
         """ Illegal axis raises ValueError """
-        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60))
+        dset = self.f.create_dataset(make_name(), (20, 30), maxshape=(20, 60), dtype='f4')
         with self.assertRaises(ValueError):
             dset.resize(50, axis=2)
 
     def test_zero_dim(self):
         """ Allow zero-length initial dims for unlimited axes (issue 111) """
-        dset = self.f.create_dataset(make_name(), (15, 0), maxshape=(15, None))
+        dset = self.f.create_dataset(make_name(), (15, 0), maxshape=(15, None), dtype='f4')
         self.assertEqual(dset.shape, (15, 0))
         self.assertEqual(dset.maxshape, (15, None))
 
@@ -1271,12 +1272,12 @@ class TestLen(BaseDataset):
 
     def test_len(self):
         """ Python len() (under 32 bits) """
-        dset = self.f.create_dataset(make_name(), (312, 15))
+        dset = self.f.create_dataset(make_name(), (312, 15), dtype='f4')
         self.assertEqual(len(dset), 312)
 
     def test_len_big(self):
         """ Python len() vs Dataset.len() """
-        dset = self.f.create_dataset(make_name(), (2 ** 33, 15))
+        dset = self.f.create_dataset(make_name(), (2 ** 33, 15), dtype='f4')
         self.assertEqual(dset.shape, (2 ** 33, 15))
         if sys.maxsize == 2 ** 31 - 1:
             with self.assertRaises(OverflowError):
@@ -1302,7 +1303,7 @@ class TestIter(BaseDataset):
 
     def test_iter_scalar(self):
         """ Iterating over scalar dataset raises TypeError """
-        dset = self.f.create_dataset(make_name(), shape=())
+        dset = self.f.create_dataset(make_name(), shape=(), dtype='f4')
         with self.assertRaises(TypeError):
             [x for x in dset]
 
@@ -1705,14 +1706,14 @@ class TestTrackTimes(BaseDataset):
 
     def test_disable_track_times(self):
         """ check that when track_times=False, the time stamp=0 (Jan 1, 1970) """
-        ds = self.f.create_dataset(make_name(), (4,), track_times=False)
+        ds = self.f.create_dataset(make_name(), (4,), track_times=False, dtype='f4')
         ds_mtime = h5py.h5g.get_objinfo(ds._id).mtime
         self.assertEqual(0, ds_mtime)
 
     def test_invalid_track_times(self):
         """ check that when give track_times an invalid value """
         with self.assertRaises(TypeError):
-            self.f.create_dataset(make_name(), (4,), track_times='null')
+            self.f.create_dataset(make_name(), (4,), track_times='null', dtype='f4')
 
 
 class TestZeroShape(BaseDataset):
@@ -1723,13 +1724,13 @@ class TestZeroShape(BaseDataset):
 
     def test_array_conversion(self):
         """ Empty datasets can be converted to NumPy arrays """
-        ds = self.f.create_dataset(make_name("x"), 0, maxshape=None)
+        ds = self.f.create_dataset(make_name("x"), 0, maxshape=None, dtype='f4')
         self.assertEqual(ds.shape, np.array(ds).shape)
 
-        ds = self.f.create_dataset(make_name("y"), (0,), maxshape=(None,))
+        ds = self.f.create_dataset(make_name("y"), (0,), maxshape=(None,), dtype='f4')
         self.assertEqual(ds.shape, np.array(ds).shape)
 
-        ds = self.f.create_dataset(make_name("z"), (0, 0), maxshape=(None, None))
+        ds = self.f.create_dataset(make_name("z"), (0, 0), maxshape=(None, None), dtype='f4')
         self.assertEqual(ds.shape, np.array(ds).shape)
 
     def test_reading(self):
@@ -1981,14 +1982,14 @@ class TestLowOpen(BaseDataset):
 
     def test_get_access_list(self):
         """ Test H5Dget_access_plist """
-        ds = self.f.create_dataset(make_name(), (4,))
+        ds = self.f.create_dataset(make_name(), (4,), dtype='f4')
         p_list = ds.id.get_access_plist()
 
     def test_dapl(self):
         """ Test the dapl keyword to h5d.open """
         name = make_name()
         dapl = h5py.h5p.create(h5py.h5p.DATASET_ACCESS)
-        dset = self.f.create_dataset(name, (100,))
+        dset = self.f.create_dataset(name, (100,), dtype='f4')
         del dset
         dsid = h5py.h5d.open(self.f.id, name.encode('utf-8'), dapl)
         self.assertIsInstance(dsid, h5py.h5d.DatasetID)
