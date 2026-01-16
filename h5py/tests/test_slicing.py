@@ -87,7 +87,7 @@ class TestObjectIndex(BaseSlicing):
     def test_regref(self):
         """ Indexing a region reference dataset returns a h5py.RegionReference
         """
-        dset1 = self.f.create_dataset(make_name("x"), (10,10))
+        dset1 = self.f.create_dataset(make_name("x"), (10,10), "f4")
         regref = dset1.regionref[...]
         dset2 = self.f.create_dataset(make_name("y"), (1,), dtype=h5py.regionref_dtype)
         dset2[0] = regref
@@ -138,7 +138,7 @@ class TestSimpleSlicing(TestCase):
     def test_write(self):
         """Assigning to a 1D slice of a 2D dataset
         """
-        dset = self.f.create_dataset(make_name(), (10, 2))
+        dset = self.f.create_dataset(make_name(), (10, 2), "f4")
 
         x = np.zeros((10, 1))
         dset[:, 0] = x[:, 0]

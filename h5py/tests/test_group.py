@@ -106,7 +106,7 @@ class TestCreate(BaseGroup):
 
     def test_appropriate_low_level_id(self):
         " Binding a group to a non-group identifier fails with ValueError "
-        dset = self.f.create_dataset(make_name(), [1])
+        dset = self.f.create_dataset(make_name(), [1], "f4")
         with self.assertRaises(ValueError):
             Group(dset.id)
 
@@ -677,7 +677,7 @@ class TestGet(BaseGroup):
         out = self.f.get(foo, getclass=True)
         self.assertEqual(out, Group)
 
-        self.f.create_dataset(bar, (4,))
+        self.f.create_dataset(bar, (4,), "f4")
         out = self.f.get(bar, getclass=True)
         self.assertEqual(out, Dataset)
 
@@ -848,19 +848,19 @@ class TestLexicographic(TestCase):
         """ Populate example hdf5 file, with track_order=True """
 
         self.f = File(self.mktemp(), 'w-', track_order=True)
-        self.f.create_dataset('b', (10,))
+        self.f.create_dataset('b', (10,), "f4")
 
         grp = self.f.create_group('B', track_order=True)
-        grp.create_dataset('b', (10,))
-        grp.create_dataset('a', (10,))
+        grp.create_dataset('b', (10,), "f4")
+        grp.create_dataset('a', (10,), "f4")
 
         grp = self.f.create_group('z', track_order=True)
-        grp.create_dataset('b', (10,))
-        grp.create_dataset('a', (10,))
+        grp.create_dataset('b', (10,), "f4")
+        grp.create_dataset('a', (10,), "f4")
 
-        self.f.create_dataset('a', (10,))
+        self.f.create_dataset('a', (10,), "f4")
         # note that 'z-' < 'z/...' but traversal order is ['z', 'z/...', 'z-']
-        self.f.create_dataset('z-', (10,))
+        self.f.create_dataset('z-', (10,), "f4")
 
         # create some links
         self.f['A/x'] = self.f['B/b']
