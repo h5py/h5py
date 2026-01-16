@@ -32,6 +32,7 @@ import h5py
 
 from .common import ut, TestCase, NUMPY_RELEASE_VERSION, is_main_thread, make_name
 from .data_files import get_data_file_path
+from ..h5py_warnings import H5pyDeprecationWarning
 
 
 class BaseDataset(TestCase):
@@ -135,6 +136,13 @@ class TestCreateShape(BaseDataset):
 
         dset2 = self.f.create_dataset((make_name("bar{}/baz")).encode('utf-8'), (2,), dtype='f4')
         self.assertEqual(dset2.shape, (2,))
+
+    def test_no_dtype(self):
+        # From h5py 4.0, either dtype or data will be required
+        with pytest.warns(H5pyDeprecationWarning):
+            dset = self.f.create_dataset(make_name(), (5,))
+
+        assert dset.dtype == np.dtype('f4')
 
 class TestCreateData(BaseDataset):
 

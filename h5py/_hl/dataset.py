@@ -19,6 +19,7 @@ from warnings import warn
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
+from ..h5py_warnings import H5pyDeprecationWarning
 from .base import (
     array_for_new_object, cached_property, Empty, find_item_type, HLObject,
     phil, product, with_phil,
@@ -87,7 +88,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                 "Creating a dataset without passing data or dtype is deprecated. "
                 "Pass an explicit dtype. Using dtype='f4' will keep the "
                 "current default behaviour.",
-                stacklevel=3,
+                category=H5pyDeprecationWarning, stacklevel=3,
             )
             dtype = numpy.dtype("=f4")
         elif dtype is None and data is not None:
