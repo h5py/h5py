@@ -14,6 +14,7 @@
 import posixpath as pp
 import sys
 from abc import ABC, abstractmethod
+from warnings import warn
 
 import numpy
 
@@ -82,6 +83,12 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     else:
         # Validate dtype
         if dtype is None and data is None:
+            warn(
+                "Creating a dataset without passing data or dtype is deprecated. "
+                "Pass an explicit dtype. Using dtype='f4' will keep the "
+                "current default behaviour.",
+                stacklevel=3,
+            )
             dtype = numpy.dtype("=f4")
         elif dtype is None and data is not None:
             dtype = data.dtype
