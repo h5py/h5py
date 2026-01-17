@@ -107,8 +107,11 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
         # memory type directly because of course that triggers HDFFV-1063.
         if (H5Tget_class(mtype) == H5T_COMPOUND) and (not read):
             rawdstype = H5Dget_type(dset)
-            dstype = make_reduced_type(mtype, rawdstype)
-            H5Tclose(rawdstype)
+            if H5Tget_class(rawdstype) == H5T_COMPOUND:
+                dstype = make_reduced_type(mtype, rawdstype)
+                H5Tclose(rawdstype)
+            else:
+                dstype = rawdstype
         else:
             dstype = H5Dget_type(dset)
 
