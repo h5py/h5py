@@ -88,7 +88,7 @@ jobs:
 
       # Windows HDF5
       - name: Cache built HDF5 (Windows)
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('ci/cibw_before_all_windows.sh', 'ci/get_hdf5_win.py') }}
           path: cache/hdf5
@@ -106,7 +106,7 @@ jobs:
 
       # macOS HDF5
       - name: Cache built HDF5 (Mac)
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v4.2.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('ci/cibw_before_all_macos.sh', 'ci/get_hdf5_if_needed.sh') }}
           path: cache/hdf5
