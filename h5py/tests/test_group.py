@@ -1159,8 +1159,10 @@ def test_get_elink_locking_arg(tmp_path, file_locking, elink_locking, file_locki
         assert isinstance(link, HardLink)
 
         ext_group = main_file.get("external", elink_locking=elink_locking)
-        access_plist = ext_group.file.id.get_access_plist()
-        assert access_plist.get_file_locking() == file_locking_props
+        if h5py.version.hdf5_version_tuple >= (1, 14, 4):
+            # Retrieving file locking is broken for older versions of HDF5
+            access_plist = ext_group.file.id.get_access_plist()
+            assert access_plist.get_file_locking() == file_locking_props
 
 
 class TestExtLinkBugs(TestCase):
