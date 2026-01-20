@@ -42,24 +42,24 @@ class TestObjects(TestCase):
             hash(oid)
 
     @pytest.mark.thread_unsafe(reason="fork() from a thread may deadlock")
+    @pytest.mark.skipif(not hasattr(os, "fork"), reason="os.fork() not available")
+    @pytest.mark.filterwarnings(  # https://github.com/python/cpython/pull/100229
+        "ignore:use of fork() may lead to deadlocks:DeprecationWarning"
+    )
     def test_phil_fork_with_threads(self):
         # Test that handling of the phil Lock after fork is correct.
         # We simulate a deadlock in the forked process by explicitly
         # waiting for the phil Lock to be acquired in a different thread
         # before forking.
 
-        # On Windows forking (and the register_at_fork handler)
-        # are not available, skip this test.
-        if not hasattr(os, "fork"):
-            raise SkipTest("os.fork not available")
-
         thread_acquired_phil_event = threading.Event()
+        thread_stop_event = threading.Event()
 
         def f():
             o.phil.acquire()
             try:
                 thread_acquired_phil_event.set()
-                time.sleep(1)
+                thread_stop_event.wait()
             finally:
                 o.phil.release()
 
@@ -87,4 +87,5 @@ class TestObjects(TestCase):
                 assert os.WIFEXITED(status)
                 assert os.WEXITSTATUS(status) == 0
         finally:
+            thread_stop_event.set()
             thread.join()
