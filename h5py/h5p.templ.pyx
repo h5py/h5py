@@ -713,8 +713,9 @@ cdef class PropDCID(PropOCID):
 
         filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags,
                                          &nelements, cd_values, 256, name, NULL)
-        name[256] = c'\0'  # in case it's > 256 chars
+        assert nelements <= 16, f"H5Pget_filter returned {nelements=}"
 
+        name[256] = c'\0'  # in case it's > 256 chars
         vlist = []
         for i in range(nelements):
             vlist.append(cd_values[i])
@@ -763,9 +764,9 @@ cdef class PropDCID(PropOCID):
             # Avoid library segfault
             return None
 
-        retval = H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
-                                     &flags, &nelements, cd_values, 256, name, NULL)
-        assert nelements <= 16
+        H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
+                            &flags, &nelements, cd_values, 256, name, NULL)
+        assert nelements <= 16, f"H5Pget_filter_by_id returned {nelements=}"
 
         name[256] = c'\0'  # In case HDF5 doesn't terminate it properly
 
