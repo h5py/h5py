@@ -7,9 +7,8 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 import os
+import sys
 import threading
-import time
-from unittest import SkipTest
 
 import pytest
 
@@ -43,9 +42,7 @@ class TestObjects(TestCase):
 
     @pytest.mark.thread_unsafe(reason="fork() from a thread may deadlock")
     @pytest.mark.skipif(not hasattr(os, "fork"), reason="os.fork() not available")
-    @pytest.mark.filterwarnings(  # https://github.com/python/cpython/pull/100229
-        "ignore:use of fork() may lead to deadlocks:DeprecationWarning"
-    )
+    @pytest.mark.skipif(sys.version_info >= (3, 15), reason="os.fork() deadlocks")
     def test_phil_fork_with_threads(self):
         # Test that handling of the phil Lock after fork is correct.
         # We simulate a deadlock in the forked process by explicitly
