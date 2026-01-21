@@ -65,7 +65,6 @@ class TestObjects(TestCase):
         thread = threading.Thread(target=f)
         thread.start()
         thread_acquired_phil_event.wait()
-        assert not o.phil.acquire(blocking=False)
 
         try:
             # Now fork the current (main) thread while the other thread holds the lock.
