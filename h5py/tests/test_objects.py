@@ -7,9 +7,8 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 import os
-import sys
-import time
 import threading
+import time
 
 import pytest
 
