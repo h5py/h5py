@@ -18,6 +18,7 @@ from warnings import warn
 
 import numpy
 
+import h5py.h5t
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
 from ..h5py_warnings import H5pyDeprecationWarning
 from .base import (
@@ -81,6 +82,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         # Named types are used as-is
         tid = dtype.id
         dtype = tid.dtype  # Following code needs this
+    elif isinstance(dtype, h5py.h5t.TypeID):  # Low-level HDF5 data type
+        tid = dtype
+        dtype = tid.dtype
     else:
         # Validate dtype
         if dtype is None and data is None:
