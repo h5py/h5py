@@ -113,7 +113,6 @@ if hasattr(os, "register_at_fork"):
 #
 # See also __cinit__ and __dealloc__ for class ObjectID.
 
-import gc
 import weakref
 import warnings
 
