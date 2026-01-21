@@ -82,7 +82,8 @@ class TestObjects(TestCase):
                     os._exit(1)
             else:
                 # Parent process
-                assert not o.phil.is_locked()
+                assert o.phil.acquire(blocking=False)
+                o.phil.release()
                 # Wait for the child process to finish
                 _, status = os.waitpid(pid, 0)
                 assert os.WIFEXITED(status)
