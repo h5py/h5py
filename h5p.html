@@ -680,7 +680,7 @@ elements are:</p>
 <ol class="arabic simple" start="0">
 <li><p>INT filter code (<a class="reference internal" href="h5z.html#ref-h5z-filter"><span class="std std-ref">h5z.FILTER*</span></a>)</p></li>
 <li><p>UINT flags (<a class="reference internal" href="h5z.html#ref-h5z-flag"><span class="std std-ref">h5z.FLAG*</span></a>)</p></li>
-<li><p>TUPLE of UINT values; filter aux data (16 values max)</p></li>
+<li><p>TUPLE of UINT values; filter aux data (256 values max)</p></li>
 <li><p>STRING name of filter (256 chars max)</p></li>
 </ol>
 </dd></dl>
@@ -693,7 +693,7 @@ of h5z.FILTER*).  If the filter doesn’t exist, returns None.
 Tuple elements are:</p>
 <ol class="arabic simple" start="0">
 <li><p>UINT flags (<a class="reference internal" href="h5z.html#ref-h5z-flag"><span class="std std-ref">h5z.FLAG*</span></a>)</p></li>
-<li><p>TUPLE of UINT values; filter aux data (16 values max)</p></li>
+<li><p>TUPLE of UINT values; filter aux data (256 values max)</p></li>
 <li><p>STRING name of filter (256 chars max)</p></li>
 </ol>
 </dd></dl>
@@ -1474,7 +1474,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jan 20, 2026.
+      Last updated on Jan 21, 2026.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
