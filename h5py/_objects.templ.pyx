@@ -118,21 +118,18 @@ import weakref
 import warnings
 
 # Will map id(obj) -> weakref(obj), where obj is an ObjectID instance.
-# Objects are added only via ObjectID.__cinit__, and removed only by
-# ObjectID.__dealloc__.
-cdef dict registry = {}
+# Objects are added only via ObjectID.__cinit__, and dropped by the weakref system
+cdef object registry = weakref.WeakValueDictionary()
 
 @with_phil
 def print_reg():
     import h5py
-    refs = registry.values()
-    objs = [r() for r in refs]
+    objs = list(registry.values())
 
-    none = len([x for x in objs if x is None])
     files = len([x for x in objs if isinstance(x, h5py.h5f.FileID)])
     groups = len([x for x in objs if isinstance(x, h5py.h5g.GroupID)])
 
-    print("REGISTRY: %d | %d None | %d FileID | %d GroupID" % (len(objs), none, files, groups))
+    print("REGISTRY: %d | %d FileID | %d GroupID" % (len(objs), files, groups))
 
 
 @with_phil
@@ -142,30 +139,7 @@ def nonlocal_close():
     cdef ObjectID obj
     cdef list reg_ids
 
-    # create a cached list of ids whilst the gc is disabled to avoid hitting
-    # the cyclic gc while iterating through the registry dict
-    gc_was_enabled = gc.isenabled()
-    gc.disable()
-    try:
-        reg_ids = list(registry)
-    finally:
-        if gc_was_enabled:
-            gc.enable()
-
-    for python_id in reg_ids:
-        ref = registry.get(python_id)
-
-        # registry dict has changed underneath us, skip to next item
-        if ref is None:
-            continue
-
-        obj = ref()
-
-        # Object died while walking the registry list, presumably because
-        # the cyclic GC kicked in.
-        if obj is None:
-            continue
-
+    for python_id, obj in registry.items():
         # Locked objects are immortal, as they generally are provided by
         # the HDF5 library itself (property list classes, etc.).
         if obj.locked:
@@ -218,7 +192,7 @@ cdef class ObjectID:
             ### {{if OBJECTS_DEBUG_ID}}
             print("CINIT - registering %d of kind %s HDF5 id %d" % (self._pyid, type(self), self.id))
             ### {{endif}}
-            registry[self._pyid] = weakref.ref(self)
+            registry[self._pyid] = self
 
 
     def __dealloc__(self):
@@ -226,7 +200,7 @@ cdef class ObjectID:
 
     # During interpreter shutdown, module attributes are set to None
     # before __dealloc__ and __del__ methods are executed.
-    def _dealloc(self, _phil=_phil, warn=warnings.warn, registry=registry):
+    def _dealloc(self, _phil=_phil, warn=warnings.warn):
         with _phil:
             ### {{if OBJECTS_DEBUG_ID}}
             print("DEALLOC - unregistering %d HDF5 id %d" % (self._pyid, self.id))
@@ -238,8 +212,6 @@ cdef class ObjectID:
                             self.id
                         )
                     )
-            if self._pyid is not None:
-                del registry[self._pyid]
 
     def _close(self):
         """ Manually close this object. """
