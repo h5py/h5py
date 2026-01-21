@@ -43,8 +43,6 @@ class TestObjects(TestCase):
     @pytest.mark.thread_unsafe(reason="fork() from a thread may deadlock")
     @pytest.mark.filterwarnings(
         # https://github.com/python/cpython/pull/100229
-        # The warning was introduced in Python 3.12 but for some reason it only starts
-        # appearing in Python 3.15
         r"ignore:.*use of fork\(\) may lead to deadlocks:DeprecationWarning"
     )
     @pytest.mark.skipif(not hasattr(os, "fork"), reason="fork() not available")
@@ -85,6 +83,7 @@ class TestObjects(TestCase):
                     os._exit(1)
             else:
                 # Parent process
+                assert not o.phil.is_locked()
                 # Wait for the child process to finish
                 _, status = os.waitpid(pid, 0)
                 assert os.WIFEXITED(status)
