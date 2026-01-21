@@ -53,10 +53,10 @@ parameters::
     >>> f["init"] = arr
 
 Keywords ``shape`` and ``dtype`` may be specified along with ``data``; if so,
-they will override ``data.shape`` and ``data.dtype``.  It's required that
-(1) the total number of points in ``shape`` match the total number of points
-in ``data.shape``, and that (2) it's possible to cast ``data.dtype`` to
-the requested ``dtype``.
+they will override ``data.shape`` and ``data.dtype``. The total number of points
+in ``shape`` must match the total in ``data.shape``, and it must be possible to
+cast ``data.dtype`` to the requested ``dtype``, although unsafe casting (e.g.
+uint64 to uint32) is allowed.
 
 .. _dataset_slicing:
 
