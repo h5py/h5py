@@ -20,7 +20,7 @@ cdef class FastRLock:
     wonderful GIL.
     """
     cdef pythread.PyThread_type_lock _real_lock
-    cdef long _owner            # ID of thread owning the lock
+    cdef unsigned long _owner   # ID of thread owning the lock
     cdef int _count             # re-entry count
     cdef int _pending_requests  # number of pending requests for real lock
     cdef bint _is_locked        # whether the real lock is acquired
@@ -63,7 +63,7 @@ cdef class FastRLock:
         return self._owner == pythread.PyThread_get_thread_ident()
 
 
-cdef inline bint lock_lock(FastRLock lock, long current_thread, bint blocking) noexcept nogil:
+cdef inline bint lock_lock(FastRLock lock, unsigned long current_thread, bint blocking) noexcept nogil:
     # Note that this function *must* hold the GIL when being called.
     # We just use 'nogil' in the signature to make sure that no Python
     # code execution slips in that might free the GIL
@@ -83,7 +83,7 @@ cdef inline bint lock_lock(FastRLock lock, long current_thread, bint blocking) n
         lock, current_thread,
         pythread.WAIT_LOCK if blocking else pythread.NOWAIT_LOCK)
 
-cdef bint _acquire_lock(FastRLock lock, long current_thread, int wait) noexcept nogil:
+cdef bint _acquire_lock(FastRLock lock, unsigned long current_thread, int wait) noexcept nogil:
     # Note that this function *must* hold the GIL when being called.
     # We just use 'nogil' in the signature to make sure that no Python
     # code execution slips in that might free the GIL
