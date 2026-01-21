@@ -12,6 +12,7 @@
 """
 
 include "_locks.pxi"
+from cpython.dict cimport PyDict_DelItem
 from .defs cimport *
 
 import os
@@ -239,7 +240,7 @@ cdef class ObjectID:
                         )
                     )
             if self._pyid is not None:
-                del registry[self._pyid]
+                PyDict_DelItem(registry, self._pyid)
 
     def _close(self):
         """ Manually close this object. """
