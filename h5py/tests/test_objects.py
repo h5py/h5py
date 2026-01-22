@@ -9,7 +9,6 @@
 import os
 import threading
 import time
-from unittest import SkipTest
 
 import pytest
 
@@ -42,47 +41,50 @@ class TestObjects(TestCase):
             hash(oid)
 
     @pytest.mark.thread_unsafe(reason="fork() from a thread may deadlock")
+    @pytest.mark.filterwarnings(
+        # https://github.com/python/cpython/pull/100229
+        r"ignore:.*use of fork\(\) may lead to deadlocks:DeprecationWarning"
+    )
+    @pytest.mark.skipif(not hasattr(os, "fork"), reason="fork() not available")
     def test_phil_fork_with_threads(self):
-        # Test that handling of the phil Lock after fork is correct.
-        # We simulate a deadlock in the forked process by explicitly
-        # waiting for the phil Lock to be acquired in a different thread
-        # before forking.
+        """Test that handling of the phil Lock after fork is correct.
 
-        # On Windows forking (and the register_at_fork handler)
-        # are not available, skip this test.
-        if not hasattr(os, "fork"):
-            raise SkipTest("os.fork not available")
-
+        h5py uses os.register_at_fork() to cause os.fork() to acquire the phil lock
+        before forking and release it afterwards, so that the global state of libhdf5
+        cannot be cloned in a corrupted state.
+        """
         thread_acquired_phil_event = threading.Event()
 
         def f():
-            o.phil.acquire()
-            try:
+            # Simulate another thread holding the phil lock while it updates
+            # the libhdf5 global state
+            with o.phil:
                 thread_acquired_phil_event.set()
                 time.sleep(1)
-            finally:
-                o.phil.release()
 
         thread = threading.Thread(target=f)
         thread.start()
-        try:
-            # wait for the thread running "f" to have acquired the phil lock
-            thread_acquired_phil_event.wait()
+        thread_acquired_phil_event.wait()
 
-            # now fork the current (main) thread while the other thread holds the lock
+        try:
+            # Now fork the current (main) thread while the other thread holds the lock.
+            # os.fork() acquires the phil lock, so this will block until the other
+            # thread releases it.
             pid = os.fork()
             if pid == 0:
-                # child process
-                # If we handle the phil lock correctly, this should not deadlock,
-                # and we should be able to acquire the lock here.
+                # Child process
+                # If we handle the phil lock correctly, this should not deadlock, and we
+                # should be able to acquire the lock here.
                 if o.phil.acquire(blocking=False):
                     o.phil.release()
                     os._exit(0)
                 else:
                     os._exit(1)
             else:
-                # parent process
-                # wait for the child process to finish
+                # Parent process
+                assert o.phil.acquire(blocking=False)
+                o.phil.release()
+                # Wait for the child process to finish
                 _, status = os.waitpid(pid, 0)
                 assert os.WIFEXITED(status)
                 assert os.WEXITSTATUS(status) == 0
