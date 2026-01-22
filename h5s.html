@@ -88,6 +88,14 @@ Python pickling machinery to do this.</p>
 <li><p>Equality: Unimplemented</p></li>
 </ul>
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5s.SpaceID.combine_select">
+<span class="sig-name descname"><span class="pre">combine_select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">op=SELECT_OR</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID"><span class="pre">SpaceID</span></a></span></span><a class="headerlink" href="#h5py.h5s.SpaceID.combine_select" title="Link to this definition">¶</a></dt>
+<dd><p>Combine two hyperslab selections with an operation, returning a new
+dataspace with the resulting selection. The default operation is a union,
+so the resulting selection includes everything selected in either input.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5s.SpaceID.copy">
 <span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID"><span class="pre">SpaceID</span></a></span></span><a class="headerlink" href="#h5py.h5s.SpaceID.copy" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new copy of this dataspace.</p>
@@ -211,6 +219,15 @@ dataspaces). Currently all HDF5 dataspaces are simple.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5s.SpaceID.modify_select">
+<span class="sig-name descname"><span class="pre">modify_select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">op=SELECT_OR</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.modify_select" title="Link to this definition">¶</a></dt>
+<dd><p>Refines the hyperslab selection of this dataspace (self) using the
+hyperslab selection from a second dataspace. The default operation
+is a union, extending the selection to any parts selected in the second
+dataspace.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5s.SpaceID.offset_simple">
 <span class="sig-name descname"><span class="pre">offset_simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">offset=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.offset_simple" title="Link to this definition">¶</a></dt>
 <dd><p>Set the offset of a dataspace.  The length of the given tuple must
@@ -222,6 +239,12 @@ the offsets on all axes will be set to 0.</p>
 <dt class="sig sig-object py" id="h5py.h5s.SpaceID.select_all">
 <span class="sig-name descname"><span class="pre">select_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.select_all" title="Link to this definition">¶</a></dt>
 <dd><p>Select all points in the dataspace.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5s.SpaceID.select_copy">
+<span class="sig-name descname"><span class="pre">select_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">src_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.select_copy" title="Link to this definition">¶</a></dt>
+<dd><p>Copies the selection from another dataspace to this one (self).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -425,6 +448,7 @@ an unlimited dimension.</p>
 </li>
 <li><a class="reference internal" href="#dataspace-objects">Dataspace objects</a><ul>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID"><code class="docutils literal notranslate"><span class="pre">SpaceID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.combine_select"><code class="docutils literal notranslate"><span class="pre">SpaceID.combine_select()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.copy"><code class="docutils literal notranslate"><span class="pre">SpaceID.copy()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.encode"><code class="docutils literal notranslate"><span class="pre">SpaceID.encode()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.extent_copy"><code class="docutils literal notranslate"><span class="pre">SpaceID.extent_copy()</span></code></a></li>
@@ -442,8 +466,10 @@ an unlimited dimension.</p>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.get_simple_extent_type"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_simple_extent_type()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.is_regular_hyperslab"><code class="docutils literal notranslate"><span class="pre">SpaceID.is_regular_hyperslab()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.is_simple"><code class="docutils literal notranslate"><span class="pre">SpaceID.is_simple()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.modify_select"><code class="docutils literal notranslate"><span class="pre">SpaceID.modify_select()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.offset_simple"><code class="docutils literal notranslate"><span class="pre">SpaceID.offset_simple()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_all"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_all()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.select_copy"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_copy()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_elements"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_elements()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_hyperslab"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_hyperslab()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5s.SpaceID.select_none"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_none()</span></code></a></li>
@@ -544,7 +570,7 @@ an unlimited dimension.</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jan 21, 2026.
+      Last updated on Jan 22, 2026.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
