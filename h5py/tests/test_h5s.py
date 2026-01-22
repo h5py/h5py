@@ -1,3 +1,4 @@
+import numpy as np
 
 from h5py import h5s
 from h5py._selector import Selector
@@ -27,8 +28,11 @@ def test_select_copy():
     s1 = h5s.create_simple((50,))
     s1.select_hyperslab((5,), (1,), block=(5,), op=h5s.SELECT_SET)
     s2 = h5s.create_simple((50,))
+    s2.select_hyperslab((23,), (1,), block=(3,), op=h5s.SELECT_SET)
     s2.select_copy(s1)
-    assert (s1.get_select_hyper_blocklist() == s2.get_select_hyper_blocklist()).all()
+    np.testing.assert_array_equal(
+        s1.get_select_hyper_blocklist(), s2.get_select_hyper_blocklist()
+    )
 
 def test_combine_select():
     # combine_select should create a new space without modifying the original
@@ -40,8 +44,12 @@ def test_combine_select():
 
     s3 = s1.combine_select(s2, op=h5s.SELECT_OR)
     s2.select_hyperslab((5,), (1,), block=(5,), op=h5s.SELECT_OR)
-    assert (s3.get_select_hyper_blocklist() == s2.get_select_hyper_blocklist()).all()
-    assert not (s3.get_select_hyper_blocklist() == s1.get_select_hyper_blocklist()).all()
+    np.testing.assert_array_equal(
+        s3.get_select_hyper_blocklist(), s2.get_select_hyper_blocklist()
+    )
+    assert not np.array_equal(
+        s3.get_select_hyper_blocklist(), s1.get_select_hyper_blocklist()
+    )
 
 def test_modify_select():
     # combine_select should create a new space without modifying the original
@@ -53,4 +61,6 @@ def test_modify_select():
 
     s1.modify_select(s2, op=h5s.SELECT_OR)
     s2.select_hyperslab((5,), (1,), block=(5,), op=h5s.SELECT_OR)
-    assert (s1.get_select_hyper_blocklist() == s2.get_select_hyper_blocklist()).all()
+    np.testing.assert_array_equal(
+        s1.get_select_hyper_blocklist(), s2.get_select_hyper_blocklist()
+    )
