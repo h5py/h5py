@@ -49,9 +49,9 @@ class TestObjects(TestCase):
     def test_phil_fork_with_threads(self):
         """Test that handling of the phil Lock after fork is correct.
 
-        h5py changes os.fork() to internally acquire the phil lock before forking
-        and release it afterwards, so that the global state of libhdf5 cannot be
-        cloned in a corrupted state.
+        h5py uses os.register_at_fork() to cause os.fork() to acquire the phil lock
+        before forking and release it afterwards, so that the global state of libhdf5
+        cannot be cloned in a corrupted state.
         """
         thread_acquired_phil_event = threading.Event()
 
@@ -68,13 +68,13 @@ class TestObjects(TestCase):
 
         try:
             # Now fork the current (main) thread while the other thread holds the lock.
-            # Internally, os.fork() acquires the phil.lock, so this will block until
-            # the other thread releases it.
+            # os.fork() acquires the phil lock, so this will block until the other
+            # thread releases it.
             pid = os.fork()
             if pid == 0:
                 # Child process
-                # If we handle the phil lock correctly, this should not deadlock,
-                # and we should be able to acquire the lock here.
+                # If we handle the phil lock correctly, this should not deadlock, and we
+                # should be able to acquire the lock here.
                 if o.phil.acquire(blocking=False):
                     o.phil.release()
                     os._exit(0)
