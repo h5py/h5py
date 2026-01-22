@@ -384,7 +384,7 @@ class Test1DFloat(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.data = np.arange(13).astype('f')
+        self.data = np.arange(50).astype('f')
         self.dset = self.f.create_dataset('x', data=self.data)
 
     def test_ndim(self):
@@ -393,7 +393,7 @@ class Test1DFloat(TestCase):
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEqual(self.dset.shape, (13,))
+        self.assertEqual(self.dset.shape, (50,))
 
     def test_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[...])
@@ -453,11 +453,19 @@ class Test1DFloat(TestCase):
     def test_indexlist_numpyarray(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5])])
 
+    def test_indexlist_long(self):
+        # selection logic changes with >16 indices
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(0, 50, 2)])
+
     def test_indexlist_single_index_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[0], ...])
 
     def test_indexlist_numpyarray_single_index_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([0]), ...])
+
+    def test_indexlist_long_ellipsis(self):
+        # selection logic changes with >16 indices
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(0, 50, 2), ...])
 
     def test_indexlist_numpyarray_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5]), ...])

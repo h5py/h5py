@@ -410,6 +410,15 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
+    def select_copy(self, SpaceID src_id):
+        """(SpaceID src_id)
+
+        Copies the selection from another dataspace to this one (self).
+        """
+        H5Sselect_copy(self.id, src_id.id)
+
+
+    @with_phil
     def select_none(self):
         """()
 
@@ -579,6 +588,27 @@ cdef class SpaceID(ObjectID):
             efree(count_array)
             efree(stride_array)
             efree(block_array)
+
+    @with_phil
+    def combine_select(self, SpaceID space2, int op=H5S_SELECT_OR):
+        """(SpaceID space2, INT op=SELECT_OR) => SpaceID
+
+        Combine two hyperslab selections with an operation, returning a new
+        dataspace with the resulting selection. The default operation is a union,
+        so the resulting selection includes everything selected in either input.
+        """
+        return SpaceID(H5Scombine_select(self.id, <H5S_seloper_t>op, space2.id))
+
+    @with_phil
+    def modify_select(self, SpaceID space2, int op=H5S_SELECT_OR):
+        """(SpaceID space2, INT op=SELECT_OR)
+
+        Refines the hyperslab selection of this dataspace (self) using the
+        hyperslab selection from a second dataspace. The default operation
+        is a union, extending the selection to any parts selected in the second
+        dataspace.
+        """
+        H5Smodify_select(self.id, <H5S_seloper_t>op, space2.id)
 
     @with_phil
     def is_regular_hyperslab(self):
