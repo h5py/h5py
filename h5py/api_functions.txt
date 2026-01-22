@@ -487,7 +487,6 @@ hdf5:
   herr_t    H5Sget_select_hyper_blocklist(hid_t space_id,  hsize_t startblock, hsize_t numblocks, hsize_t *buf )
   herr_t    H5Sselect_hyperslab(hid_t space_id, H5S_seloper_t op,  hsize_t *start, hsize_t *_stride, hsize_t *count, hsize_t *_block)
 
-  hid_t     H5Scombine_hyperslab(hid_t space_id, H5S_seloper_t op,  hsize_t *start, hsize_t *_stride, hsize_t *count, hsize_t *_block)
   hid_t     H5Scombine_select(hid_t space1_id, H5S_seloper_t op, hid_t space2_id)
   herr_t     H5Smodify_select(hid_t space1_id, H5S_seloper_t op, hid_t space2_id)
 
