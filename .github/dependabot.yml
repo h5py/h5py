@@ -9,3 +9,14 @@ updates:
       actions:
         patterns:
           - "*"
+
+  - package-ecosystem: "pip"
+    directory: "docs"
+    schedule:
+      interval: "quarterly"
+    cooldown:
+      default-days: 7
+    groups:
+      docs-patches:
+        update-types:
+        - patch
