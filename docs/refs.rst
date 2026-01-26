@@ -93,15 +93,10 @@ You can write the reference to the dataset and retrieve the reference as you wou
     >>> print(ref_dataset[0])
     <HDF5 object reference>
 
-You can also write the reference to the dataset in a single line, without specifying the shape. 
+You can also create a dataset containing references in a single line. 
 Here is an example with the region reference ``regref`` defined above:
 
-    >>> regref_dataset = myfile.create_dataset("MyRegRefs", data=regref, dtype=h5py.regionref_dtype)
-
-To read a reference from a dataset:
-    >>> myregref = regref_dataset[()]
-Then, the reference can be used to access the region within the dataset it points to:
-    >>> myds[myregref]
+    >>> regref_dataset = myfile.create_dataset("MyRegRefs", data=regref)
 
 Storing references in an attribute
 ----------------------------------
