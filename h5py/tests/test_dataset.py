@@ -2334,3 +2334,17 @@ def test_filter_properties(writable_file):
         h5py.h5z.FILTER_SHUFFLE, h5py.h5z.FILTER_LZF, h5py.h5z.FILTER_FLETCHER32
     )
     assert ds.filter_names == ('shuffle', 'lzf', 'fletcher32')
+
+
+def test_store_refs(writable_file):
+    ds1 = writable_file.create_dataset('foo', data=np.arange(12))
+    refs_ds = writable_file.create_dataset('refs', data=[writable_file.ref, ds1.ref])
+    assert isinstance(refs_ds[0], h5py.h5r.Reference)
+    assert writable_file[refs_ds[0]] == writable_file
+    assert isinstance(refs_ds[1], h5py.h5r.Reference)
+    assert writable_file[refs_ds[1]] == ds1
+
+    # Single reference
+    ref_scalar_ds = writable_file.create_dataset('ref_scalar', data=ds1.ref)
+    assert isinstance(ref_scalar_ds[()], h5py.h5r.Reference)
+    assert writable_file[ref_scalar_ds[()]] == ds1

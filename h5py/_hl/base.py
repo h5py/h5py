@@ -76,12 +76,12 @@ def guess_dtype(data):
     constructor to figure out)
     """
     with phil:
-        if isinstance(data, h5r.RegionReference):
-            return h5t.regionref_dtype
-        if isinstance(data, h5r.Reference):
-            return h5t.ref_dtype
-
         item_type = find_item_type(data)
+
+        if item_type is h5r.RegionReference:
+            return h5t.regionref_dtype
+        if item_type is h5r.Reference:
+            return h5t.ref_dtype
 
         if item_type is bytes:
             return h5t.string_dtype(encoding='ascii')
