@@ -2339,12 +2339,26 @@ def test_filter_properties(writable_file):
 def test_store_refs(writable_file):
     ds1 = writable_file.create_dataset('foo', data=np.arange(12))
     refs_ds = writable_file.create_dataset('refs', data=[writable_file.ref, ds1.ref])
-    assert isinstance(refs_ds[0], h5py.h5r.Reference)
+    assert isinstance(refs_ds[0], h5py.Reference)
     assert writable_file[refs_ds[0]] == writable_file
-    assert isinstance(refs_ds[1], h5py.h5r.Reference)
+    assert isinstance(refs_ds[1], h5py.Reference)
     assert writable_file[refs_ds[1]] == ds1
 
     # Single reference
     ref_scalar_ds = writable_file.create_dataset('ref_scalar', data=ds1.ref)
     assert isinstance(ref_scalar_ds[()], h5py.h5r.Reference)
     assert writable_file[ref_scalar_ds[()]] == ds1
+
+
+def test_store_regionrefs(writable_file):
+    ds1 = writable_file.create_dataset('foo', data=np.arange(12))
+    regionrefs_ds = writable_file.create_dataset('regrefs', data=[
+        ds1.regionref[:-1], ds1.regionref[1:]
+    ])
+    assert isinstance(regionrefs_ds[0], h5py.RegionReference)
+    np.testing.assert_array_equal(ds1[regionrefs_ds[0]], np.arange(11))
+    np.testing.assert_array_equal(ds1[regionrefs_ds[1]], np.arange(1, 12))
+
+    refs_ds = writable_file.create_dataset('refs', shape=(1,), dtype=h5py.ref_dtype)
+    with pytest.raises(TypeError):
+        refs_ds[0] = ds1.regionref[:6]
