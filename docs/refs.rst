@@ -93,7 +93,7 @@ You can write the reference to the dataset and retrieve the reference as you wou
     >>> print(ref_dataset[0])
     <HDF5 object reference>
 
-You can also create a dataset containing references in a single line. 
+You can also create a dataset containing references in a single line.
 Here is an example with the region reference ``regref`` defined above:
 
     >>> regref_dataset = myfile.create_dataset("MyRegRefs", data=regref)
