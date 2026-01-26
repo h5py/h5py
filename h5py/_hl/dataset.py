@@ -1061,9 +1061,6 @@ class Dataset(HLObject):
         # Perform the dataspace selection
         selection = sel.select(self.shape, args, dataset=self)
 
-        if selection.nselect == 0:
-            return
-
         # Broadcast scalars if necessary.
         # In order to avoid slow broadcasting filling the destination by
         # the scalar value, we create an intermediate array of the same
