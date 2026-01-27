@@ -16,7 +16,7 @@ cpdef int check_numpy_read(ndarray arr, hid_t space_id=*) except -1
 cpdef int check_numpy_write(ndarray arr, hid_t space_id=*) except -1
 
 cdef int convert_tuple(object tuple, hsize_t *dims, hsize_t rank) except -1
-cdef object convert_dims(hsize_t* dims, hsize_t rank)
+cdef object convert_dims(const hsize_t *dims, hsize_t rank)
 
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1
 
