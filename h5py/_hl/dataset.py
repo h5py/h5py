@@ -637,6 +637,8 @@ class Dataset(HLObject):
         for x in ('gzip','lzf','szip'):
             if x in self._filters:
                 return x
+        if any(f not in filters._COMP_FILTERS for f in self._filters):
+            return 'unknown'  # Filter from a plugin
         return None
 
     @property
@@ -644,6 +646,21 @@ class Dataset(HLObject):
     def compression_opts(self):
         """ Compression setting.  Int(0-9) for gzip, 2-tuple for szip. """
         return self._filters.get(self.compression, None)
+
+    @property
+    @with_phil
+    def filter_ids(self):
+        """Numeric IDs of HDF5 filters used for this dataset"""
+        pl = self._dcpl
+        return tuple([pl.get_filter(i)[0] for i in range(pl.get_nfilters())])
+
+    @property
+    @with_phil
+    def filter_names(self):
+        """Names, as stored in the file, of the filters used for this dataset"""
+        pl = self._dcpl
+        return tuple([pl.get_filter(i)[3].decode('utf-8', 'surrogateescape')
+                for i in range(pl.get_nfilters())])
 
     @property
     @with_phil
