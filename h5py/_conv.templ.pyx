@@ -701,12 +701,11 @@ cdef int conv_vlen2ndarray(void* ipt,
         void* back_buf = NULL
         cnp.ndarray ndarray
         PyObject* ndarray_obj
-        vlen_t in_vlen0
         size_t size, itemsize
 
     #Replaces the memcpy
-    size = in_vlen0.len = in_vlen[0].len
-    data = in_vlen0.ptr = in_vlen[0].ptr
+    size = in_vlen[0].len
+    data = in_vlen[0].ptr
 
     dims[0] = size
     itemsize = H5Tget_size(outtype.id)
@@ -754,8 +753,6 @@ cdef int conv_vlen2ndarray(void* ipt,
 
     PyArray_ENABLEFLAGS(ndarray, flags)
     ndarray_obj = <PyObject*>ndarray
-
-    in_vlen0.ptr = NULL
 
     # Write the new ndarray object to the buffer in-place and ensure it is not destroyed
     buf_obj[0] = ndarray_obj
