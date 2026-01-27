@@ -18,8 +18,6 @@ from ._objects cimport pdefault
 from .utils cimport emalloc, efree
 from .h5p import CRT_ORDER_TRACKED
 from .h5p cimport PropID, PropGCID, propwrap
-from . cimport _hdf5 # to implement container testing for 1.6
-from ._errors cimport set_error_handler, err_cookie
 
 # Python level imports
 from ._objects import phil, with_phil
@@ -458,13 +456,6 @@ cdef class GroupID(ObjectID):
 
         Determine if a group member of the given name is present
         """
-        cdef err_cookie old_handler
-        cdef err_cookie new_handler
-        cdef herr_t retval
-
-        new_handler.func = NULL
-        new_handler.data = NULL
-
         if not self:
             return False
 
