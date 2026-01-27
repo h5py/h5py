@@ -161,7 +161,7 @@ cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, ha
         (<object>f.fileobj).readinto(mview)
     else:
         b = (<object>f.fileobj).read(size)
-        if len(b) == size:
+        if <size_t>len(b) == size:
             memcpy(buf, <unsigned char *>b, size)
         else:
             return 1

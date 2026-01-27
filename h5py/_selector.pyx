@@ -27,7 +27,7 @@ import_array()
 cdef object convert_bools(bint* data, hsize_t rank):
     # Convert a bint array to a Python tuple of bools.
     cdef list bools_l
-    cdef int i
+    cdef hsize_t i
     bools_l = []
 
     for i in range(rank):

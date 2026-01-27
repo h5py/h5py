@@ -645,9 +645,8 @@ cdef class PropDCID(PropOCID):
         values
             TUPLE of UINTs giving auxiliary data for the filter
         """
-        cdef size_t nelements
+        cdef size_t nelements, i
         cdef unsigned int *cd_values
-        cdef int i
         cd_values = NULL
 
         require_tuple(values, 1, -1, b"values")
@@ -702,10 +701,9 @@ cdef class PropDCID(PropOCID):
         cdef list vlist
         cdef int filter_code
         cdef unsigned int flags
-        cdef size_t nelements
+        cdef size_t nelements, i
         cdef unsigned int cd_values[256]
         cdef char name[257]
-        cdef int i
         nelements = 256 # HDF5 library actually complains if this is too big.
 
         if filter_idx < 0:
@@ -753,11 +751,10 @@ cdef class PropDCID(PropOCID):
         """
         cdef list vlist
         cdef unsigned int flags
-        cdef size_t nelements
+        cdef size_t nelements, i
         cdef unsigned int cd_values[256]
         cdef char name[257]
         cdef herr_t retval
-        cdef int i
         nelements = 256 # HDF5 library actually complains if this is too big.
 
         if not self._has_filter(filter_code):
