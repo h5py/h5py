@@ -701,7 +701,7 @@ Reference
         above provide convenient shortcuts to check on common filters.
         IDs for filters built into h5py can be found in the :mod:`h5py.h5z`
         module, while filter IDs from plugins are listed in `HDF Group's registry
-        <https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins>`_.
+        <https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md>`_.
 
         .. versionadded:: 3.16
 
