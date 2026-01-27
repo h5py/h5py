@@ -171,7 +171,7 @@ cdef class Reference:
         self.typesize = sizeof(hobj_ref_t)
 
     def __bool__(self):
-        cdef int i
+        cdef size_t i
         for i in range(self.typesize):
             if (<unsigned char*>&self.ref)[i] != 0: return True
         return False

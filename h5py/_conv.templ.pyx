@@ -507,7 +507,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
     cdef:
         conv_enum_t *info
         size_t nalloc
-        int i
+        size_t i
         char* cbuf = NULL
         char* buf = <char*>buf_i
         int identical

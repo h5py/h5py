@@ -94,9 +94,9 @@ cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
     # Convert a Python tuple to an hsize_t array.  You must allocate
     # the array yourself and pass both it and the size to this function.
     # Returns 0 on success, -1 on failure and raises an exception.
-    cdef int i
+    cdef hsize_t i
 
-    if len(tpl) != rank:
+    if <hsize_t>len(tpl) != rank:
         raise ValueError("Tuple length incompatible with array")
 
     try:
@@ -111,7 +111,7 @@ cdef object convert_dims(const hsize_t* dims, hsize_t rank):
     # Convert an hsize_t array to a Python tuple of ints.
 
     cdef list dims_list
-    cdef int i
+    cdef hsize_t i
     dims_list = []
 
     for i in range(rank):
