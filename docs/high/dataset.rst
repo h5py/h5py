@@ -669,7 +669,7 @@ Reference
 
         This only recognises the built-in compression options ``'gzip'``,
         ``'lzf'`` and ``'szip'``. Other compression mechanisms will show as
-        ``'unknown'`` from h5py 3.8. Use :attr:`filter_ids` and
+        ``'unknown'`` from h5py 3.16. Use :attr:`filter_ids` and
         :attr:`filter_names` to get more complete information.
 
     .. attribute:: compression_opts
