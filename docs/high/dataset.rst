@@ -703,7 +703,7 @@ Reference
         module, while filter IDs from plugins are listed in `HDF Group's registry
         <https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins>`_.
 
-        .. versionadded:: 3.8
+        .. versionadded:: 3.16
 
     .. attribute:: fillvalue
 
