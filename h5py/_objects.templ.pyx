@@ -120,10 +120,28 @@ import warnings
 # Objects are added only via ObjectID.__cinit__, and dropped by the weakref system
 cdef object registry = weakref.WeakValueDictionary()
 
+# These 2 functions are part of a bugfix from Python 3.14. Before this,
+# a race condition meant that an entry could be removed from wvd.data while
+# another thread was iterating over it. We can remove these and use the
+# WeakValueDict methods once 3.14 is the minimum supported version.
+# https://github.com/python/cpython/issues/89967
+def wvd_values(self):
+    for wr in self.data.copy().values():
+        obj = wr()
+        if obj is not None:
+            yield obj
+
+def wvd_items(self):
+    for k, wr in self.data.copy().items():
+        v = wr()
+        if v is not None:
+            yield k, v
+
+
 @with_phil
 def print_reg():
     import h5py
-    objs = list(registry.values())
+    objs = list(wvd_values(registry))
 
     files = len([x for x in objs if isinstance(x, h5py.h5f.FileID)])
     groups = len([x for x in objs if isinstance(x, h5py.h5g.GroupID)])
@@ -138,7 +156,7 @@ def nonlocal_close():
     cdef ObjectID obj
     cdef list reg_ids
 
-    for python_id, obj in registry.items():
+    for python_id, obj in wvd_items(registry):
         # Locked objects are immortal, as they generally are provided by
         # the HDF5 library itself (property list classes, etc.).
         if obj.locked:
