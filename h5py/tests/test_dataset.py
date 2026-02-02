@@ -2326,8 +2326,9 @@ def test_concurrent_dataset_creation(writable_file):
 
 
 def test_filter_properties(writable_file):
+    name = make_name()
     ds = writable_file.create_dataset(
-        'foo', shape=1000, dtype=np.float32,
+        name, shape=1000, dtype=np.float32,
         fletcher32=True, shuffle=True, compression='lzf'
     )
     assert ds.filter_ids == (
