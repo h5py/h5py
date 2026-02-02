@@ -8,8 +8,7 @@ class SampleException(Exception):
     pass
 
 def throwing(name, obj):
-    print(name, obj)
-    raise SampleException("throwing exception")
+    raise SampleException(f"throwing exception for {name} {obj}")
 
 class TestVisit(TestCase):
     def test_visit(self):
