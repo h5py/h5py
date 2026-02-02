@@ -697,12 +697,8 @@ class TestUnicode(TestCase):
         """ Unicode filenames can be used, and seen correctly from python
         """
         fname = self.mktemp(prefix=chr(0x201a))
-        print(h5py.version.info)
-        from h5py._hl.compat import WINDOWS_ENCODING
-        print("Windows file encoding in use", WINDOWS_ENCODING)
-        print(f"Creating {fname!r}")
-        with File(fname, 'w') as f:
-            print(os.listdir(self.tempdir))
+        with File(fname, 'w'):
+            pass
         assert os.path.exists(fname)
 
     def test_nonexistent_file_unicode(self):
