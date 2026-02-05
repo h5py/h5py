@@ -10,7 +10,7 @@ charset-normalizer==3.4.4
     # via requests
 colorama==0.4.6 ; sys_platform == 'win32'
     # via sphinx
-docutils==0.21.2
+docutils==0.22.4
     # via
     #   sphinx
     #   sphinx-rtd-theme
