@@ -12,7 +12,6 @@
 """
 
 from contextlib import contextmanager
-from typing import Literal
 import posixpath as pp
 import numpy
 
@@ -26,7 +25,7 @@ from . import datatype
 from .vds import vds_support
 
 
-def set_fapl_file_locking(fapl, locking: Literal["true", "false", "best-effort"] | bool):
+def set_fapl_file_locking(fapl, locking):
     if locking in ("false", False):
         fapl.set_file_locking(False, ignore_when_disabled=False)
     elif locking in ("true", True):
@@ -37,12 +36,7 @@ def set_fapl_file_locking(fapl, locking: Literal["true", "false", "best-effort"]
         raise ValueError(f"Unsupported locking value: {locking}")
 
 
-def make_lapl(
-    file,
-    elink_mode: Literal["r", "r+"] | None = None,
-    elink_swmr: bool | None = None,
-    elink_locking: Literal["true", "false", "best-effort"] | bool | None = None,
-) -> h5p.PropLAID | None:
+def make_lapl(file, elink_mode=None, elink_swmr=None, elink_locking=None):
     """Set up a link access property list"""
     if elink_mode is None and elink_swmr is None and elink_locking is None:
         return None
@@ -437,14 +431,8 @@ class Group(HLObject, MutableMappingHDF5):
             raise TypeError("Unknown object type")
 
     def get(
-        self,
-        name,
-        default=None,
-        getclass=False,
-        getlink=False,
-        elink_mode: Literal["r", "r+"] | None = None,
-        elink_locking: Literal["true", "false", "best-effort"] | bool | None = None,
-        elink_swmr: bool | None = None,
+        self, name, default=None, getclass=False, getlink=False,
+        elink_mode=None, elink_locking=None, elink_swmr=None,
     ):
         """ Retrieve an item or other information.
 
