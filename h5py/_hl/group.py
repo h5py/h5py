@@ -409,6 +409,9 @@ class Group(HLObject, MutableMappingHDF5):
     @with_phil
     def _get(self, name, lapl=None):
         if isinstance(name, h5r.Reference):
+            if lapl is not None:
+                raise NotImplementedError(
+                    "Accessing a reference with link access properties is not supported")
             oid = h5r.dereference(name, self.id)
             if oid is None:
                 raise ValueError("Invalid HDF5 object reference")
