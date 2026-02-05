@@ -469,8 +469,7 @@ class Group(HLObject, MutableMappingHDF5):
             - True (or "true")   --  Enable file locking
             - "best-effort"      --  Enable file locking but ignore some errors
 
-            .. warning::
-
+            Warning:
                 The HDF5_USE_FILE_LOCKING environment variable can override
                 this parameter.
 
