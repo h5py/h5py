@@ -481,8 +481,9 @@ class TestDrivers(TestCase):
 
 
 @pytest.mark.skipif(
+    h5py.version.hdf5_version_tuple[0] == 1  and
     h5py.version.hdf5_version_tuple[1] % 2 != 0 ,
-    reason='Not HDF5 release version'
+    reason='Not HDF5 release version 1.x.y'
 )
 class TestNewLibver(TestCase):
 
