@@ -93,6 +93,9 @@ packages = [
 ]
 
 [dependency-groups]
+build = [
+    "cython",
+]
 check-manifest = [
     "check-manifest>=0.50",
 ]
@@ -122,7 +125,6 @@ wheels = [
     "codecov>=2.1.13",
     "coverage>=7.9.1",
     "tox>=4.26.0",
-    "tox-uv>=1.27.0",
 ]
 
 [tool.cibuildwheel]
@@ -165,3 +167,6 @@ no-build-package = ["numpy"]
 
 # see https://github.com/h5py/h5py/issues/2797
 extra-build-dependencies = { mpi4py = ["setuptools<81"] }
+
+[tool.uv.sources]
+cython = { git = "https://github.com/neutrinoceros/cython", branch = "patch-list-parsing" }
