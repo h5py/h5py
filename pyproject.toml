@@ -169,4 +169,4 @@ no-build-package = ["numpy"]
 extra-build-dependencies = { mpi4py = ["setuptools<81"] }
 
 [tool.uv.sources]
-cython = { git = "https://github.com/neutrinoceros/cython", branch = "patch-list-parsing" }
+cython = { git = "https://github.com/neutrinoceros/cython" }
