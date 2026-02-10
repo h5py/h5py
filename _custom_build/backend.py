@@ -21,9 +21,10 @@ def get_requires_for_build_wheel(config_settings=None):
     # these build requirements for any reason.
     if os.getenv('HDF5_MPI') == 'ON' and os.getenv('H5PY_SETUP_REQUIRES') != '0':
         requires.extend([
-            "mpi4py ==3.1.2; python_version=='3.10.*'",
-            "mpi4py ==3.1.4; python_version=='3.11.*'",
-            "mpi4py ==3.1.6; python_version=='3.12.*'",
+            # mpi4py 3.x fails to build with setuptools >= 81, so we'll use 4.0
+            # to keep things simple. If you need to build with older mpi4py, it
+            # may well work, but it's up to you to figure out.
+            "mpi4py ==4.0.0; python_version<'3.13'",
             "mpi4py ==4.0.1; python_version=='3.13.*'",
             "mpi4py ==4.1.0; python_version=='3.14.*'",
             # leave dependency unpinned for unstable Python versions
