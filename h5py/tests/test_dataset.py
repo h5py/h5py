@@ -2360,5 +2360,5 @@ def test_store_regionrefs(writable_file):
     np.testing.assert_array_equal(ds1[regionrefs_ds[1]], np.arange(1, 12))
 
     refs_ds = writable_file.create_dataset('refs', shape=(1,), dtype=h5py.ref_dtype)
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="convert"):
         refs_ds[0] = ds1.regionref[:6]
