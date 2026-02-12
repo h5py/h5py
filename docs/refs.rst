@@ -82,7 +82,7 @@ These dtypes are available from h5py for references and region references:
 * ``h5py.ref_dtype`` - for object references
 * ``h5py.regionref_dtype`` - for region references
 
-To store an array of references, use the appropriate dtype when initalizing the
+To store an array of references, use the appropriate dtype when initializing the
 dataset:
 
     >>> ref_dataset = myfile.create_dataset("MyRefs", shape=(100,), dtype=h5py.ref_dtype)
