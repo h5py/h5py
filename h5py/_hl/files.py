@@ -14,6 +14,7 @@
 import inspect
 import os
 import sys
+from typing import TYPE_CHECKING, Literal
 from warnings import warn
 
 from .compat import filename_decode, filename_encode
@@ -22,6 +23,48 @@ from .base import phil, with_phil
 from .group import Group, set_fapl_file_locking
 from .. import h5, h5f, h5p, h5i, h5fd, _objects
 from .. import version
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Concatenate, Generic, Protocol, TypeAlias, TypeVar
+    from .attrs import AttributeManager
+    from h5py.h5p import PropFAID, PropFCID
+
+    if sys.version_info >= (3, 11):
+        from typing import Self
+    else:
+        from typing_extensions import Self
+
+    if sys.version_info >= (3, 12):
+        from collections.abc import Buffer
+    else:
+        from typing_extensions import Buffer
+
+    OpenFileMode: TypeAlias = Literal['r', 'r+', 'w', 'w-', 'x', 'a']
+    Driver: TypeAlias = Literal['sec2', 'stdio', 'core', 'family', 'fileobj', 'split', 'ros3']
+    DriverFunction: TypeAlias = Callable[Concatenate[PropFAID, ...], None]
+    LibVer: TypeAlias = Literal['earliest', 'v108', 'v110', 'v112', 'v114' 'latest']
+    FileSpaceStrategy: TypeAlias = Literal['fsm', 'page', 'aggregate', 'none']
+
+    T = TypeVar("T", str, bytes)
+    class FileObj(Protocol, Generic[T]):
+        def write(self, buffer: T, /) -> int: ... # TODO: check buffer type
+        def seek(self, target: int, whence: int = 0, /) -> None: ...
+        def tell(self) -> int: ...
+        def truncate(self, pos: int | None, /) -> int: ...
+        def flush(self) -> None: ...
+
+    class FileReader(FileObj, Generic[T]):
+        def read(self, size: int | None = -1, /) -> T: ... # TODO: check size type
+
+    class FileIntoReader(FileObj):
+        def readinto(self, buffer: Buffer, /) -> int: ...
+
+    FileLike: TypeAlias = FileReader | FileIntoReader
+
+    Locking: TypeAlias = bool | Literal["false", "true", "best-effort"]
+
 
 mpi = h5.get_config().mpi
 ros3 = h5.get_config().ros3
@@ -61,7 +104,7 @@ def _set_fapl_fileobj(plist, **kwargs):
     plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs.get('fileobj'))
 
 
-_drivers = {
+_drivers: dict["Driver | str", "DriverFunction"] = {
     'sec2': lambda plist, **kwargs: plist.set_fapl_sec2(**kwargs),
     'stdio': lambda plist, **kwargs: plist.set_fapl_stdio(**kwargs),
     'core': lambda plist, **kwargs: plist.set_fapl_core(**kwargs),
@@ -81,7 +124,7 @@ if direct_vfd:
     _drivers['direct'] = lambda plist, **kwargs: plist.set_fapl_direct(**kwargs)  # noqa
 
 
-def register_driver(name, set_fapl):
+def register_driver(name: str, set_fapl: "DriverFunction") -> None:
     """Register a custom driver.
 
     Parameters
@@ -94,7 +137,7 @@ def register_driver(name, set_fapl):
     _drivers[name] = set_fapl
 
 
-def unregister_driver(name):
+def unregister_driver(name: str) -> None:
     """Unregister a custom driver.
 
     Parameters
@@ -105,18 +148,27 @@ def unregister_driver(name):
     del _drivers[name]
 
 
-def registered_drivers():
+def registered_drivers() -> frozenset["Driver | str"]:
     """Return a frozenset of the names of all of the registered drivers.
     """
     return frozenset(_drivers)
 
 
 def make_fapl(
-    driver, libver=None, rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
-    locking=None, page_buf_size=None, min_meta_keep=0, min_raw_keep=0,
-    alignment_threshold=1, alignment_interval=1, meta_block_size=None,
-    **kwds
-):
+    driver: "Driver | str | None",
+    libver: "LibVer | None" = None,
+    rdcc_nslots: int | None = None,
+    rdcc_nbytes: int | None = None,
+    rdcc_w0: float | None = None,
+    locking: "Locking | None" = None,
+    page_buf_size: int | None = None,
+    min_meta_keep: int = 0,
+    min_raw_keep: int = 0,
+    alignment_threshold: int = 1,
+    alignment_interval: int = 1,
+    meta_block_size: int | None = None,
+    **kwds,
+) -> "PropFCID":
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -177,8 +229,14 @@ def make_fapl(
     return plist
 
 
-def make_fcpl(track_order=False, track_times=False, fs_strategy=None, fs_persist=False,
-              fs_threshold=1, fs_page_size=None):
+def make_fcpl(
+    track_order: bool = False,
+    track_times: bool | None = False,
+    fs_strategy: "FileSpaceStrategy | None" = None,
+    fs_persist: bool = False,
+    fs_threshold: int = 1,
+    fs_page_size: int | None = None,
+) -> "PropFCID":
     """ Set up a file creation property list """
     plist = h5p.create(h5p.FILE_CREATE)
     if track_order:
@@ -193,7 +251,7 @@ def make_fcpl(track_order=False, track_times=False, fs_strategy=None, fs_persist
     else:
         raise TypeError("track_times must be either True or False")
     if fs_strategy:
-        strategies = {
+        strategies: dict["FileSpaceStrategy", int] = {
             'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
             'page': h5f.FSPACE_STRATEGY_PAGE,
             'aggregate': h5f.FSPACE_STRATEGY_AGGR,
@@ -209,7 +267,8 @@ def make_fcpl(track_order=False, track_times=False, fs_strategy=None, fs_persist
     return plist
 
 
-def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
+# TODO: annotate return type
+def make_fid(name, mode, userblock_size: int | None, fapl, fcpl=None, swmr: bool = False):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
 
@@ -278,7 +337,7 @@ class File(Group):
     """
 
     @property
-    def attrs(self):
+    def attrs(self) -> "AttributeManager":
         """ Attributes attached to this object """
         # hdf5 complains that a file identifier is an invalid location for an
         # attribute. Instead of self, pass the root group to AttributeManager:
@@ -288,13 +347,13 @@ class File(Group):
 
     @property
     @with_phil
-    def filename(self):
+    def filename(self) -> os.PathLike[str]:
         """File name on disk"""
         return filename_decode(h5f.get_name(self.id))
 
     @property
     @with_phil
-    def driver(self):
+    def driver(self) -> "Driver" | Literal['unknown']:
         """Low-level HDF5 file driver used to open file"""
         drivers = {h5fd.SEC2: 'sec2',
                    h5fd.STDIO: 'stdio',
@@ -312,28 +371,28 @@ class File(Group):
 
     @property
     @with_phil
-    def mode(self):
+    def mode(self) -> Literal['r', 'r+']:
         """ Python mode used to open file """
         write_intent = h5f.ACC_RDWR | h5f.ACC_SWMR_WRITE
         return 'r+' if self.id.get_intent() & write_intent else 'r'
 
     @property
     @with_phil
-    def libver(self):
+    def libver(self) -> tuple[str, str]:
         """File format version bounds (2-tuple: low, high)"""
         bounds = self.id.get_access_plist().get_libver_bounds()
         return tuple(libver_dict_r[x] for x in bounds)
 
     @property
     @with_phil
-    def userblock_size(self):
+    def userblock_size(self) -> int:
         """ User block size (in bytes) """
         fcpl = self.id.get_create_plist()
         return fcpl.get_userblock()
 
     @property
     @with_phil
-    def meta_block_size(self):
+    def meta_block_size(self) -> int:
         """ Meta block size (in bytes) """
         fapl = self.id.get_access_plist()
         return fapl.get_meta_block_size()
@@ -342,38 +401,59 @@ class File(Group):
 
         @property
         @with_phil
-        def atomic(self):
+        def atomic(self) -> bool:
             """ Set/get MPI-IO atomic mode
             """
             return self.id.get_mpi_atomicity()
 
         @atomic.setter
         @with_phil
-        def atomic(self, value):
+        def atomic(self, value: bool) -> None:
             # pylint: disable=missing-docstring
             self.id.set_mpi_atomicity(value)
 
     @property
     @with_phil
-    def swmr_mode(self):
+    def swmr_mode(self) -> bool:
         """ Controls single-writer multiple-reader mode """
         return bool(self.id.get_intent() & (h5f.ACC_SWMR_READ | h5f.ACC_SWMR_WRITE))
 
     @swmr_mode.setter
     @with_phil
-    def swmr_mode(self, value):
+    def swmr_mode(self, value: Literal[True]) -> None:
         # pylint: disable=missing-docstring
         if value:
             self.id.start_swmr_write()
         else:
             raise ValueError("It is not possible to forcibly switch SWMR mode off.")
 
-    def __init__(self, name, mode='r', driver=None, libver=None, userblock_size=None, swmr=False,
-                 rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
-                 fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
-                 page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
-                 alignment_threshold=1, alignment_interval=1, meta_block_size=None,
-                 *, track_times=False, **kwds):
+    def __init__(
+        self,
+        name: "os.PathLike[str | bytes] | FileLike",
+        mode: "OpenFileMode" = 'r',
+        driver: "Driver | None" = None,
+        libver: "LibVer | None" = None,
+        userblock_size: int | None = None,
+        swmr: bool = False,
+        rdcc_nslots: int | None = None,
+        rdcc_nbytes: int | None = None,
+        rdcc_w0: float | None = None,
+        track_order: bool | None = None,
+        fs_strategy: "FileSpaceStrategy | None" = None,
+        fs_persist: bool = False,
+        fs_threshold: int = 1,
+        fs_page_size: int | None = None,
+        page_buf_size: int | None = None,
+        min_meta_keep: int = 0,
+        min_raw_keep: int = 0,
+        locking: "Locking | None" = None,
+        alignment_threshold: int = 1,
+        alignment_interval: int = 1,
+        meta_block_size: int | None = None,
+        *,
+        track_times: bool | None = False,
+        **kwds,
+    ):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -498,6 +578,8 @@ class File(Group):
         if driver == 'ros3':
             if not ros3:
                 raise ValueError("h5py was built without ROS3 support, can't use ros3 driver")
+            if not isinstance(name, (str, bytes)):
+                raise TypeError(f"with {driver=!r}, name must be str or bytes, not {type(name).__name__}")
             if hdf5_version < (2, 0, 0):
                 from urllib.parse import urlparse
                 url = urlparse(name)
@@ -565,7 +647,7 @@ class File(Group):
 
     @classmethod
     @with_phil
-    def in_memory(cls, file_image=None, **kwargs):
+    def in_memory(cls, file_image=None, **kwargs) -> "Self": # TODO: annotate file_image
         """Create an HDF5 file in memory, without an underlying file
 
         file_image
@@ -608,7 +690,7 @@ class File(Group):
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
         return cls(fid)
 
-    def close(self):
+    def close(self) -> None:
         """ Close the file.  All open objects become invalid """
         with phil:
             # Check that the file is still open, otherwise skip
@@ -622,23 +704,23 @@ class File(Group):
 
                 self.id.close()
 
-    def flush(self):
+    def flush(self) -> None:
         """ Tell the HDF5 library to flush its buffers.
         """
         with phil:
             h5f.flush(self.id)
 
     @with_phil
-    def __enter__(self):
+    def __enter__(self) -> "Self":
         return self
 
     @with_phil
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         if self.id:
             self.close()
 
     @with_phil
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not self.id:
             r = '<Closed HDF5 file>'
         else:
