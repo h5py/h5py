@@ -69,7 +69,7 @@ cdef class H5PYConfig:
         ### {{endif}}
 
     @property
-    def native_complex(self):
+    def has_native_complex(self):
         """Boolean indicating availability of native HDF5 complex number datatypes."""
         return self._native_complex
 
