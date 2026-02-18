@@ -162,3 +162,10 @@ H5PY_DIRECT_VFD = "0"
 [tool.uv]
 # never build numpy from source
 no-build-package = ["numpy"]
+constraint-dependencies = [
+    # replicate missing lower bounds for pytest's dependencies
+    # see https://github.com/pytest-dev/pytest/pull/13791
+    "colorama>=0.4; sys_platform=='win32'",
+    "iniconfig>=1.0.1",
+    "packaging>=22",
+]
