@@ -32,9 +32,9 @@ pytestmark = [
     ),
 ]
 
-REQUIRE_NUMPY_LONG_COMPLEX = pytest.mark.skipif(
+REQUIRE_NUMPY_COMPLEX256 = pytest.mark.skipif(
     not hasattr(np, "complex256"),
-    reason="long complex type is not available in numpy",
+    reason="complex256 type is not available in numpy",
 )
 
 NATIVE_BYTE_ORDER = h5t.ORDER_BE if sys.byteorder == "big" else h5t.ORDER_LE
@@ -54,7 +54,7 @@ NATIVE_BYTE_ORDER = h5t.ORDER_BE if sys.byteorder == "big" else h5t.ORDER_LE
         pytest.param(
             "NATIVE_LDOUBLE_COMPLEX", 32, NATIVE_BYTE_ORDER,
             id="long-native",
-            marks=REQUIRE_NUMPY_LONG_COMPLEX,
+            marks=REQUIRE_NUMPY_COMPLEX256,
         )
     ]
 )
@@ -74,7 +74,7 @@ H5_VS_NUMPY_DTYPES = [
     pytest.param("NATIVE_DOUBLE_COMPLEX", "=c16", id="=c16"),
     pytest.param(
         "NATIVE_LDOUBLE_COMPLEX", "=c32", id="=c32",
-        marks=REQUIRE_NUMPY_LONG_COMPLEX,
+        marks=REQUIRE_NUMPY_COMPLEX256,
     ),
 ]
 
