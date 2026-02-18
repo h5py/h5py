@@ -76,6 +76,8 @@ jobs:
             arch: arm64
           - os: macos-15-intel
             arch: x86_64
+          - os: ubuntu-24.04-ppc64le
+            arch: ppc64le
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -121,6 +123,83 @@ jobs:
 
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e # v3.3.1
+        if: matrix.arch != 'ppc64le'
+      
+      - name: Setup Python and system dependencies (ppc64le)
+        if: matrix.arch == 'ppc64le'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common pkg-config
+          sudo add-apt-repository ppa:deadsnakes/ppa -y
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3.11 python3.11-dev python3.11-venv \
+            python3.12 python3.12-dev python3.12-venv \
+            python3.13 python3.13-dev python3.13-venv \
+            python3.14 python3.14-dev python3.14-venv \
+            python3-pip
+      
+      # ------------------------------------------------------------
+      # Build NumPy wheels (policy-aligned)
+      #
+      # NumPy support:
+      # - Python 3.11 → NumPy 2.4.x
+      # - Python >=3.12 → NumPy main (2.5+)
+      # ------------------------------------------------------------
+      # ppc64le builds NumPy from source because official wheels are not available.
+      # This is intentionally separated from cibuildwheel to avoid repeated rebuilds.
+
+      - name: Build NumPy wheels from source (ppc64le)
+        if: matrix.arch == 'ppc64le'
+        run: |
+          set -euo pipefail
+          mkdir -p numpy_wheels
+          build_numpy () {
+            local PY=$1
+            local DIR=$2
+            echo "🔹 Building NumPy in $DIR for Python $PY"
+            cd "$DIR"
+            python$PY -m venv venv$PY
+            source venv$PY/bin/activate
+            pip install -U pip setuptools wheel meson ninja meson-python Cython build
+            
+            python -m build --wheel --no-isolation -v
+            cp dist/*.whl ../numpy_wheels/
+            deactivate
+            rm -rf build dist .mesonpy-* _skbuild venv$PY
+            cd ..
+          }
+          # NumPy 2.4.x for Python 3.11
+          git clone --depth 1 --branch v2.4.1 --recurse-submodules https://github.com/numpy/numpy.git numpy-2.4.1
+          build_numpy 3.11 numpy-2.4.1
+          # NumPy main for Python >= 3.12
+          git clone --depth 1 --recurse-submodules https://github.com/numpy/numpy.git numpy-main
+          for PY in 3.12 3.13 3.14; do
+            build_numpy $PY numpy-main
+          done
+      
+      - name: Setup venv for h5py build
+        if: matrix.arch == 'ppc64le'
+        run: |
+          python3.12 -m venv venv
+          source venv/bin/activate
+          pip install -U pip setuptools wheel cibuildwheel
+      - name: Build h5py wheels using locally built NumPy (ppc64le)
+        if: matrix.arch == 'ppc64le'
+        run: |
+          source venv/bin/activate
+          cibuildwheel
+        env:
+          CIBW_ARCHS: ppc64le
+          CIBW_BUILD: "cp311-manylinux_ppc64le cp312-manylinux_ppc64le cp313-manylinux_ppc64le cp314-manylinux_ppc64le"
+          CIBW_BUILD_FRONTEND: "pip"
+          CIBW_BEFORE_BUILD: |
+            PYTAG=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+            pip install ./numpy_wheels/*${PYTAG}*.whl
+          CIBW_BEFORE_TEST: |
+            PYTAG=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+            pip install ./numpy_wheels/*${PYTAG}*.whl
+          CIBW_TEST_SKIP: "cp*-*ppc64le"
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
