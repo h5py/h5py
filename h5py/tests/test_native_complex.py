@@ -27,7 +27,7 @@ pytestmark = [
         reason="Requires HDF5 >= 2.0",
     ),
     pytest.mark.skipif(
-        not cfg.native_complex,
+        not cfg.has_native_complex,
         reason="Native HDF5 complex number datatypes not available",
     ),
 ]
