@@ -621,7 +621,6 @@ class File(Group):
                 self.id._close_open_objects(h5f.OBJ_LOCAL | h5f.OBJ_FILE)
 
                 self.id.close()
-                _objects.nonlocal_close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.
