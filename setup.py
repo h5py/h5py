@@ -33,9 +33,8 @@ RUN_REQUIRES = [
 ]
 
 if setup_configure.mpi_enabled():
-    # Older mpi4py probably still works if you need it, but 3.x versions can't
-    # build with setuptools >= 81, so for simplicity we build with 4.x.
-    RUN_REQUIRES.append('mpi4py >=4.0')
+    # 3.1.2 is the first release with any wheels for Python 3.10
+    RUN_REQUIRES.append('mpi4py >=3.1.2')
 
 # --- Custom setuptools commands -----------------------------------------------
 
