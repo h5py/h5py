@@ -1942,6 +1942,29 @@ ref_dtype = np.dtype('O', metadata={'ref': Reference})
 regionref_dtype = np.dtype('O', metadata={'ref': RegionReference})
 
 
+def complex_compat_dtype(complex_dtype, names=('r', 'i')):
+    """Create a backward-compatible structured dtype for storing complex numbers
+
+    HDF5 1.x does not have a native way to represent complex numbers, so we
+    translate them to a compound datatype of 2 floats. HDF5 2.0 added a complex
+    datatype, and a future version of h5py will probably use that by default.
+
+    With this function, you can explicitly create datasets and attributes with
+    the compatible compound dtype for complex numbers:
+
+        cx_dt = h5py.compound_complex_dtype('<c8')
+        ds = f.create_dataset('complex_compat', shape=(100,), dtype=cx_dt)
+
+    Pass a specification for a NumPy complex dtype to control size & endianness.
+    """
+    complex_dtype = np.dtype(complex_dtype)
+    if complex_dtype.kind != 'c':
+        raise TypeError(f"{complex_dtype!r} is not a complex dtype")
+    field_size = complex_dtype.itemsize // 2
+    field_fmt = f"{complex_dtype.byteorder}f{field_size}"
+    return np.dtype({"names": names, "formats": [field_fmt, field_fmt]})
+
+
 @with_phil
 def special_dtype(**kwds):
     """ Create a new h5py "special" type.  Only one keyword may be given.

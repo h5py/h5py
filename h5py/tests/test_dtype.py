@@ -549,3 +549,19 @@ def test_create_bitfield(writable_file):
     assert isinstance(ds2.id.get_type(), h5py.h5t.TypeBitfieldID)
     assert ds2.id.get_type().get_size() == 2
     np.testing.assert_array_equal(ds2[:], data)
+
+
+def test_complex_compat(writable_file):
+    dt = h5py.complex_compat_dtype(np.complex64)
+    assert dt.names == ('r', 'i')
+    assert dt['r'] == np.dtype('=f4')
+    assert dt['i'] == np.dtype('=f4')
+
+    dt2 = h5py.complex_compat_dtype(np.dtype('>c16'))
+    assert dt2['r'] == np.dtype('>f8')
+    assert dt2['i'] == np.dtype('>f8')
+
+    ds = writable_file.create_dataset(make_name(), shape=(10,), dtype=dt)
+    assert ds.dtype == np.dtype('c8')  # Recognised as complex
+    ds[:] = arr = np.arange(10, dtype='c8')
+    np.testing.assert_array_equal(ds[:], arr)
