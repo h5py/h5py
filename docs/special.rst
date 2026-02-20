@@ -124,6 +124,45 @@ arrays::
    Check if ``dt`` is a variable-length dtype.
    Returns the base type if it is, or ``None`` if not.
 
+.. _complex_dtypes:
+
+Complex numbers
+---------------
+
+HDF5 2.0 has a native way to represent complex numbers. h5py doesn't yet create
+new datasets or attributes with this datatype automatically, but you can do so
+explicitly::
+
+    >>> f = h5py.File('foo.hdf5','w')
+    >>> ds = f.create_dataset("complex", (100,), dtype=h5py.h5t.COMPLEX_IEEE_F32LE)
+    # Read & write with numpy complex data
+    >>> ds[:] = np.arange(100, dtype='c8')
+
+By default, h5py creates new objects for complex data with a compound datatype,
+which is compatible with HDF5 1.x. This default will probably change in a future
+major version of h5py, so you can also specify it explicitly, to keep using the
+backwards-compatible format::
+
+    >>> f = h5py.File('foo.hdf5','w')
+    >>> ds = f.create_dataset("complex", (100,), dtype=h5py.complex_compat_dtype('c8'))
+    # Read & write with numpy complex data
+    >>> ds[:] = np.arange(100, dtype='c8')
+
+The native & compatible formats both store the data in the same format, as do
+NumPy's complex dtypes. So it's cheap to 'convert' between them, as only the
+metadata is affected.
+
+.. function:: complex_compat_dtype(complex_dtype, names=('r', 'i'))
+
+   Create a backward-compatible structured dtype for storing complex numbers.
+
+   Pass in a numpy complex dtype specification, e.g. ``'<c8'``, to control size
+   and endianness. You can also override the field names for the resulting
+   compound dtype; these should match the :doc:`globally configured <config>`
+   names, so that the HDF5 datatype can be recognised as complex data.
+
+   .. versionadded:: 3.16
+
 Enumerated types
 ----------------
 

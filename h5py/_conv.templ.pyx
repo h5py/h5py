@@ -905,6 +905,101 @@ cdef herr_t uint2bitfield(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
+# Complex to Compound routines
+#
+#   these are no-ops, but needed for interoperability between the native complex
+#   datatype (HDF5 2.0+) and h5py's older imitation of complex data as a compound
+#   datatype. In h5py 3.x, numpy complex dtypes are presented to HDF5 as compound
+#   to preserve existing behaviour. We expect to switch this in h5py 4.0.
+
+cdef inline int check_compound_complex(hid_t tid, size_t member_size, H5T_order_t order):
+    if (
+            H5Tget_class(tid) == H5T_COMPOUND
+            and H5Tget_nmembers(tid) == 2
+            and H5Tget_member_class(tid, 0) == H5T_FLOAT
+            and H5Tget_member_class(tid, 1) == H5T_FLOAT
+            and H5Tget_size(H5Tget_member_type(tid, 0)) == member_size
+            and H5Tget_size(H5Tget_member_type(tid, 1)) == member_size
+            and H5Tget_member_offset(tid, 0) == 0
+            and H5Tget_member_offset(tid, 1) == <int>member_size
+            and H5Tget_order(H5Tget_member_type(tid, 0)) == order
+            and H5Tget_order(H5Tget_member_type(tid, 1)) == order
+    ):
+        return 1
+    return 0
+
+### {{if HDF5_VERSION >= (2, 0, 0)}}
+cdef herr_t complex2compound(hid_t src_id,
+                             hid_t dst_id,
+                             H5T_cdata_t *cdata,
+                             size_t nl,
+                             size_t buf_stride,
+                             size_t bkg_stride,
+                             void *buf_i,
+                             void *bkg_i,
+                             hid_t dxpl) except -1:
+    cdef:
+        int command = cdata[0].command
+        size_t member_size
+
+    if command == H5T_CONV_INIT:
+        cdata[0].need_bkg = H5T_BKG_NO
+        if H5Tget_class(src_id) != H5T_COMPLEX:
+            return -2
+        member_size = H5Tget_size(src_id) // 2
+        if not check_compound_complex(dst_id, member_size, H5Tget_order(src_id)):
+            return -2
+        # Not calling log_convert_registered() here - logging requires the GIL,
+        # but this function can be called without it.
+
+    elif command == H5T_CONV_FREE:
+        pass
+
+    elif command == H5T_CONV_CONV:
+        return 0  # Conversion is a no-op
+
+    else:
+        return -2   # Unrecognized command.  Note this is NOT an exception.
+
+    return 0
+
+cdef herr_t compound2complex(hid_t src_id,
+                             hid_t dst_id,
+                             H5T_cdata_t *cdata,
+                             size_t nl,
+                             size_t buf_stride,
+                             size_t bkg_stride,
+                             void *buf_i,
+                             void *bkg_i,
+                             hid_t dxpl) except -1:
+    cdef:
+        int command = cdata[0].command
+        size_t member_size
+
+    if command == H5T_CONV_INIT:
+        cdata[0].need_bkg = H5T_BKG_NO
+        if H5Tget_class(dst_id) != H5T_COMPLEX:
+            return -2
+        member_size = H5Tget_size(dst_id) // 2
+        if not check_compound_complex(src_id, member_size, H5Tget_order(dst_id)):
+            return -2
+        # Not calling log_convert_registered() here - logging requires the GIL,
+        # but this function can be called without it.
+
+    elif command == H5T_CONV_FREE:
+        pass
+
+    elif command == H5T_CONV_CONV:
+        return 0  # Conversion is a no-op
+
+    else:
+        return -2   # Unrecognized command.  Note this is NOT an exception.
+
+    return 0
+### {{endif}}
+
+# =============================================================================
+#
 
 cpdef int register_converters() except -1:
     cdef:
@@ -913,6 +1008,7 @@ cpdef int register_converters() except -1:
         hid_t pyobj
         hid_t enum
         hid_t boolenum = -1
+        hid_t complex_compound = -1
         int8_t f_value = 0
         int8_t t_value = 1
 
@@ -974,6 +1070,19 @@ cpdef int register_converters() except -1:
     H5Tregister(H5T_PERS_SOFT, "vlen2str", vlstring, pyobj, vlen2str)
     H5Tregister(H5T_PERS_SOFT, "str2vlen", pyobj, vlstring, str2vlen)
 
+    ### {{if HDF5_VERSION >= (2, 0, 0)}}
+    # The sizes here don't matter, because 'soft' conversions are registered
+    # for the type classes, i.e. H5T_COMPLEX & H5T_COMPOUND.
+    # The details of fields & sizes are checked inside the function.
+    complex_compound = H5Tcreate(H5T_COMPOUND, 16)
+    H5Tinsert(complex_compound, b'r', 0, H5T_IEEE_F64LE)
+    H5Tinsert(complex_compound, b'i', 8, H5T_IEEE_F64LE)
+    H5Tregister(H5T_PERS_SOFT, "complex2compound", H5T_COMPLEX_IEEE_F64LE, complex_compound, complex2compound)
+    H5Tregister(H5T_PERS_SOFT, "compound2complex", complex_compound, H5T_COMPLEX_IEEE_F64LE, compound2complex)
+
+    H5Tclose(complex_compound)
+    ### {{endif}}
+
     H5Tclose(vlstring)
     H5Tclose(vlentype)
     H5Tclose(enum)
@@ -1007,5 +1116,10 @@ cpdef int unregister_converters() except -1:
     # Pass an empty string to unregister all methods that use these functions
     H5Tunregister(H5T_PERS_HARD, "", -1, -1, uint2bitfield)
     H5Tunregister(H5T_PERS_HARD, "", -1, -1, bitfield2uint)
+
+    ### {{if HDF5_VERSION >= (2, 0, 0)}}
+    H5Tunregister(H5T_PERS_SOFT, "complex2compound", -1, -1, complex2compound)
+    H5Tunregister(H5T_PERS_SOFT, "compound2complex", -1, -1, compound2complex)
+    ### {{endif}}
 
     return 0
