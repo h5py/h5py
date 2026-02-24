@@ -2081,6 +2081,32 @@ def check_ref_dtype(dt):
         return None
 
 
+def check_complex_dtype(dt, names=('r', 'i')):
+    """If the dtype represents complex number, return an equivalent NumPy dtype.
+
+    This recognises both real complex dtypes, and the compatible compound dtypes
+    produced by complex_compat_dtype(). For the compatible dtypes, the field
+    names must match *names*, or pass None to allow any field names.
+
+    Returns None if the dtype does not represent complex numbers.
+    """
+    if dt.kind == 'c':
+        return dt
+
+    if (dt.names is None) or len(dt.names) != 2:
+        return None
+    if (names is not None) and dt.names != names:
+        return None
+    dt1, dt2 = [dt.fields[n][0] for n in dt.names]
+    if (dt1.kind != 'f') or (dt2.kind != 'f'):
+        return None
+    if (dt1.itemsize != dt2.itemsize) or (dt1.itemsize * 2 != dt.itemsize):
+        return None
+    if dt1.byteorder != dt2.byteorder:
+        return None
+    return np.dtype(f"{dt1.byteorder}c{dt.itemsize}")
+
+
 @with_phil
 def check_dtype(**kwds):
     """ Check a dtype for h5py special type "hint" information.  Only one

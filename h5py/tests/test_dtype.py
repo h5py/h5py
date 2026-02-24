@@ -556,12 +556,16 @@ def test_complex_compat(writable_file):
     assert dt.names == ('r', 'i')
     assert dt['r'] == np.dtype('=f4')
     assert dt['i'] == np.dtype('=f4')
+    assert h5py.check_complex_dtype(dt) == np.dtype('=c8')
 
     dt2 = h5py.complex_compat_dtype(np.dtype('>c16'))
     assert dt2['r'] == np.dtype('>f8')
     assert dt2['i'] == np.dtype('>f8')
+    assert h5py.check_complex_dtype(dt2) == np.dtype('>c16')
 
     ds = writable_file.create_dataset(make_name(), shape=(10,), dtype=dt)
     assert ds.dtype == np.dtype('c8')  # Recognised as complex
     ds[:] = arr = np.arange(10, dtype='c8')
     np.testing.assert_array_equal(ds[:], arr)
+
+    assert h5py.check_complex_dtype(np.dtype('<c16')) == np.dtype('<c16')
