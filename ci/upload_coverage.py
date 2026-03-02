@@ -99,6 +99,10 @@ def main():
     parser.add_argument("--codecov-token", default=None)
     args = parser.parse_args()
 
+    if hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled():
+        msg("codecov 2.1.13 segfaults on free-threaded python; skipping")
+        return
+
     msg(f"Working in {GIT_MAIN_DIR}, looking for coverage files...")
     coverage_files = [str(f) for f in COVERAGE_DIR.glob('coverage-*')]
     pmsg(sorted(coverage_files))
