@@ -12,11 +12,14 @@ Testing native complex number datatypes.
 """
 
 import sys
+
 import numpy as np
 import pytest
+
 import h5py
 from h5py.h5 import get_config  # type: ignore
 from h5py import h5t
+from .common import make_name
 from .data_files import get_data_file_path
 
 cfg = get_config()
@@ -114,7 +117,7 @@ def check_compound_complex_datatype(datatype, np_dtype):
 def test_default_create(writable_file, dt):
     """Test default translation when creating datasets & attributes"""
     complex_array = (np.random.rand(100) + 1j * np.random.rand(100)).astype(dt)
-    ds = writable_file.create_dataset(dt, data=complex_array)
+    ds = writable_file.create_dataset(make_name(dt), data=complex_array)
     c = np.array(1.9 + 1j * 6.7, dtype=dt)
     ds.attrs["c"] = c
     check_compound_complex_datatype(ds.id.get_type(), np.dtype(dt))
@@ -129,7 +132,7 @@ def test_explicit_create(writable_file, h5type_str, dt):
     h5type = getattr(h5t, h5type_str)
     np_dt = np.dtype(dt)
     complex_array = (np.random.rand(100) + 1j * np.random.rand(100)).astype(np_dt)
-    ds = writable_file.create_dataset(dt, (100,), dtype=h5py.Datatype(h5type))
+    ds = writable_file.create_dataset(make_name(dt), (100,), dtype=h5py.Datatype(h5type))
     ds[:] = complex_array
     c = np.array(1.9 + 1j * 6.7, dtype=np_dt)
     ds.attrs.create("c", c, dtype=h5py.Datatype(h5type))
