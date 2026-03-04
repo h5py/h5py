@@ -637,21 +637,21 @@ def test_error_newaxis(writable_file):
         ds[np.newaxis, :]
 
 
-def test_bool_selection_1d(writable_file):
+@pytest.mark.parametrize(
+    "arr", [
+        np.arange(9),
+        np.array([s.encode() for s in 'abcdefghi'], dtype=object),
+    ]
+)
+def test_bool_selection_1d(writable_file, arr):
     """https://github.com/h5py/h5py/issues/2674"""
-    int_arr = np.arange(9).reshape(3, 3)
-    writable_file['integers'] = int_arr
-    str_arr = np.array([s.encode() for s in 'abcdefghi'], dtype=object).reshape(3, 3)
-    writable_file['strings'] = str_arr
-
+    arr = arr.reshape(3, 3)
+    name = make_name()
+    writable_file[name] = arr
+    dset = writable_file[name]
     sel = np.array([True, False, True])
-    int_dset = writable_file['integers']
-    np.testing.assert_array_equal(int_dset[sel], int_arr[sel])
-    np.testing.assert_array_equal(int_dset[sel, :], int_arr[sel, :])
-
-    str_dset = writable_file['strings']
-    np.testing.assert_array_equal(str_dset[sel], str_arr[sel])
-    np.testing.assert_array_equal(str_dset[sel, :], str_arr[sel, :])
+    np.testing.assert_array_equal(dset[sel], arr[sel])
+    np.testing.assert_array_equal(dset[sel, :], arr[sel, :])
 
 
 class TestZeroSizeSelectionResizableDataset(TestCase):

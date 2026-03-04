@@ -118,6 +118,9 @@ test = [
     "pytest-cov>=5.0.0",
     "pytest-mpi>=0.6",
 ]
+concurrency = [
+    "pytest-run-parallel >=0.8.0",
+]
 wheels = [
     "codecov>=2.1.13",
     "coverage>=7.9.1",

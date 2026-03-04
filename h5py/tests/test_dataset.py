@@ -2326,8 +2326,9 @@ def test_concurrent_dataset_creation(writable_file):
 
 
 def test_filter_properties(writable_file):
+    name = make_name()
     ds = writable_file.create_dataset(
-        'foo', shape=1000, dtype=np.float32,
+        name, shape=1000, dtype=np.float32,
         fletcher32=True, shuffle=True, compression='lzf'
     )
     assert ds.filter_ids == (
@@ -2337,28 +2338,28 @@ def test_filter_properties(writable_file):
 
 
 def test_store_refs(writable_file):
-    ds1 = writable_file.create_dataset('foo', data=np.arange(12))
-    refs_ds = writable_file.create_dataset('refs', data=[writable_file.ref, ds1.ref])
+    ds1 = writable_file.create_dataset(make_name("foo"), data=np.arange(12))
+    refs_ds = writable_file.create_dataset(make_name("refs"), data=[writable_file.ref, ds1.ref])
     assert isinstance(refs_ds[0], h5py.Reference)
     assert writable_file[refs_ds[0]] == writable_file
     assert isinstance(refs_ds[1], h5py.Reference)
     assert writable_file[refs_ds[1]] == ds1
 
     # Single reference
-    ref_scalar_ds = writable_file.create_dataset('ref_scalar', data=ds1.ref)
+    ref_scalar_ds = writable_file.create_dataset(make_name("ref_scalar"), data=ds1.ref)
     assert isinstance(ref_scalar_ds[()], h5py.h5r.Reference)
     assert writable_file[ref_scalar_ds[()]] == ds1
 
 
 def test_store_regionrefs(writable_file):
-    ds1 = writable_file.create_dataset('foo', data=np.arange(12))
-    regionrefs_ds = writable_file.create_dataset('regrefs', data=[
+    ds1 = writable_file.create_dataset(make_name("foo"), data=np.arange(12))
+    regionrefs_ds = writable_file.create_dataset(make_name("regrefs"), data=[
         ds1.regionref[:-1], ds1.regionref[1:]
     ])
     assert isinstance(regionrefs_ds[0], h5py.RegionReference)
     np.testing.assert_array_equal(ds1[regionrefs_ds[0]], np.arange(11))
     np.testing.assert_array_equal(ds1[regionrefs_ds[1]], np.arange(1, 12))
 
-    refs_ds = writable_file.create_dataset('refs', shape=(1,), dtype=h5py.ref_dtype)
+    refs_ds = writable_file.create_dataset(make_name("refs"), shape=(1,), dtype=h5py.ref_dtype)
     with pytest.raises(TypeError, match="convert"):
         refs_ds[0] = ds1.regionref[:6]
