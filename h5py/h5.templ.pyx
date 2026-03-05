@@ -61,10 +61,22 @@ cdef class H5PYConfig:
         self._t_name = b'TRUE'
         self._bytestrings = ByteStringContext()
         self._track_order = False
+        ### {{if HDF5_VERSION >= (2, 0, 0)}}
+        self._native_complex = bool(
+            H5_SIZEOF_FLOAT_COMPLEX + H5_SIZEOF_DOUBLE_COMPLEX + H5_SIZEOF_LONG_DOUBLE_COMPLEX)
+        ### {{else}}
+        self._native_complex = False
+        ### {{endif}}
+
+    @property
+    def has_native_complex(self):
+        """Boolean indicating availability of native HDF5 complex number datatypes."""
+        return self._native_complex
 
     @property
     def complex_names(self):
-        """ Settable 2-tuple controlling how complex numbers are saved.
+        """ Settable 2-tuple controlling the field names used for storing
+        complex numbers as an HDF5 compound.
 
         Format is (real_name, imag_name), defaulting to ('r','i').
         """
