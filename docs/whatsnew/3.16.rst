@@ -1,4 +1,4 @@
-What's new in h5py 3.15
+What's new in h5py 3.16
 =======================
 
 New features
@@ -15,7 +15,7 @@ New features
 
   h5py will still convert NumPy complex numbers into an HDF5 compound datatype
   by default, preserving the behaviour from earlier versions. See
-  :ref:`complex_dtypes` for how to use the new datatype.
+  :ref:`complex_dtypes` for how to use the new datatypes.
 * New attributes :attr:`~.Dataset.filter_ids` and :attr:`~.Dataset.filter_names`
   to provide more precise information on the filters set up for a dataset
   (:pr:`2792`). See :ref:`dataset_compression`.
@@ -43,7 +43,7 @@ Bug fixes
 * Correctly raise errors when trying to write data to a zero-sized dataset or
   a zero-sized slice (:pr:`2729`).
 * When creating a dataset, the ``dtype=`` parameter can now be a
-  `TypeID <low:h5py.h5t.TypeID>` object from the low-level API.
+  :class:`TypeID <low:h5py.h5t.TypeID>` object from the low-level API.
 * Various fixes for safe usage from multiple threads (:pr:`2795`, :pr:`2794`,
   :pr:`2764`).
 * Trying to store region references in a dataset for object references now
@@ -70,8 +70,8 @@ Exposing HDF5 functions
 Building h5py
 -------------
 
-* Fix building against pre-release version of NumPy (:pr:`2758`).
-* Fixed some compiler warnings (:pr:`2784`, :pr:`2791`).
+* Fix building against pre-release versions of NumPy (:pr:`2758`).
+* Fix some compiler warnings (:pr:`2784`, :pr:`2791`).
 * The package metadata now requires mpi4py 4.0.0 for MPI builds on Python <= 3.12
   (:pr:`2799`). This works around an issue building older mpi4py with recent
   versions of setuptools. If you are building from source yourself, it may still
