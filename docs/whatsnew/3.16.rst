@@ -48,7 +48,7 @@ Bug fixes
   :pr:`2764`).
 * Trying to store region references in a dataset for object references now
   raises ``TypeError`` instead of discarding information (:pr:`2790`). See
-  :doc:`refs` for more about references.
+  :doc:`/refs` for more about references.
 * A list of reference objects can be used to create a dataset (:pr:`2790`).
 * Fix getting filter details for the :ref:`scaleoffset filter
   <dataset_scaleoffset>` (:pr:`2781`).
