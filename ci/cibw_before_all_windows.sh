@@ -7,7 +7,6 @@ if [[ "$1" == "" ]] ; then
     exit 1
 fi
 PROJECT_PATH="$1"
-ZLIB_VERSION="1.3.1"
 
 if [[ "$ARCH" == "ARM64" ]]; then
     #Use vcpkg for Windows ARM64, since Nuget\Chocolatey doesn't provide zlib package for Windows ARM64
