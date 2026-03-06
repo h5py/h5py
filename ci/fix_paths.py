@@ -26,12 +26,8 @@ def main():
         zlib_root = os.environ.get("ZLIB_ROOT")
         if zlib_root:
             arch = platform.machine().lower()
-            if arch in ("arm64", "aarch64"):
-                f = pjoin(zlib_root, 'bin', 'zlib1.dll')
-            elif arch in ("amd64", "x86_64"):
-                f = pjoin(zlib_root, 'bin', 'zlib.dll')
-            else:
-                raise RuntimeError(f"Unexpected architecture detected: {platform.machine()=}")
+            # z.dll from zlib 1.3.2; previously zlib.dll / zlib1.dll
+            f = pjoin(zlib_root, "bin", "z.dll")
             copy(f, pjoin(sitepackagesdir, 'h5py', basename(f)))
             print("Copied", f)
 
