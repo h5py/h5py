@@ -49,7 +49,7 @@ else
 
         if [[ "$OSTYPE" == "darwin"* ]]; then
             ARCH=$(uname -m)
-            ZLIB_VERSION="1.3.1"
+            ZLIB_VERSION="1.3.2"
 
             # When compiling HDF5, we should use the minimum across all
             # Python versions for a given arch.

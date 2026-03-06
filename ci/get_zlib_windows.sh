@@ -8,7 +8,7 @@ fi
 
 INSTALL_PREFIX="$1"
 
-ZLIB_VERSION="1.3.1"
+ZLIB_VERSION="1.3.2"
 ZLIB_DIR="zlib-$ZLIB_VERSION"
 
 if [ ! -d "$ZLIB_DIR" ]; then

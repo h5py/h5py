@@ -43,23 +43,13 @@ CMAKE_CONFIGURE_CMD = [
 
 ]
 if ZLIB_ROOT:
-    if arch in ("arm64", "aarch64"):
-        # ZLIB includes based on vcpkg layout
-        CMAKE_CONFIGURE_CMD += [
-            "-DHDF5_ENABLE_ZLIB_SUPPORT=ON",
-            f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
-            f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib\\zlib.lib",
-            f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\debug\\lib\\zlibd.lib",
-        ]
-    elif arch in ("amd64", "x86_64"):
-        ## ZLIB includes based on source build layout
-        CMAKE_CONFIGURE_CMD += [
-            "-DHDF5_ENABLE_ZLIB_SUPPORT=ON",
-            f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
-            f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib\\zlib.lib",
-        ]
-    else:
-        raise RuntimeError(f"Unexpected architecture detected: {platform.machine()=}")
+    ## ZLIB includes based on source build layout
+    CMAKE_CONFIGURE_CMD += [
+        "-DHDF5_ENABLE_ZLIB_SUPPORT=ON",
+        f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
+        # z.lib from zlib 1.3.2 (previously zlib.lib)
+        f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib\\z.lib",
+    ]
 
 CMAKE_BUILD_CMD = ["cmake", "--build"]
 CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
