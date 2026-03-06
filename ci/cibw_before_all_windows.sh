@@ -9,30 +9,24 @@ fi
 PROJECT_PATH="$1"
 
 if [[ "$ARCH" == "ARM64" ]]; then
-    # Build zlib from source
-    ./ci/get_zlib_amd64.sh $PROJECT_PATH/zlib-win-arm64
-
-    ZLIB_ROOT="$PROJECT_PATH/zlib-win-arm64"
-    EXTRA_PATH="$ZLIB_ROOT/bin"
-    export CL="/I$ZLIB_ROOT/include"
-    export LINK="/LIBPATH:$ZLIB_ROOT/lib"
+    export ZLIB_ROOT="$PROJECT_PATH/zlib-win-arm64"
     export HDF5_VSVERSION="17-arm64"
 elif [[ "$ARCH" == "AMD64" ]]; then
-    # Build zlib from source for Windows AMD64
-    ./ci/get_zlib_amd64.sh $PROJECT_PATH/zlib-win-x64
-
-    ZLIB_ROOT="$PROJECT_PATH/zlib-win-x64"
-    EXTRA_PATH="$ZLIB_ROOT/bin"
-    export CL="/I$ZLIB_ROOT/include"
-    export LINK="/LIBPATH:$ZLIB_ROOT/lib"
+    export ZLIB_ROOT="$PROJECT_PATH/zlib-win-x64"
     export HDF5_VSVERSION="17-64"
 else
     echo "Got unexpected arch '$ARCH'"
     exit 1
 fi
 
+echo "Building zlib into $ZLIB_ROOT"
+./ci/get_zlib_windows.sh "$ZLIB_ROOT"
+
+EXTRA_PATH="$ZLIB_ROOT/bin"
+export CL="/I$ZLIB_ROOT/include"
+export LINK="/LIBPATH:$ZLIB_ROOT/lib"
+
 export PATH="$PATH:$EXTRA_PATH"
-export ZLIB_ROOT
 
 # HDF5
 export HDF5_VERSION="2.0.0"
