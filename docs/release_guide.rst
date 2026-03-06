@@ -42,6 +42,5 @@ Steps to make an h5py release:
 
 8. Check that the release is correctly published to PyPI after the tag-triggered
    CI job completes.
-
 9. Close the GitHub milestone for this release and open one for the next
-    version.
+   version.
