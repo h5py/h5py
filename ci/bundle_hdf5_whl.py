@@ -11,7 +11,6 @@ import os
 import os.path as osp
 import shutil
 import sys
-import platform
 import tempfile
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -22,13 +21,8 @@ def find_dlls():
     zlib_root = os.environ.get("ZLIB_ROOT")
     if zlib_root:
         print("ZLIB_ROOT", zlib_root)
-        arch = platform.machine().lower()
-        if arch in ("arm64", "aarch64"):
-            yield os.path.join(zlib_root, 'bin', 'zlib1.dll')
-        elif arch in ("amd64", "x86_64"):
-            yield os.path.join(zlib_root, 'bin', 'zlib.dll')
-        else:
-            raise RuntimeError(f"Unexpected architecture detected: {platform.machine()=}")
+        # z.dll from zlib 1.3.2; previously zlib.dll / zlib1.dll
+        yield osp.join(zlib_root, "bin", "z.dll")
 
 def file_sha256(path):
     h = hashlib.sha256()
