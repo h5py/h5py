@@ -26,6 +26,14 @@ def localpath(*args):
     return op.abspath(op.join(op.dirname(__file__), *args))
 
 
+USE_PY_LIMITED_API = (
+    os.getenv('H5PY_LIMITED_API', '0') == '1'
+    and sys.version_info >= (3, 11)
+    and not sysconfig.get_config_var("Py_GIL_DISABLED")
+)
+ABI3_TARGET_VERSION = "".join(str(_) for _ in sys.version_info[:2])
+ABI3_TARGET_HEX = hex(sys.hexversion & 0xFFFF00F0)
+
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
             'h5', 'h5i', 'h5r', 'utils', '_selector',
             '_conv', 'h5t', 'h5s',
@@ -49,6 +57,13 @@ COMPILER_SETTINGS = {
                        ('NPY_NO_DEPRECATED_API', 0),
                       ]
 }
+if USE_PY_LIMITED_API:
+    COMPILER_SETTINGS['define_macros'].append(('Py_LIMITED_API', ABI3_TARGET_HEX))
+
+    # options to be passed as setuptools.setup(..., options=...)
+    OPTIONS = {"bdist_wheel": {"py_limited_api": f"cp{ABI3_TARGET_VERSION}"}}
+else:
+    OPTIONS = {}
 
 EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c") ]}
 
@@ -147,6 +162,7 @@ class h5py_build_ext(build_ext):
         sources = [localpath('h5py', module + '.pyx')] + EXTRA_SRC.get(module, [])
         settings = copy.deepcopy(settings)
         settings['libraries'] += EXTRA_LIBRARIES.get(module, [])
+        settings["py_limited_api"] = USE_PY_LIMITED_API
 
         return Extension('h5py.' + module, sources, **settings)
 
