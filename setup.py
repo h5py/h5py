@@ -30,6 +30,7 @@ RUN_REQUIRES = [
     # works (assuming you build it from source too).
     # NumPy 1.21.2 is the first release with any wheels for Python 3.10, our minimum Python.
     "numpy >=1.21.2",
+    "typing-extensions >= 4.6.0 ; python_version < '3.12'",
 ]
 
 if setup_configure.mpi_enabled():
