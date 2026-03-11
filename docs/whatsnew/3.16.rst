@@ -44,7 +44,7 @@ Bug fixes
 * Correctly raise errors when trying to write data to a zero-sized dataset or
   a zero-sized slice (:pr:`2729`).
 * When creating a dataset, the ``dtype=`` parameter can now be a
-  :class:`TypeID <low:h5py.h5t.TypeID>` object from the low-level API.
+  :class:`TypeID <low:h5py.h5t.TypeID>` object from the low-level API (:pr:`2770`).
 * Various fixes for safe usage from multiple threads (:pr:`2795`, :pr:`2794`,
   :pr:`2764`).
 * Trying to store region references in a dataset for object references now
