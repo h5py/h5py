@@ -12,7 +12,9 @@
 """
 
 from collections import namedtuple
-from . import h5 as _h5
+from .h5 import (HDF5_VERSION_COMPILED_AGAINST, NUMPY_VERSION_COMPILED_AGAINST,
+                 CYTHON_VERSION_COMPILED_WITH, get_libversion,
+                 )
 import sys
 import numpy
 
@@ -21,7 +23,7 @@ import numpy
 _H5PY_VERSION_CLS = namedtuple("_H5PY_VERSION_CLS",
                                "major minor bugfix pre post dev")
 
-hdf5_built_version_tuple = _h5.HDF5_VERSION_COMPILED_AGAINST
+hdf5_built_version_tuple = HDF5_VERSION_COMPILED_AGAINST
 
 version_tuple = _H5PY_VERSION_CLS(3, 16, 0, None, None, None)
 
@@ -33,7 +35,7 @@ if version_tuple.post is not None:
 if version_tuple.dev is not None:
     version += ".dev{0.dev:d}".format(version_tuple)
 
-hdf5_version_tuple = _h5.get_libversion()
+hdf5_version_tuple = get_libversion()
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
 
 api_version_tuple = (1,8)
@@ -59,7 +61,7 @@ HDF5 (built against) %(hdf5_build_version)s
     'platform': sys.platform,
     'maxsize': sys.maxsize,
     'numpy': numpy.__version__,
-    'cython_version': _h5.CYTHON_VERSION_COMPILED_WITH,
-    'numpy_build_version': _h5.NUMPY_VERSION_COMPILED_AGAINST,
+    'cython_version': CYTHON_VERSION_COMPILED_WITH,
+    'numpy_build_version': NUMPY_VERSION_COMPILED_AGAINST,
     'hdf5_build_version': "%d.%d.%d" % hdf5_built_version_tuple,
 }
