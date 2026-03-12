@@ -533,7 +533,7 @@ def test_opaque(writable_file):
 
 
 def test_create_bitfield(writable_file):
-    data = np.arange(12, dtype=np.uint16)
+    data = np.arange(12, dtype="<u2")
     ds = writable_file.create_dataset(
         make_name("x"), dtype=h5py.Datatype(h5py.h5t.STD_B16LE), shape=(12,)
     )
