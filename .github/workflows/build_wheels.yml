@@ -64,18 +64,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            arch: x86_64
-          - os: ubuntu-24.04-arm
-            arch: aarch64
-          - os: windows-latest
-            arch: AMD64
+#          - os: ubuntu-latest
+#            arch: x86_64
+#          - os: ubuntu-24.04-arm
+#            arch: aarch64
+#          - os: windows-latest
+#            arch: AMD64
           - os: windows-11-arm
             arch: ARM64
-          - os: macos-14
-            arch: arm64
-          - os: macos-15-intel
-            arch: x86_64
+#          - os: macos-14
+#            arch: arm64
+#          - os: macos-15-intel
+#            arch: x86_64
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
