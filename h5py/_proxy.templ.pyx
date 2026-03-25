@@ -238,8 +238,10 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
     # return a new compound type with the fields packed together
     # See also: issue 372
 
-    cdef hid_t newtype, temptype
-    cdef hsize_t newtype_size, offset
+    cdef hid_t newtype = H5I_UNINIT
+    cdef hid_t temptype = H5I_UNINIT
+    cdef hsize_t newtype_size = 0
+    cdef hsize_t offset = 0
     cdef char* member_name = NULL
     cdef int idx
 
@@ -255,7 +257,6 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
 
     # First pass: add up the sizes of matching fields so we know how large a
     # type to make
-    newtype_size = 0
     for idx in range(H5Tget_nmembers(dstype)):
         member_name = H5Tget_member_name(dstype, idx)
         try:
@@ -271,7 +272,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
     # Second pass: pick out the matching fields and pack them in the new type
-    offset = 0
+    temptype = H5I_UNINIT
     for idx in range(H5Tget_nmembers(dstype)):
         member_name = H5Tget_member_name(dstype, idx)
         try:
