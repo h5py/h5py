@@ -543,8 +543,6 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
                 nalloc = info[0].dst_size*nl
 
             cbuf = <char*>emalloc(nalloc)
-            if cbuf == NULL:
-                raise MemoryError()
 
             for i in range(nl):
                 memcpy(cbuf + (i*info[0].src_size), buf + (i*buf_stride),
