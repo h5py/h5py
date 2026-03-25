@@ -14,6 +14,7 @@
 # Cython C-level imports
 from ._objects cimport ObjectID, pdefault
 from .h5p cimport PropID
+from .utils cimport emalloc
 
 #Python level imports
 from ._objects import phil, with_phil
@@ -138,7 +139,7 @@ def get_name(Reference ref not None, ObjectID loc not None):
 
     namesize = H5Rget_name(loc.id, <H5R_type_t>ref.typecode, &ref.ref, NULL, 0)
     if namesize > 0:
-        namebuf = <char*>malloc(namesize+1)
+        namebuf = <char*>emalloc(namesize+1)
         try:
             namesize = H5Rget_name(loc.id, <H5R_type_t>ref.typecode, &ref.ref, namebuf, namesize+1)
             return namebuf

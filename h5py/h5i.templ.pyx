@@ -12,6 +12,7 @@
     Identifier interface for object inspection.
 """
 
+from .utils cimport emalloc
 from ._objects import phil, with_phil
 
 
@@ -100,7 +101,7 @@ def get_name(ObjectID obj not None):
         return None
 
     assert namelen > 0
-    name = <char*>malloc(sizeof(char)*(namelen+1))
+    name = <char*>emalloc(sizeof(char)*(namelen+1))
     try:
         H5Iget_name(obj.id, name, namelen+1)
         pystring = name
