@@ -149,11 +149,13 @@ cdef void _npystrings_pack(hid_t space, void *contig, void *noncontig,
     # and not HDF5 variable length strings (char*).
     tid = H5Tcreate(H5T_OPAQUE, SIZEOF_NPY_PACKED_STATIC_STRING)
 
-    # Read char*[] (zero-terminated) from h5py
-    # and deep-copy to npy_packed_static_string[] for NumPy
-    H5Diterate(noncontig, tid, space, npystrings_pack_cb, &info)
-    NpyString_release_allocator(info.allocator)
-    H5Tclose(tid)
+    try:
+        # Read char*[] (zero-terminated) from h5py
+        # and deep-copy to npy_packed_static_string[] for NumPy
+        H5Diterate(noncontig, tid, space, npystrings_pack_cb, &info)
+    finally:
+        NpyString_release_allocator(info.allocator)
+        H5Tclose(tid)
 
 
 cdef herr_t npystrings_unpack_cb(
