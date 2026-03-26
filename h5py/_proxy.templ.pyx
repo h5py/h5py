@@ -223,6 +223,8 @@ cdef herr_t dset_rw_vlen_strings(
     finally:
         free(zero_terminated_buf)
         free(conv_buf)
+        if h5_vlen_string > 0:
+            H5Tclose(h5_vlen_string)
         if dstype > 0:
             H5Tclose(dstype)
         if dspace > 0:
