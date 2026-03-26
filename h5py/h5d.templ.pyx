@@ -516,10 +516,10 @@ cdef class DatasetID(ObjectID):
         space_id = H5Dget_space(self.id)
         rank = H5Sget_simple_extent_ndims(space_id)
 
-        if len(offsets) != rank:
-            raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
-
         try:
+            if len(offsets) != rank:
+                raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
+
             offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(offsets, offset, rank)
             PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
