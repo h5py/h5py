@@ -213,36 +213,22 @@ cdef class ObjectID:
 
 
     def __dealloc__(self):
-        self._dealloc()
+        self._close(debug_message="DEALLOC - unregistering")
 
     # During interpreter shutdown, module attributes are set to None
     # before __dealloc__ and __del__ methods are executed.
-    def _dealloc(self, _phil=_phil, warn=warnings.warn):
+    # Here we attach _phil and warnings.warn to the function object as default values
+    # so they remain available during shutdown.
+    def _close(self, _phil=_phil, warn=warnings.warn, debug_message="CLOSE -"):
+        """ Manually close this object. """
         with _phil:
             ### {{if OBJECTS_DEBUG_ID}}
-            print("DEALLOC - unregistering %d HDF5 id %d" % (self._pyid, self.id))
+            print(f"{debug_message} {self._pyid} HDF5 id {self.id}")
             ### {{endif}}
             if is_h5py_obj_valid(self) and (not self.locked):
                 if H5Idec_ref(self.id) < 0:
                     warn(
-                        "Reference counting issue with HDF5 id {}".format(
-                            self.id
-                        )
-                    )
-
-    def _close(self):
-        """ Manually close this object. """
-
-        with _phil:
-            ### {{if OBJECTS_DEBUG_ID}}
-            print("CLOSE - %d HDF5 id %d" % (self._pyid, self.id))
-            ### {{endif}}
-            if is_h5py_obj_valid(self) and (not self.locked):
-                if H5Idec_ref(self.id) < 0:
-                    warnings.warn(
-                        "Reference counting issue with HDF5 id {}".format(
-                            self.id
-                        )
+                        f"Reference counting issue with HDF5 id {self.id}"
                     )
             self.id = 0
 
