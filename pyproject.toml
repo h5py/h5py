@@ -3,7 +3,7 @@
 # REMEMBER TO KEEP THE VERSIONS IN THIS FILE THE SAME AS IN ci/triage_build.sh
 requires = [
     "Cython >=3.0.0, <4",
-    "numpy >=1.25.0, <3",
+    "numpy >=1.25.0, <3, !=2.4.3",
     "packaging >=23.0",
     "pkgconfig >=1.5.5",
     "setuptools >=77.0.1",
