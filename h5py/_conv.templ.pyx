@@ -911,20 +911,33 @@ cdef herr_t uint2bitfield(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 #   to preserve existing behaviour. We expect to switch this in h5py 4.0.
 
 cdef inline int check_compound_complex(hid_t tid, size_t member_size, H5T_order_t order):
+    cdef hid_t tm
     if (
             H5Tget_class(tid) == H5T_COMPOUND
-            and H5Tget_nmembers(tid) == 2
-            and H5Tget_member_class(tid, 0) == H5T_FLOAT
-            and H5Tget_member_class(tid, 1) == H5T_FLOAT
-            and H5Tget_size(H5Tget_member_type(tid, 0)) == member_size
-            and H5Tget_size(H5Tget_member_type(tid, 1)) == member_size
-            and H5Tget_member_offset(tid, 0) == 0
-            and H5Tget_member_offset(tid, 1) == <int>member_size
-            and H5Tget_order(H5Tget_member_type(tid, 0)) == order
-            and H5Tget_order(H5Tget_member_type(tid, 1)) == order
+        and H5Tget_nmembers(tid) == 2
+        and H5Tget_member_class(tid, 0) == H5T_FLOAT
+        and H5Tget_member_class(tid, 1) == H5T_FLOAT
+        and H5Tget_member_offset(tid, 0) == 0
+        and H5Tget_member_offset(tid, 1) == <int>member_size
     ):
+        # Check member type details
+        tm = H5Tget_member_type(tid, 0)
+        try:
+            if H5Tget_size(tm) != member_size or H5Tget_order(tm) != order:
+                return 0
+        finally:
+            H5Tclose(tm)
+
+        tm = H5Tget_member_type(tid, 1)
+        try:
+            if H5Tget_size(tm) != member_size or H5Tget_order(tm) != order:
+                return 0
+        finally:
+            H5Tclose(tm)
+
         return 1
-    return 0
+    else:
+        return 0
 
 ### {{if HDF5_VERSION >= (2, 0, 0)}}
 cdef herr_t complex2compound(hid_t src_id,
