@@ -53,6 +53,7 @@ setup(
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
   cmdclass = CMDCLASS,
+  options = setup_build.OPTIONS,
 )
 
 # see pyproject.toml for static metadata
