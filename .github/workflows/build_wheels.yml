@@ -89,7 +89,7 @@ jobs:
 
       # Windows HDF5
       - name: Cache built HDF5 (Windows)
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('ci/cibw_before_all_windows.sh', 'ci/get_hdf5_win.py') }}
           path: cache/hdf5
@@ -107,7 +107,7 @@ jobs:
 
       # macOS HDF5
       - name: Cache built HDF5 (Mac)
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.4  # zizmor: ignore[cache-poisoning] cache not used when uploading wheels
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('ci/cibw_before_all_macos.sh', 'ci/get_hdf5_if_needed.sh') }}
           path: cache/hdf5
@@ -207,7 +207,7 @@ jobs:
 
       # If it's a tag, create a Github release
       - name: Upload to GitHub releases
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
         with:
           draft: false
