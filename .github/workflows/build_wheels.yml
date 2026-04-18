@@ -207,13 +207,7 @@ jobs:
 
       # If it's a tag, create a Github release
       - name: Upload to GitHub releases
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
-        # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
-        with:
-          draft: false
-          generate_release_notes: false
-          files: |
-            dist/*
+        run: gh release create dist/*
         if: github.repository_owner == 'h5py' && github.event_name == 'push'
 
       # If it's a tag, publish to PyPI
