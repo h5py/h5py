@@ -498,7 +498,7 @@ class File(Group):
         if (
             driver is None
             and isinstance(name, str)
-            and name.startswith(r("http://", "https://", "s3://"))
+            and name.startswith(("http://", "https://", "s3://"))
         ):
             driver = 'ros3'
 
