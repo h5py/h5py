@@ -495,11 +495,10 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
-        ros3_schemes = ("http://", "https://", "s3://")
         if (
-            isinstance(name, str)
-            and str(name).startswith(ros3_schemes)
-            and driver is None
+            driver is None
+            and isinstance(name, str)
+            and name.startswith(r("http://", "https://", "s3://"))
         ):
             driver = "ros3"
 
