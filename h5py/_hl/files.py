@@ -500,7 +500,7 @@ class File(Group):
             and isinstance(name, str)
             and name.startswith(r("http://", "https://", "s3://"))
         ):
-            driver = "ros3"
+            driver = 'ros3'
 
         if driver == 'ros3':
             if not ros3:
