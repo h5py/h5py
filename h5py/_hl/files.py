@@ -495,6 +495,14 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
+        ros3_schemes = ("http://", "https://", "s3://")
+        if (
+            isinstance(name, str)
+            and str(name).startswith(ros3_schemes)
+            and driver is None
+        ):
+            driver = "ros3"
+
         if driver == 'ros3':
             if not ros3:
                 raise ValueError("h5py was built without ROS3 support, can't use ros3 driver")
