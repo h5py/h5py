@@ -6,7 +6,7 @@ babel==2.17.0
     # via sphinx
 certifi==2026.2.25
     # via requests
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
 colorama==0.4.6 ; sys_platform == 'win32'
     # via sphinx
@@ -26,7 +26,7 @@ packaging==26.0
     # via sphinx
 pygments==2.20.0
     # via sphinx
-requests==2.33.0
+requests==2.33.1
     # via sphinx
 roman-numerals==4.1.0 ; python_full_version >= '3.11'
     # via roman-numerals-py
