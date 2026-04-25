@@ -5,6 +5,7 @@
 from itertools import count
 import platform
 import numpy as np
+import pytest
 import h5py
 try:
     import tables
@@ -530,6 +531,113 @@ def test_opaque(writable_file):
     assert isinstance(ds.id.get_type(), h5py.h5t.TypeOpaqueID)
     assert ds.id.get_type().get_size() == 2
     np.testing.assert_array_equal(ds[:], arr)
+
+
+def test_opaque_tag_dataset_roundtrip(writable_file):
+    tag = b'org.example.uuid'
+    dt = h5py.opaque_dtype(np.dtype('V16'), tag=tag)
+    assert h5py.get_opaque_tag(dt) == tag
+
+    ds = writable_file.create_dataset(make_name(), data=np.zeros(4, dtype=dt))
+    assert ds.id.get_type().get_tag() == tag
+    assert h5py.check_opaque_dtype(ds.dtype)
+    assert h5py.get_opaque_tag(ds.dtype) == tag
+    assert ds.dtype.itemsize == 16
+
+
+def test_opaque_tag_str_encoded_as_utf8():
+    dt = h5py.opaque_dtype(np.dtype('V4'), tag='utf8-\u00e9')
+    assert h5py.get_opaque_tag(dt) == 'utf8-\u00e9'.encode('utf-8')
+
+
+def test_opaque_tag_on_attribute(tmp_path):
+    tag = b'my-attr-tag'
+    dt = h5py.opaque_dtype(np.dtype('V3'), tag=tag)
+    path = tmp_path / 'attr_tag.h5'
+    with h5py.File(path, 'w') as f:
+        f.attrs.create('x', data=np.zeros(2, dtype=dt), dtype=dt)
+
+    with h5py.File(path, 'r') as f:
+        assert h5py.get_opaque_tag(f.attrs['x'].dtype) == tag
+
+
+def test_opaque_tag_committed_datatype(tmp_path):
+    tag = b'committed-opaque-v1'
+    dt = h5py.opaque_dtype(np.dtype('V8'), tag=tag)
+    path = tmp_path / 'committed_tag.h5'
+    with h5py.File(path, 'w') as f:
+        f['t'] = dt
+
+    with h5py.File(path, 'r') as f:
+        named = f['t']
+        assert isinstance(named, h5py.Datatype)
+        assert named.opaque_tag == tag
+        assert h5py.get_opaque_tag(named.dtype) == tag
+
+
+def test_opaque_default_no_tag_backwards_compatible(tmp_path):
+    # No-tag opaque_dtype should still produce the NUMPY:... on-disk tag
+    # and round-trip the original numpy dtype.
+    original = np.dtype('<M8[ns]')
+    dt = h5py.opaque_dtype(original)
+    assert h5py.get_opaque_tag(dt) is None
+
+    path = tmp_path / 'default_tag.h5'
+    arr = np.array([0], dtype='<i8').view(dt)
+    with h5py.File(path, 'w') as f:
+        f.create_dataset('d', data=arr, dtype=dt)
+
+    with h5py.File(path, 'r') as f:
+        ds = f['d']
+        assert ds.dtype == original
+        # NUMPY: tags do not surface as get_opaque_tag
+        assert h5py.get_opaque_tag(ds.dtype) is None
+
+
+def test_opaque_tag_astype_preserves_metadata():
+    tag = b'keep-me'
+    dt = h5py.opaque_dtype(np.dtype('V2'), tag=tag)
+    arr = np.zeros(3, dtype='V2').astype(dt)
+    assert h5py.get_opaque_tag(arr.dtype) == tag
+
+
+def test_opaque_foreign_tag_surfaces_on_read(tmp_path):
+    # A tag written via the low-level API (not h5py's NUMPY: scheme) is
+    # exposed through get_opaque_tag on read.
+    foreign_tag = b'other-tool/opaque'
+    path = tmp_path / 'foreign_tag.h5'
+    with h5py.File(path, 'w') as f:
+        tid = h5py.h5t.create(h5py.h5t.OPAQUE, 4)
+        tid.set_tag(foreign_tag)
+        space = h5py.h5s.create_simple((3,))
+        h5py.h5d.create(f.id, b'x', tid, space)
+
+    with h5py.File(path, 'r') as f:
+        ds = f['x']
+        assert h5py.check_opaque_dtype(ds.dtype)
+        assert h5py.get_opaque_tag(ds.dtype) == foreign_tag
+
+
+@pytest.mark.parametrize('bad_tag', [
+    b'',
+    b'has\x00nul',
+    b'x' * 256,
+    b'NUMPY:something',
+    b'PYTHON:OBJECT',
+])
+def test_opaque_tag_validation_value_errors(bad_tag):
+    with pytest.raises(ValueError):
+        h5py.opaque_dtype(np.dtype('V2'), tag=bad_tag)
+
+
+def test_opaque_tag_validation_type_error():
+    with pytest.raises(TypeError):
+        h5py.opaque_dtype(np.dtype('V2'), tag=123)
+
+
+def test_get_opaque_tag_on_plain_dtypes():
+    assert h5py.get_opaque_tag(np.dtype('i4')) is None
+    assert h5py.get_opaque_tag(np.dtype('V4')) is None
 
 
 def test_create_bitfield(writable_file):
