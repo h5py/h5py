@@ -525,7 +525,7 @@ class TestBitfield(TestCase):
             self.assertArrayEqual(dset[:], arr1)
 
 def test_opaque(writable_file):
-    # opaque without an h5py tag corresponds to numpy void dtypes
+    """Opaque without an h5py tag corresponds to numpy void dtypes"""
     arr = np.zeros(3, dtype='V2')
     ds = writable_file.create_dataset(make_name(), data=arr)
     assert isinstance(ds.id.get_type(), h5py.h5t.TypeOpaqueID)
@@ -534,6 +534,7 @@ def test_opaque(writable_file):
 
 
 def test_opaque_tag_dataset_roundtrip(writable_file):
+    """User opaque tag"""
     tag = b'org.example.uuid'
     dt = h5py.opaque_dtype(np.dtype('V16'), tag=tag)
     assert h5py.get_opaque_tag(dt) == tag
@@ -546,14 +547,16 @@ def test_opaque_tag_dataset_roundtrip(writable_file):
 
 
 def test_opaque_tag_str_encoded_as_utf8():
+    """ User opaque tag as UTF-8 string"""
     dt = h5py.opaque_dtype(np.dtype('V4'), tag='utf8-\u00e9')
     assert h5py.get_opaque_tag(dt) == 'utf8-\u00e9'.encode('utf-8')
 
 
 def test_opaque_tag_on_attribute(tmp_path):
+    """User tag for attribute opaque dtype"""
     tag = b'my-attr-tag'
     dt = h5py.opaque_dtype(np.dtype('V3'), tag=tag)
-    path = tmp_path / 'attr_tag.h5'
+    path = tmp_path / make_name('attr_tag{}.h5')
     with h5py.File(path, 'w') as f:
         f.attrs.create('x', data=np.zeros(2, dtype=dt), dtype=dt)
 
@@ -562,11 +565,13 @@ def test_opaque_tag_on_attribute(tmp_path):
 
 
 def test_opaque_tag_committed_datatype(tmp_path):
+    """User tag on committed opaque dtype"""
     tag = b'committed-opaque-v1'
     dt = h5py.opaque_dtype(np.dtype('V8'), tag=tag)
-    path = tmp_path / 'committed_tag.h5'
+    path = tmp_path / make_name('committed_tag{}.h5')
     with h5py.File(path, 'w') as f:
         f['t'] = dt
+        f['int32'] = np.dtype('int32')
 
     with h5py.File(path, 'r') as f:
         named = f['t']
@@ -574,15 +579,19 @@ def test_opaque_tag_committed_datatype(tmp_path):
         assert named.opaque_tag == tag
         assert h5py.get_opaque_tag(named.dtype) == tag
 
+        i32 = f['int32']
+        assert isinstance(i32, h5py.Datatype)
+        assert i32.opaque_tag is None
+        assert h5py.get_opaque_tag(i32.dtype) is None
+
 
 def test_opaque_default_no_tag_backwards_compatible(tmp_path):
-    # No-tag opaque_dtype should still produce the NUMPY:... on-disk tag
-    # and round-trip the original numpy dtype.
+    """No tag opaque dtype tag round-trip"""
     original = np.dtype('<M8[ns]')
     dt = h5py.opaque_dtype(original)
     assert h5py.get_opaque_tag(dt) is None
 
-    path = tmp_path / 'default_tag.h5'
+    path = tmp_path / make_name('default_tag{}.h5')
     arr = np.array([0], dtype='<i8').view(dt)
     with h5py.File(path, 'w') as f:
         f.create_dataset('d', data=arr, dtype=dt)
@@ -595,6 +604,7 @@ def test_opaque_default_no_tag_backwards_compatible(tmp_path):
 
 
 def test_opaque_tag_astype_preserves_metadata():
+    """User opaque dtype tag carries metadata"""
     tag = b'keep-me'
     dt = h5py.opaque_dtype(np.dtype('V2'), tag=tag)
     arr = np.zeros(3, dtype='V2').astype(dt)
@@ -602,10 +612,9 @@ def test_opaque_tag_astype_preserves_metadata():
 
 
 def test_opaque_foreign_tag_surfaces_on_read(tmp_path):
-    # A tag written via the low-level API (not h5py's NUMPY: scheme) is
-    # exposed through get_opaque_tag on read.
+    """A tag written via the low-level API"""
     foreign_tag = b'other-tool/opaque'
-    path = tmp_path / 'foreign_tag.h5'
+    path = tmp_path / make_name('foreign_tag{}.h5')
     with h5py.File(path, 'w') as f:
         tid = h5py.h5t.create(h5py.h5t.OPAQUE, 4)
         tid.set_tag(foreign_tag)
