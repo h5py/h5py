@@ -114,7 +114,7 @@ class TestRepr(BaseTest):
 
     def test_dataset(self):
         """ Dataset repr() with unicode """
-        dset = self.f.create_dataset(make_name(self.USTRING), (1,))
+        dset = self.f.create_dataset(make_name(self.USTRING), (1,), "i4")
         self._check_type(dset)
 
     def test_namedtype(self):

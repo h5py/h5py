@@ -106,7 +106,7 @@ class TestCreate(BaseGroup):
 
     def test_appropriate_low_level_id(self):
         " Binding a group to a non-group identifier fails with ValueError "
-        dset = self.f.create_dataset(make_name(), [1])
+        dset = self.f.create_dataset(make_name(), [1], "f4")
         with self.assertRaises(ValueError):
             Group(dset.id)
 
@@ -677,7 +677,7 @@ class TestGet(BaseGroup):
         out = self.f.get(foo, getclass=True)
         self.assertEqual(out, Group)
 
-        self.f.create_dataset(bar, (4,))
+        self.f.create_dataset(bar, (4,), "f4")
         out = self.f.get(bar, getclass=True)
         self.assertEqual(out, Dataset)
 
@@ -848,19 +848,19 @@ class TestLexicographic(TestCase):
         """ Populate example hdf5 file, with track_order=True """
 
         self.f = File(self.mktemp(), 'w-', track_order=True)
-        self.f.create_dataset('b', (10,))
+        self.f.create_dataset('b', (10,), "f4")
 
         grp = self.f.create_group('B', track_order=True)
-        grp.create_dataset('b', (10,))
-        grp.create_dataset('a', (10,))
+        grp.create_dataset('b', (10,), "f4")
+        grp.create_dataset('a', (10,), "f4")
 
         grp = self.f.create_group('z', track_order=True)
-        grp.create_dataset('b', (10,))
-        grp.create_dataset('a', (10,))
+        grp.create_dataset('b', (10,), "f4")
+        grp.create_dataset('a', (10,), "f4")
 
-        self.f.create_dataset('a', (10,))
+        self.f.create_dataset('a', (10,), "f4")
         # note that 'z-' < 'z/...' but traversal order is ['z', 'z/...', 'z-']
-        self.f.create_dataset('z-', (10,))
+        self.f.create_dataset('z-', (10,), "f4")
 
         # create some links
         self.f['A/x'] = self.f['B/b']
@@ -1044,6 +1044,125 @@ class TestExternalLinks(TestCase):
             ext_file["α"].attrs["ext_attr"] = "test"
         self.f[name] = ExternalLink(ext_filename, '/α')
         self.assertEqual(self.f[name].attrs["ext_attr"], "test")
+
+
+def test_get_elink_mode_arg(tmp_path):
+    """Check that external link is opened with modified access mode"""
+    external_filepath = tmp_path / make_name("external{}.h5")
+    with File(external_filepath, "w") as external_file:
+        external_file.create_group("/group")
+
+    main_filepath = tmp_path / make_name("main{}.h5")
+    with File(main_filepath, "w") as main_file:
+        main_file["/external"] = h5py.ExternalLink(str(external_filepath), "/group")
+
+    with File(main_filepath, "a") as main_file:
+        ext_group = main_file.get("/external", elink_mode="r")
+        assert ext_group.file.mode == "r"
+        with pytest.raises(ValueError):
+            ext_group['data'] = 1  # Writing fails
+
+
+def test_get_elink_mode_arg_exception(tmp_path):
+    """Check that external links open in write mode from read-only file fails"""
+    external_filepath = tmp_path / make_name("external{}.h5")
+    with File(external_filepath, "w") as external_file:
+        external_file.create_group("/group")
+
+    main_filepath = tmp_path / make_name("main{}.h5")
+    with File(main_filepath, "w") as main_file:
+        main_file["/external"] = h5py.ExternalLink(str(external_filepath), "/group")
+
+    with File(main_filepath, "r") as main_file:
+        with pytest.raises(ValueError):
+            main_file.get("external", elink_mode="r+")
+
+
+@pytest.mark.parametrize("file_swmr", (False, True))
+@pytest.mark.parametrize("elink_swmr", (False, True))
+def test_get_elink_swmr_arg_from_ro_file(tmp_path, file_swmr, elink_swmr):
+    """Check that external links are opened with custom read-only SWMR mode"""
+    external_filepath = tmp_path / make_name("external{}.h5")
+    with File(external_filepath, "w", libver="latest") as external_file:
+        external_file.create_group("/group")
+
+    main_filepath = tmp_path / make_name("main{}.h5")
+    with File(main_filepath, "w", libver="latest") as main_file:
+        main_file["/external"] = h5py.ExternalLink(str(external_filepath), "/group")
+
+    with File(main_filepath, "r", swmr=file_swmr) as main_file:
+        ext_group = main_file.get("external", elink_swmr=elink_swmr)
+        assert ext_group.file.mode == "r"
+        assert ext_group.file.swmr_mode == elink_swmr
+
+
+@pytest.mark.parametrize("elink_swmr", (False, True))
+def test_get_elink_swmr_arg_from_rw_file(tmp_path, elink_swmr):
+    """Check that external links are opened with custom read-only SWMR mode"""
+    external_filepath = tmp_path / make_name("external{}.h5")
+    with File(external_filepath, "w", libver="latest") as external_file:
+        external_file.create_group("/group")
+
+    main_filepath = tmp_path / make_name("main{}.h5")
+    with File(main_filepath, "w", libver="latest") as main_file:
+        main_file["/external"] = h5py.ExternalLink(str(external_filepath), "/group")
+
+    with File(main_filepath, "a") as main_file:
+        ext_group = main_file.get("external", elink_mode="r", elink_swmr=elink_swmr)
+        assert ext_group.file.mode == "r"
+        assert ext_group.file.swmr_mode == elink_swmr
+
+
+def test_get_elink_swmr_arg_from_rw_swmr_file(tmp_path):
+    """Check that exceptions are raised when changing access mode from a file opened in read-write SWMR mode"""
+    external_filepath = tmp_path / make_name("external{}.h5")
+    with File(external_filepath, "w", libver="latest") as external_file:
+        external_file.create_group("/group")
+
+    main_filepath = tmp_path / make_name("main{}.h5")
+    with File(main_filepath, "w", libver="latest") as main_file:
+        main_file["/external"] = h5py.ExternalLink(str(external_filepath), "/group")
+        main_file.swmr_mode = True
+
+        with pytest.raises(ValueError):
+            main_file.get("external", elink_mode="r")
+
+        with pytest.raises(ValueError):
+            main_file.get("external", elink_swmr=False)
+
+
+@pytest.mark.parametrize("file_locking", (False, True, "best-effort"))
+@pytest.mark.parametrize(
+    "elink_locking,file_locking_props",
+    [
+        (False, (0, 0)),
+        (True, (1, 0)),
+        ("best-effort", (1, 1)),
+    ]
+)
+def test_get_elink_locking_arg(tmp_path, file_locking, elink_locking, file_locking_props):
+    """Check that external links are opened with custom file locking"""
+    external_filepath = tmp_path / make_name("external{}.h5")
+    with File(external_filepath, "w") as external_file:
+        external_file.create_group("/group")
+        external_file["/group/data"] = 1, 2, 3
+
+    main_filepath = tmp_path / make_name("main{}.h5")
+    with File(main_filepath, "w") as main_file:
+        main_file["external"] = ExternalLink(str(external_filepath), "/group")
+
+    with File(main_filepath, "r", locking=file_locking) as main_file:
+        cls = main_file.get("/external/data", getclass=True, elink_locking=elink_locking)
+        assert cls is Dataset
+
+        link = main_file.get("/external/data", getlink=True, elink_locking=elink_locking)
+        assert isinstance(link, HardLink)
+
+        ext_group = main_file.get("external", elink_locking=elink_locking)
+        if h5py.version.hdf5_version_tuple >= (1, 14, 4):
+            # Retrieving file locking is broken for older versions of HDF5
+            access_plist = ext_group.file.id.get_access_plist()
+            assert access_plist.get_file_locking() == file_locking_props
 
 
 class TestExtLinkBugs(TestCase):

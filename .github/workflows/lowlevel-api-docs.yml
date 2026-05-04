@@ -19,12 +19,12 @@ jobs:
       HDF5_DIR: ${{ github.workspace }}/cache/hdf5
       TOXENV: apidocs
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Cache HDF5
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.HDF5_DIR }}
           key: ${{ runner.os }}-hdf5-${{ env.HDF5_VERSION }}
@@ -34,7 +34,7 @@ jobs:
           ./ci/get_hdf5_if_needed.sh
 
       - name: Setup Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.12'
 
@@ -49,7 +49,7 @@ jobs:
           echo -n "api.h5py.org" > docs_api/_build/html/CNAME
 
       - name: Upload built docs
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: docs-html
           path: docs_api/_build/html

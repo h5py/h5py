@@ -20,6 +20,7 @@ from .h5d cimport DatasetID
 from .h5s cimport SpaceID
 from .h5t cimport TypeID, typewrap, py_create
 from .utils cimport emalloc, efree, convert_dims
+from ._objects import phil, with_phil
 
 import_array()
 
@@ -27,7 +28,7 @@ import_array()
 cdef object convert_bools(bint* data, hsize_t rank):
     # Convert a bint array to a Python tuple of bools.
     cdef list bools_l
-    cdef int i
+    cdef hsize_t i
     bools_l = []
 
     for i in range(rank):
@@ -51,17 +52,18 @@ cdef class Selector:
     def __cinit__(self, SpaceID space):
         self.spaceobj = space
         self.space = space.id
-        self.rank = H5Sget_simple_extent_ndims(self.space)
         self.is_fancy = False
 
-        self.dims = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
+        with phil:
+            self.rank = H5Sget_simple_extent_ndims(self.space)
+            self.dims = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
+            H5Sget_simple_extent_dims(self.space, self.dims, NULL)
+
         self.start = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.stride = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.count = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.block = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.scalar = <bint*>emalloc(sizeof(bint) * self.rank)
-
-        H5Sget_simple_extent_dims(self.space, self.dims, NULL)
 
     def __dealloc__(self):
         efree(self.dims)
@@ -242,6 +244,23 @@ cdef class Selector:
             self.is_fancy = False
         return True
 
+    cdef build_fancy_hyperslab(self, space, ndarray array_arg, int array_ix, hsize_t* tmp_start, hsize_t* tmp_count):
+        """Recursive merge algorithm to help select_fancy quickly apply selection to the dataspace"""
+
+        # With fewer than 16 elements, looping through fancy indices is faster
+        if len(array_arg)<16:
+            for i in array_arg:
+                tmp_start[array_ix] = i
+                H5Sselect_hyperslab(space, H5S_SELECT_OR, tmp_start, self.stride, tmp_count, self.block)
+            return space
+        else:
+            self.build_fancy_hyperslab(space, array_arg[:len(array_arg)//2], array_ix, tmp_start, tmp_count)
+            space2 = H5Screate_simple(self.rank, self.dims, NULL)
+            H5Sselect_none(space2)
+            self.build_fancy_hyperslab(space2, array_arg[len(array_arg)//2:], array_ix, tmp_start, tmp_count)
+            H5Smodify_select(space, H5S_SELECT_OR, space2)
+            H5Sclose(space2)
+
     cdef select_fancy(self, int array_ix, ndarray array_arg):
         """Apply a 'fancy' selection (array of indices) to the dataspace"""
         cdef hsize_t* tmp_start
@@ -257,15 +276,12 @@ cdef class Selector:
             memcpy(tmp_count, self.count, sizeof(hsize_t) * self.rank)
             tmp_count[array_ix] = 1
 
-            # Iterate over the array of indices, add each hyperslab to the selection
-            for i in array_arg:
-                tmp_start[array_ix] = i
-                H5Sselect_hyperslab(self.space, H5S_SELECT_OR, tmp_start, self.stride, tmp_count, self.block)
+            self.build_fancy_hyperslab(self.space, array_arg, array_ix, tmp_start, tmp_count)
         finally:
             efree(tmp_start)
             efree(tmp_count)
 
-
+    @with_phil
     def make_selection(self, tuple args):
         """Apply indexing/slicing args and create a high-level selection object
 
@@ -315,7 +331,8 @@ cdef class Reader:
         # match in numpy. Translating it to a numpy dtype chooses the smallest
         # dtype which won't lose any data, then we translate that back to a
         # HDF5 datatype (h5_memory_datatype).
-        h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
+        with phil:
+            h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
         np_dtype = h5_stored_datatype.py_dtype()
         self.np_typenum = np_dtype.num
         self.native_byteorder = PyArray_IsNativeByteOrder(ord(np_dtype.byteorder))
@@ -346,6 +363,7 @@ cdef class Reader:
 
         return arr
 
+    @with_phil
     def read(self, tuple args):
         """Index the dataset using args and read into a new numpy array
 

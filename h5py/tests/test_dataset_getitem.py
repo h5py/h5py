@@ -384,7 +384,7 @@ class Test1DFloat(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.data = np.arange(13).astype('f')
+        self.data = np.arange(50).astype('f')
         self.dset = self.f.create_dataset('x', data=self.data)
 
     def test_ndim(self):
@@ -393,7 +393,7 @@ class Test1DFloat(TestCase):
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEqual(self.dset.shape, (13,))
+        self.assertEqual(self.dset.shape, (50,))
 
     def test_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[...])
@@ -453,11 +453,19 @@ class Test1DFloat(TestCase):
     def test_indexlist_numpyarray(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5])])
 
+    def test_indexlist_long(self):
+        # selection logic changes with >16 indices
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(0, 50, 2)])
+
     def test_indexlist_single_index_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[0], ...])
 
     def test_indexlist_numpyarray_single_index_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([0]), ...])
+
+    def test_indexlist_long_ellipsis(self):
+        # selection logic changes with >16 indices
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(0, 50, 2), ...])
 
     def test_indexlist_numpyarray_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5]), ...])
@@ -580,7 +588,7 @@ class TestVeryLargeArray(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.dset = self.f.create_dataset('x', shape=(2**15, 2**16))
+        self.dset = self.f.create_dataset('x', shape=(2**15, 2**16), dtype='f4')
 
     @ut.skipIf(sys.maxsize < 2**31, 'Maximum integer size >= 2**31 required')
     def test_size(self):
@@ -627,3 +635,53 @@ def test_error_newaxis(writable_file):
     ds = writable_file.create_dataset(make_name(), data=np.arange(5))
     with pytest.raises(TypeError, match="newaxis"):
         ds[np.newaxis, :]
+
+
+@pytest.mark.parametrize(
+    "arr", [
+        np.arange(9),
+        np.array([s.encode() for s in 'abcdefghi'], dtype=object),
+    ]
+)
+def test_bool_selection_1d(writable_file, arr):
+    """https://github.com/h5py/h5py/issues/2674"""
+    arr = arr.reshape(3, 3)
+    name = make_name()
+    writable_file[name] = arr
+    dset = writable_file[name]
+    sel = np.array([True, False, True])
+    np.testing.assert_array_equal(dset[sel], arr[sel])
+    np.testing.assert_array_equal(dset[sel, :], arr[sel, :])
+
+
+class TestZeroSizeSelectionResizableDataset(TestCase):
+    """
+    Tests for indexing of zero Resizable Datasets
+    see https://github.com/h5py/h5py/issues/2549
+    """
+    def setUp(self):
+        super().setUp()
+        self.dset0 = self.f.create_dataset('x', (0,), 'f4', maxshape=(None,))
+        self.dset1 = self.f.create_dataset('y', (1,), 'f4', maxshape=(None,))
+
+    def test_set_with_scalar(self):
+        sel = np.s_[:]
+        self.dset0[sel] = 1
+        self.arr = np.array([], dtype=np.float32)
+        self.assertNumpyBehavior(self.dset0, self.arr, sel)
+
+    def test_set_with_array(self):
+        sel = np.s_[:]
+        with self.assertRaises(TypeError, msg="Can't broadcast (4,) -> (0,)"):
+            self.dset0[sel] = np.arange(4)
+
+    def test_set_zerosel_with_scalar(self):
+        sel = np.s_[0:0]
+        self.dset1[sel] = 1
+        self.arr = np.array([], dtype=np.float32)
+        self.assertNumpyBehavior(self.dset1, self.arr, sel)
+
+    def test_set_zerosel_with_array(self):
+        sel = np.s_[0:0]
+        with self.assertRaises(TypeError, msg="Can't broadcast (4,) -> (0,)"):
+            self.dset1[sel] = np.arange(4)

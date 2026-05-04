@@ -67,6 +67,7 @@ class TestReadDirectChunk(TestCase):
             dataset = filehandle.create_dataset("frame",
                                                 maxshape=(1,) + frame.shape,
                                                 shape=(1,) + frame.shape,
+                                                dtype="f4",
                                                 compression="gzip",
                                                 compression_opts=9)
             # Write uncompressed data

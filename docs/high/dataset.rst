@@ -53,10 +53,10 @@ parameters::
     >>> f["init"] = arr
 
 Keywords ``shape`` and ``dtype`` may be specified along with ``data``; if so,
-they will override ``data.shape`` and ``data.dtype``.  It's required that
-(1) the total number of points in ``shape`` match the total number of points
-in ``data.shape``, and that (2) it's possible to cast ``data.dtype`` to
-the requested ``dtype``.
+they will override ``data.shape`` and ``data.dtype``. The total number of points
+in ``shape`` must match the total in ``data.shape``, and it must be possible to
+cast ``data.dtype`` to the requested ``dtype``, although unsafe casting (e.g.
+uint64 to uint32) is allowed.
 
 .. _dataset_slicing:
 
@@ -667,6 +667,11 @@ Reference
         String with the currently applied compression filter, or None if
         compression is not enabled for this dataset.  See :ref:`dataset_compression`.
 
+        This only recognises the built-in compression options ``'gzip'``,
+        ``'lzf'`` and ``'szip'``. Other compression mechanisms will show as
+        ``'unknown'`` from h5py 3.16. Use :attr:`filter_ids` and
+        :attr:`filter_names` to get more complete information.
+
     .. attribute:: compression_opts
 
         Options for the compression filter.  See :ref:`dataset_compression`.
@@ -684,6 +689,21 @@ Reference
     .. attribute:: fletcher32
 
         Whether Fletcher32 checksumming is enabled (T/F).  See :ref:`dataset_fletcher32`.
+
+    .. attribute:: filter_ids
+                   filter_names
+
+        The numeric filter IDs and the string names (as stored in the file) of
+        the filters in use. Each attribute is a tuple.
+
+        Filters are mostly used to compress data, but can also do things like
+        checksumming (see :ref:`dataset_compression`). Other attributes listed
+        above provide convenient shortcuts to check on common filters.
+        IDs for filters built into h5py can be found in the :mod:`h5py.h5z`
+        module, while filter IDs from plugins are listed in `HDF Group's registry
+        <https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md>`_.
+
+        .. versionadded:: 3.16
 
     .. attribute:: fillvalue
 

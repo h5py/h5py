@@ -127,7 +127,7 @@ class TestDimensionManager(BaseDataset):
             )
 
     def test_repr(self):
-        ds = self.f.create_dataset(make_name(), (2,3))
+        ds = self.f.create_dataset(make_name(), (2,3), "f4")
         self.assertIsInstance(repr(ds.dims), str)
 
         if is_main_thread():

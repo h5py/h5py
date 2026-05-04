@@ -10,7 +10,7 @@ class TestCompletions(TestCase):
         with h5py.File(self.mktemp(), 'w') as f:
             f.create_group('h')
             f.create_group('g')
-            f.create_dataset('data', [1, 2, 3])
+            f.create_dataset('data', [1, 2, 3], "f4")
             self.assertEqual(
             f._ipython_key_completions_(),
                 ['data', 'g', 'h'],
@@ -26,14 +26,14 @@ class TestCompletions(TestCase):
 
     def test_subgroup_completions(self):
         g = self.f.create_group(make_name())
-        g.create_dataset('g_data2', [4, 5, 6])
-        g.create_dataset('g_data1', [1, 2, 3])
+        g.create_dataset('g_data2', [4, 5, 6], "f4")
+        g.create_dataset('g_data1', [1, 2, 3], "f4")
         self.assertEqual(
             g._ipython_key_completions_(),
             ['g_data1', 'g_data2'],  # Order is alphabetical
         )
 
-        g.create_dataset('g_data3', [7, 8, 9])
+        g.create_dataset('g_data3', [7, 8, 9], "f")
         self.assertEqual(
             g._ipython_key_completions_(),
             ['g_data1', 'g_data2', 'g_data3'],

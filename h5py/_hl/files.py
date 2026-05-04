@@ -19,7 +19,7 @@ from warnings import warn
 from .compat import filename_decode, filename_encode
 
 from .base import phil, with_phil
-from .group import Group
+from .group import Group, set_fapl_file_locking
 from .. import h5, h5f, h5p, h5i, h5fd, _objects
 from .. import version
 
@@ -27,8 +27,6 @@ mpi = h5.get_config().mpi
 ros3 = h5.get_config().ros3
 direct_vfd = h5.get_config().direct_vfd
 hdf5_version = version.hdf5_version_tuple[0:3]
-
-swmr_support = True
 
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST,
@@ -151,14 +149,7 @@ def make_fapl(
         plist.set_meta_block_size(int(meta_block_size))
 
     if locking is not None:
-        if locking in ("false", False):
-            plist.set_file_locking(False, ignore_when_disabled=False)
-        elif locking in ("true", True):
-            plist.set_file_locking(True, ignore_when_disabled=False)
-        elif locking == "best-effort":
-            plist.set_file_locking(True, ignore_when_disabled=True)
-        else:
-            raise ValueError(f"Unsupported locking value: {locking}")
+        set_fapl_file_locking(plist, locking)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
@@ -236,7 +227,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
 
     if mode == 'r':
         flags = h5f.ACC_RDONLY
-        if swmr and swmr_support:
+        if swmr:
             flags |= h5f.ACC_SWMR_READ
         fid = h5f.open(name, flags, fapl=fapl)
     elif mode == 'r+':
@@ -323,9 +314,7 @@ class File(Group):
     @with_phil
     def mode(self):
         """ Python mode used to open file """
-        write_intent = h5f.ACC_RDWR
-        if swmr_support:
-            write_intent |= h5f.ACC_SWMR_WRITE
+        write_intent = h5f.ACC_RDWR | h5f.ACC_SWMR_WRITE
         return 'r+' if self.id.get_intent() & write_intent else 'r'
 
     @property
@@ -368,7 +357,7 @@ class File(Group):
     @with_phil
     def swmr_mode(self):
         """ Controls single-writer multiple-reader mode """
-        return swmr_support and bool(self.id.get_intent() & (h5f.ACC_SWMR_READ | h5f.ACC_SWMR_WRITE))
+        return bool(self.id.get_intent() & (h5f.ACC_SWMR_READ | h5f.ACC_SWMR_WRITE))
 
     @swmr_mode.setter
     @with_phil
@@ -632,7 +621,6 @@ class File(Group):
                 self.id._close_open_objects(h5f.OBJ_LOCAL | h5f.OBJ_FILE)
 
                 self.id.close()
-                _objects.nonlocal_close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.

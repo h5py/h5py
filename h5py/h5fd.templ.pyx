@@ -110,10 +110,11 @@ ctypedef struct H5FD_fileobj_t:
 # parameters (dxpl, type) are ignored.
 
 from cpython cimport Py_INCREF, Py_DECREF
-from libc.stdlib cimport malloc as stdlib_malloc
 from libc.stdlib cimport free as stdlib_free
 cimport libc.stdio
 cimport libc.stdint
+
+from .utils cimport emalloc
 
 
 cdef void *H5FD_fileobj_fapl_get(H5FD_fileobj_t *f) with gil:
@@ -131,7 +132,7 @@ cdef herr_t H5FD_fileobj_fapl_free(PyObject *fa) except -1 with gil:
 
 cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr) except * with gil:
     cdef PyObject *fileobj = <PyObject *>H5Pget_driver_info(fapl)
-    f = <H5FD_fileobj_t *>stdlib_malloc(sizeof(H5FD_fileobj_t))
+    f = <H5FD_fileobj_t *>emalloc(sizeof(H5FD_fileobj_t))
     f.fileobj = fileobj
     Py_INCREF(<object>f.fileobj)
     f.eoa = 0
@@ -161,7 +162,7 @@ cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, ha
         (<object>f.fileobj).readinto(mview)
     else:
         b = (<object>f.fileobj).read(size)
-        if len(b) == size:
+        if <size_t>len(b) == size:
             memcpy(buf, <unsigned char *>b, size)
         else:
             return 1

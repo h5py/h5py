@@ -645,9 +645,8 @@ cdef class PropDCID(PropOCID):
         values
             TUPLE of UINTs giving auxiliary data for the filter
         """
-        cdef size_t nelements
+        cdef size_t nelements, i
         cdef unsigned int *cd_values
-        cdef int i
         cd_values = NULL
 
         require_tuple(values, 1, -1, b"values")
@@ -696,25 +695,25 @@ cdef class PropDCID(PropOCID):
 
         0. INT filter code (h5z.FILTER*)
         1. UINT flags (h5z.FLAG*)
-        2. TUPLE of UINT values; filter aux data (16 values max)
+        2. TUPLE of UINT values; filter aux data (256 values max)
         3. STRING name of filter (256 chars max)
         """
         cdef list vlist
         cdef int filter_code
         cdef unsigned int flags
-        cdef size_t nelements
-        cdef unsigned int cd_values[16]
+        cdef size_t nelements, i
+        cdef unsigned int cd_values[256]
         cdef char name[257]
-        cdef int i
-        nelements = 16 # HDF5 library actually complains if this is too big.
+        nelements = 256 # HDF5 library actually complains if this is too big.
 
         if filter_idx < 0:
             raise ValueError("Filter index must be a non-negative integer")
 
         filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags,
                                          &nelements, cd_values, 256, name, NULL)
-        name[256] = c'\0'  # in case it's > 256 chars
+        assert nelements <= 256, f"H5Pget_filter returned {nelements=}"
 
+        name[256] = c'\0'  # in case it's > 256 chars
         vlist = []
         for i in range(nelements):
             vlist.append(cd_values[i])
@@ -747,25 +746,24 @@ cdef class PropDCID(PropOCID):
         Tuple elements are:
 
         0. UINT flags (h5z.FLAG*)
-        1. TUPLE of UINT values; filter aux data (16 values max)
+        1. TUPLE of UINT values; filter aux data (256 values max)
         2. STRING name of filter (256 chars max)
         """
         cdef list vlist
         cdef unsigned int flags
-        cdef size_t nelements
-        cdef unsigned int cd_values[16]
+        cdef size_t nelements, i
+        cdef unsigned int cd_values[256]
         cdef char name[257]
         cdef herr_t retval
-        cdef int i
-        nelements = 16 # HDF5 library actually complains if this is too big.
+        nelements = 256 # HDF5 library actually complains if this is too big.
 
         if not self._has_filter(filter_code):
             # Avoid library segfault
             return None
 
-        retval = H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
-                                     &flags, &nelements, cd_values, 256, name, NULL)
-        assert nelements <= 16
+        H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
+                            &flags, &nelements, cd_values, 256, name, NULL)
+        assert nelements <= 256, f"H5Pget_filter_by_id returned {nelements=}"
 
         name[256] = c'\0'  # In case HDF5 doesn't terminate it properly
 
@@ -1432,6 +1430,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_mdc_config(self.id, &config.cache_config)
 
+    @with_phil
     def get_alignment(self):
         """
         Retrieves the current settings for alignment properties from a file access property list.
@@ -1441,6 +1440,7 @@ cdef class PropFAID(PropInstanceID):
 
         return threshold, alignment
 
+    @with_phil
     def set_alignment(self, threshold, alignment):
         """
         Sets alignment properties of a file access property list.
