@@ -4,6 +4,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
   cancel-in-progress: true
 
+env:
+  # Feature flags for platform builds
+  ENABLE_PPC64LE: true  # Set to false to skip ppc64le builds
+
 # Adapted from https://github.com/matplotlib/matplotlib/blob/main/.github/workflows/nightlies.yml
 # and https://cibuildwheel.pypa.io/en/stable/setup/#github-actions
 
@@ -77,6 +81,8 @@ jobs:
             arch: arm64
           - os: macos-15-intel
             arch: x86_64
+          - os: ubuntu-24.04-ppc64le
+            arch: ppc64le
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -122,6 +128,33 @@ jobs:
 
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084 # v3.4.1
+        if: matrix.arch != 'ppc64le'
+
+      # Build wheels for ppc64le using cibuildwheel command
+      - name: Build wheels for ppc64le
+        if: matrix.arch == 'ppc64le' && env.ENABLE_PPC64LE == 'true'
+        run: |
+          # Install cibuildwheel
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install cibuildwheel
+          
+          # Build wheels
+          python3 -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS_LINUX: ppc64le
+          CIBW_BUILD: "cp311-manylinux_ppc64le cp312-manylinux_ppc64le cp313-manylinux_ppc64le cp314-manylinux_ppc64le"
+          CIBW_BUILD_FRONTEND: "pip"
+          # Configure pip to use IBM's devpi index for prebuilt NumPy wheels
+          # PyPI is used as fallback for other dependencies
+          CIBW_BEFORE_BUILD: |
+            pip config set global.index-url https://devpi.net/ibm/community/+simple/
+            pip config set global.extra-index-url https://pypi.org/simple
+            pip install --upgrade pip setuptools wheel
+          CIBW_BEFORE_TEST: |
+            pip config set global.index-url https://devpi.net/ibm/community/+simple/
+            pip config set global.extra-index-url https://pypi.org/simple
+          # Simple import test for ppc64le
+          CIBW_TEST_COMMAND: "python -c 'import h5py; import numpy; print(f\"h5py {h5py.__version__} with NumPy {numpy.__version__}\")'"
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
