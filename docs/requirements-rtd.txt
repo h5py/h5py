@@ -62,5 +62,5 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 tomli==2.4.0 ; python_full_version < '3.11'
     # via sphinx
-urllib3==2.6.3
+urllib3==2.7.0
     # via requests
