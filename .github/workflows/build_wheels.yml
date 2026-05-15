@@ -125,7 +125,7 @@ jobs:
 
       # For nightlies, also build a future-compatible abi3 wheel
       - uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084 # v3.4.1
-        if: ${{ github.event_name == 'schedule') }}
+        if: ${{ github.event_name == 'schedule' }}
         env:
           H5PY_LIMITED_API: 1
           CIBW_BUILD: cp314-*
