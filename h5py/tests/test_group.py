@@ -1477,7 +1477,13 @@ class TestMutableMapping(BaseGroup):
 
 
 def test_non_utf8(writable_file):
-    writable_file.create_group(b'caf\xe9')
-    assert set(writable_file) == {'caf\udce9'}  # Surrogate escape
-    assert 'caf\udce9' in writable_file
-    assert b'caf\xe9' in writable_file
+    name_b = make_name('café').encode('latin-1')
+    writable_file.create_group(name_b)
+
+    name_s = name_b.decode('utf8', 'surrogateescape')
+    assert set(writable_file) == {name_s}
+    assert name_s in writable_file
+    assert name_b in writable_file
+
+    assert isinstance(writable_file[name_s], h5py.Group)
+    assert isinstance(writable_file[name_b], h5py.Group)
