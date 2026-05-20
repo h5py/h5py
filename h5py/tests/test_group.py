@@ -1474,3 +1474,10 @@ class TestMutableMapping(BaseGroup):
         Group.__delitem__
         Group.__iter__
         Group.__len__
+
+
+def test_non_utf8(writable_file):
+    writable_file.create_group(b'caf\xe9')
+    assert set(writable_file) == {'caf\udce9'}  # Surrogate escape
+    assert 'caf\udce9' in writable_file
+    assert b'caf\xe9' in writable_file
