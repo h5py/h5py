@@ -2,8 +2,5 @@
 
 from typing import TypeAlias as _TypeAlias
 
-int: _TypeAlias = int
-int: _TypeAlias = int
 PyObject: _TypeAlias = None
-int: _TypeAlias = int
 Py_uintptr_t: _TypeAlias = int
