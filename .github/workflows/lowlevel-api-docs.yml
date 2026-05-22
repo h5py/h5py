@@ -55,7 +55,7 @@ jobs:
           path: docs_api/_build/html
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         if: github.repository == 'h5py/h5py' && github.ref == 'refs/heads/master' && github.event_name == 'push'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
