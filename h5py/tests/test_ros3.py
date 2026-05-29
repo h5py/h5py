@@ -26,7 +26,7 @@ pytestmark = [
 @pytest.mark.network
 @pytest.mark.parametrize("driver", [None, "ros3"])
 @pytest.mark.parametrize(
-    "url", 
+    "url",
     [
         "s3://dandiarchive/ros3test.hdf5",
         "https://dandiarchive.s3.amazonaws.com/ros3test.hdf5"
