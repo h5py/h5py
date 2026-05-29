@@ -25,12 +25,17 @@ pytestmark = [
 
 @pytest.mark.network
 @pytest.mark.parametrize("driver", [None, "ros3"])
-@pytest.mark.parametrize("url", ["s3://dandiarchive/ros3test.hdf5", "https://dandiarchive.s3.amazonaws.com/ros3test.hdf5"])
-def test_ros3(driver, scheme):
+@pytest.mark.parametrize(
+    "url", 
+    [
+        "s3://dandiarchive/ros3test.hdf5",
+        "https://dandiarchive.s3.amazonaws.com/ros3test.hdf5"
+    ]
+)
+def test_ros3(driver, url):
     """ ROS3 driver and options """
 
-    with h5py.File(f"{scheme}dandiarchive.s3.amazonaws.com/ros3test.hdf5", "r",
-                   aws_region=b"us-east-2", driver=driver) as f:
+    with h5py.File(url, "r", aws_region=b"us-east-2", driver=driver) as f:
         assert f
         assert 'mydataset' in f.keys()
         assert f["mydataset"].shape == (100,)
