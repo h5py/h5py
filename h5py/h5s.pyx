@@ -19,7 +19,7 @@ cimport numpy as cnp
 #Python level imports
 from ._objects import phil, with_phil
 
-cdef object lockid(hid_t id_):
+cdef SpaceID lockid(hid_t id_):
     cdef SpaceID space
     space = SpaceID(id_)
     space.locked = 1
@@ -28,39 +28,39 @@ cdef object lockid(hid_t id_):
 # === Public constants and data structures ====================================
 
 #enum H5S_seloper_t:
-SELECT_NOOP     = H5S_SELECT_NOOP
-SELECT_SET      = H5S_SELECT_SET
-SELECT_OR       = H5S_SELECT_OR
-SELECT_AND      = H5S_SELECT_AND
-SELECT_XOR      = H5S_SELECT_XOR
-SELECT_NOTB     = H5S_SELECT_NOTB
-SELECT_NOTA     = H5S_SELECT_NOTA
-SELECT_APPEND   = H5S_SELECT_APPEND
-SELECT_PREPEND  = H5S_SELECT_PREPEND
-SELECT_INVALID  = H5S_SELECT_INVALID
+SELECT_NOOP: int     = H5S_SELECT_NOOP
+SELECT_SET: int      = H5S_SELECT_SET
+SELECT_OR: int       = H5S_SELECT_OR
+SELECT_AND: int      = H5S_SELECT_AND
+SELECT_XOR: int      = H5S_SELECT_XOR
+SELECT_NOTB: int     = H5S_SELECT_NOTB
+SELECT_NOTA: int     = H5S_SELECT_NOTA
+SELECT_APPEND: int   = H5S_SELECT_APPEND
+SELECT_PREPEND: int  = H5S_SELECT_PREPEND
+SELECT_INVALID: int  = H5S_SELECT_INVALID
 
-ALL = lockid(H5S_ALL)   # This is accepted in lieu of an actual identifier
+ALL: SpaceID = lockid(H5S_ALL)   # This is accepted in lieu of an actual identifier
                         # in functions like H5Dread, so wrap it.
-UNLIMITED = H5S_UNLIMITED
+UNLIMITED: int = H5S_UNLIMITED
 
 #enum H5S_class_t
-NO_CLASS = H5S_NO_CLASS
-SCALAR   = H5S_SCALAR
-SIMPLE   = H5S_SIMPLE
+NO_CLASS: int = H5S_NO_CLASS
+SCALAR: int   = H5S_SCALAR
+SIMPLE: int   = H5S_SIMPLE
 globals()["NULL"] = H5S_NULL  # "NULL" is reserved in Cython
 
 #enum H5S_sel_type
-SEL_ERROR       = H5S_SEL_ERROR
-SEL_NONE        = H5S_SEL_NONE
-SEL_POINTS      = H5S_SEL_POINTS
-SEL_HYPERSLABS  = H5S_SEL_HYPERSLABS
-SEL_ALL         = H5S_SEL_ALL
+SEL_ERROR: int       = H5S_SEL_ERROR
+SEL_NONE: int        = H5S_SEL_NONE
+SEL_POINTS: int      = H5S_SEL_POINTS
+SEL_HYPERSLABS: int  = H5S_SEL_HYPERSLABS
+SEL_ALL: int         = H5S_SEL_ALL
 
 
 # === Basic dataspace operations ==============================================
 
 @with_phil
-def create(int class_code):
+def create(int class_code) -> SpaceID:
     """(INT class_code) => SpaceID
 
     Create a new HDF5 dataspace object, of the given class.
@@ -70,7 +70,7 @@ def create(int class_code):
 
 
 @with_phil
-def create_simple(object dims_tpl, object max_dims_tpl=None):
+def create_simple(object dims_tpl, object max_dims_tpl=None) -> SpaceID:
     """(TUPLE dims_tpl, TUPLE max_dims_tpl) => SpaceID
 
     Create a simple (slab) dataspace from a tuple of dimensions.
@@ -104,7 +104,7 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
 
 
 @with_phil
-def decode(buf):
+def decode(buf) -> SpaceID:
     """(STRING buf) => SpaceID
 
     Unserialize a dataspace.  Bear in mind you can also use the native
@@ -131,7 +131,7 @@ cdef class SpaceID(ObjectID):
     """
 
     @property
-    def shape(self):
+    def shape(self) -> object | None:
         """ Numpy-style shape tuple representing dimensions.  () == scalar.
         """
         with phil:
@@ -139,7 +139,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def copy(self):
+    def copy(self) -> SpaceID:
         """() => SpaceID
 
         Create a new copy of this dataspace.
@@ -148,7 +148,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def encode(self):
+    def encode(self) -> bytes:
         """() => STRING
 
         Serialize a dataspace, including its selection.  Bear in mind you
@@ -167,12 +167,12 @@ cdef class SpaceID(ObjectID):
 
         return pystr
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple:
         with phil:
             return (type(self), (-1,), self.encode())
 
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         cdef char* buf = state
         with phil:
             self.id = H5Sdecode(buf)
@@ -181,7 +181,7 @@ cdef class SpaceID(ObjectID):
     # === Simple dataspaces ===================================================
 
     @with_phil
-    def is_simple(self):
+    def is_simple(self) -> bint:
         """() => BOOL is_simple
 
         Determine if an existing dataspace is "simple" (including scalar
@@ -191,7 +191,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def offset_simple(self, object offset=None):
+    def offset_simple(self, object offset=None) -> None:
         """(TUPLE offset=None)
 
         Set the offset of a dataspace.  The length of the given tuple must
@@ -226,7 +226,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_simple_extent_ndims(self):
+    def get_simple_extent_ndims(self) -> int:
         """() => INT rank
 
         Determine the rank of a "simple" (slab) dataspace.
@@ -235,7 +235,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_simple_extent_dims(self, int maxdims=0):
+    def get_simple_extent_dims(self, int maxdims=0) -> tuple | None:
         """(BOOL maxdims=False) => TUPLE shape
 
         Determine the shape of a "simple" (slab) dataspace.  If "maxdims"
@@ -263,7 +263,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_simple_extent_npoints(self):
+    def get_simple_extent_npoints(self) -> long:
         """() => LONG npoints
 
         Determine the total number of elements in a dataspace.
@@ -272,7 +272,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_simple_extent_type(self):
+    def get_simple_extent_type(self) -> int:
         """() => INT class_code
 
         Class code is either SCALAR or SIMPLE.
@@ -283,7 +283,7 @@ cdef class SpaceID(ObjectID):
     # === Extents =============================================================
 
     @with_phil
-    def extent_copy(self, SpaceID source not None):
+    def extent_copy(self, SpaceID source not None) -> None:
         """(SpaceID source)
 
         Replace this dataspace's extent with another's, changing its
@@ -293,7 +293,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def set_extent_simple(self, object dims_tpl, object max_dims_tpl=None):
+    def set_extent_simple(self, object dims_tpl, object max_dims_tpl=None) -> None:
         """(TUPLE dims_tpl, TUPLE max_dims_tpl=None)
 
         Reset the dataspace extent via a tuple of dimensions.
@@ -327,7 +327,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def set_extent_none(self):
+    def set_extent_none(self) -> None:
         """()
 
         Remove the dataspace extent; typecode changes to NO_CLASS.
@@ -338,7 +338,7 @@ cdef class SpaceID(ObjectID):
     # === General selection operations ========================================
 
     @with_phil
-    def get_select_type(self):
+    def get_select_type(self) -> int:
         """ () => INT select_code
 
             Determine selection type.  Return values are:
@@ -352,7 +352,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_select_npoints(self):
+    def get_select_npoints(self) -> long:
         """() => LONG npoints
 
         Determine the total number of points currently selected.
@@ -362,7 +362,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_select_bounds(self):
+    def get_select_bounds(self) -> tuple | None:
         """() => (TUPLE start, TUPLE end)
 
         Determine the bounding box which exactly contains
@@ -392,7 +392,7 @@ cdef class SpaceID(ObjectID):
             efree(end)
 
     @with_phil
-    def select_shape_same(self, SpaceID space2):
+    def select_shape_same(self, SpaceID space2) -> bint:
         """(SpaceID space2) => BOOL
 
         Check if two selections are the same shape. HDF5 may read data
@@ -401,7 +401,7 @@ cdef class SpaceID(ObjectID):
         return <bint>H5Sselect_shape_same(self.id, space2.id)
 
     @with_phil
-    def select_all(self):
+    def select_all(self) -> None:
         """()
 
         Select all points in the dataspace.
@@ -410,7 +410,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def select_copy(self, SpaceID src_id):
+    def select_copy(self, SpaceID src_id) -> None:
         """(SpaceID src_id)
 
         Copies the selection from another dataspace to this one (self).
@@ -419,7 +419,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def select_none(self):
+    def select_none(self) -> None:
         """()
 
         Deselect entire dataspace.
@@ -428,7 +428,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def select_valid(self):
+    def select_valid(self) -> bint:
         """() => BOOL
 
         Determine if the current selection falls within
@@ -440,7 +440,7 @@ cdef class SpaceID(ObjectID):
     # === Point selection functions ===========================================
 
     @with_phil
-    def get_select_elem_npoints(self):
+    def get_select_elem_npoints(self) -> long:
         """() => LONG npoints
 
         Determine the number of elements selected in point-selection mode.
@@ -449,7 +449,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_select_elem_pointlist(self):
+    def get_select_elem_pointlist(self) -> cnp.ndarray:
         """() => NDARRAY
 
         Get a list of all selected elements.  Return is a Numpy array of
@@ -469,7 +469,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def select_elements(self, object coords, int op=H5S_SELECT_SET):
+    def select_elements(self, object coords, int op=H5S_SELECT_SET) -> None:
         """(SEQUENCE coords, INT op=SELECT_SET)
 
         Select elements by specifying coordinates points.  The argument
@@ -508,7 +508,7 @@ cdef class SpaceID(ObjectID):
     # === Hyperslab selection functions =======================================
 
     @with_phil
-    def get_select_hyper_nblocks(self):
+    def get_select_hyper_nblocks(self) -> long:
         """() => LONG nblocks
 
         Get the number of hyperslab blocks currently selected.
@@ -517,7 +517,7 @@ cdef class SpaceID(ObjectID):
 
 
     @with_phil
-    def get_select_hyper_blocklist(self):
+    def get_select_hyper_blocklist(self) -> cnp.ndarray:
         """() => NDARRAY
 
         Get the current hyperslab selection.  The returned array has shape::
@@ -546,7 +546,7 @@ cdef class SpaceID(ObjectID):
 
     @with_phil
     def select_hyperslab(self, object start, object count, object stride=None,
-                         object block=None, int op=H5S_SELECT_SET):
+                         object block=None, int op=H5S_SELECT_SET) -> None:
         """(TUPLE start, TUPLE count, TUPLE stride=None, TUPLE block=None,
              INT op=SELECT_SET)
 
@@ -590,7 +590,7 @@ cdef class SpaceID(ObjectID):
             efree(block_array)
 
     @with_phil
-    def combine_select(self, SpaceID space2, int op=H5S_SELECT_OR):
+    def combine_select(self, SpaceID space2, int op=H5S_SELECT_OR) -> SpaceID:
         """(SpaceID space2, INT op=SELECT_OR) => SpaceID
 
         Combine two hyperslab selections with an operation, returning a new
@@ -600,7 +600,7 @@ cdef class SpaceID(ObjectID):
         return SpaceID(H5Scombine_select(self.id, <H5S_seloper_t>op, space2.id))
 
     @with_phil
-    def modify_select(self, SpaceID space2, int op=H5S_SELECT_OR):
+    def modify_select(self, SpaceID space2, int op=H5S_SELECT_OR) -> None:
         """(SpaceID space2, INT op=SELECT_OR)
 
         Refines the hyperslab selection of this dataspace (self) using the
@@ -611,7 +611,7 @@ cdef class SpaceID(ObjectID):
         H5Smodify_select(self.id, <H5S_seloper_t>op, space2.id)
 
     @with_phil
-    def is_regular_hyperslab(self):
+    def is_regular_hyperslab(self) -> bint:
         """() => BOOL
 
         Determine whether a hyperslab selection is regular.
@@ -619,7 +619,7 @@ cdef class SpaceID(ObjectID):
         return <bint>H5Sis_regular_hyperslab(self.id)
 
     @with_phil
-    def get_regular_hyperslab(self):
+    def get_regular_hyperslab(self) -> tuple[tuple[long, ...], tuple[long, ...], tuple[long, ...], tuple[long, ...]]:
         """() => (TUPLE start, TUPLE stride, TUPLE count, TUPLE block)
 
         Retrieve a regular hyperslab selection.

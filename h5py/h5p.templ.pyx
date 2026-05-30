@@ -45,7 +45,7 @@ cdef hid_t pdefault(PropID pid):
         return <hid_t>H5P_DEFAULT
     return pid.id
 
-cdef object propwrap(hid_t id_in):
+cdef PropID propwrap(hid_t id_in):
 
     clsid = H5Pget_class(id_in)
     try:
@@ -79,7 +79,7 @@ cdef object propwrap(hid_t id_in):
     finally:
         H5Pclose_class(clsid)
 
-cdef object lockcls(hid_t id_in):
+cdef PropClassID lockcls(hid_t id_in):
     cdef PropClassID pid
     pid = PropClassID(id_in)
     pid.locked = 1
@@ -92,22 +92,22 @@ cdef object lockcls(hid_t id_in):
 # These need to be locked, as the library won't let you close them.
 
 
-NO_CLASS       = lockcls(H5P_NO_CLASS)
-FILE_CREATE    = lockcls(H5P_FILE_CREATE)
-FILE_ACCESS    = lockcls(H5P_FILE_ACCESS)
-DATASET_CREATE = lockcls(H5P_DATASET_CREATE)
-DATASET_XFER   = lockcls(H5P_DATASET_XFER)
-DATASET_ACCESS = lockcls(H5P_DATASET_ACCESS)
+NO_CLASS: PropClassID       = lockcls(H5P_NO_CLASS)
+FILE_CREATE: PropClassID    = lockcls(H5P_FILE_CREATE)
+FILE_ACCESS: PropClassID    = lockcls(H5P_FILE_ACCESS)
+DATASET_CREATE: PropClassID = lockcls(H5P_DATASET_CREATE)
+DATASET_XFER: PropClassID   = lockcls(H5P_DATASET_XFER)
+DATASET_ACCESS: PropClassID = lockcls(H5P_DATASET_ACCESS)
 
-OBJECT_COPY = lockcls(H5P_OBJECT_COPY)
+OBJECT_COPY: PropClassID = lockcls(H5P_OBJECT_COPY)
 
-LINK_CREATE = lockcls(H5P_LINK_CREATE)
-LINK_ACCESS = lockcls(H5P_LINK_ACCESS)
-GROUP_CREATE = lockcls(H5P_GROUP_CREATE)
-OBJECT_CREATE = lockcls(H5P_OBJECT_CREATE)
+LINK_CREATE: PropClassID = lockcls(H5P_LINK_CREATE)
+LINK_ACCESS: PropClassID = lockcls(H5P_LINK_ACCESS)
+GROUP_CREATE: PropClassID = lockcls(H5P_GROUP_CREATE)
+OBJECT_CREATE: PropClassID = lockcls(H5P_OBJECT_CREATE)
 
-CRT_ORDER_TRACKED = H5P_CRT_ORDER_TRACKED
-CRT_ORDER_INDEXED = H5P_CRT_ORDER_INDEXED
+CRT_ORDER_TRACKED: int = H5P_CRT_ORDER_TRACKED
+CRT_ORDER_INDEXED: int = H5P_CRT_ORDER_INDEXED
 
 DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
                  # invalid identifier.  The new strategy for default options
@@ -118,7 +118,7 @@ DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
 # === Property list functional API ============================================
 
 @with_phil
-def create(PropClassID cls not None):
+def create(PropClassID cls not None) -> PropID:
     """(PropClassID cls) => PropID
 
     Create a new property list as an instance of a class; classes are:
@@ -149,14 +149,14 @@ cdef class PropID(ObjectID):
 
 
     @with_phil
-    def equal(self, PropID plist not None):
+    def equal(self, PropID plist not None) -> bint:
         """(PropID plist) => BOOL
 
         Compare this property list (or class) to another for equality.
         """
         return <bint>(H5Pequal(self.id, plist.id))
 
-    def __richcmp__(self, object other, int how):
+    def __richcmp__(self, object other, int how) -> bint:
         cdef bint truthval = 0
 
         with phil:
@@ -169,7 +169,7 @@ cdef class PropID(ObjectID):
                 return truthval
             return not truthval
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         raise TypeError("Property lists are unhashable")
 
 cdef class PropClassID(PropID):
@@ -181,10 +181,10 @@ cdef class PropClassID(PropID):
         * Equality: Logical H5P comparison
     """
 
-    def __richcmp__(self, object other, int how):
+    def __richcmp__(self, object other, int how) -> bint:
         return PropID.__richcmp__(self, other, how)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """ Since classes are library-created and immutable, they are uniquely
             identified by their HDF5 identifiers.
         """
@@ -202,7 +202,7 @@ cdef class PropInstanceID(PropID):
 
 
     @with_phil
-    def copy(self):
+    def copy(self) -> PropID:
         """() => PropList newid
 
          Create a new copy of an existing property list object.
@@ -210,7 +210,7 @@ cdef class PropInstanceID(PropID):
         return type(self)(H5Pcopy(self.id))
 
 
-    def get_class(self):
+    def get_class(self) -> PropClassID:
         """() => PropClassID
 
         Determine the class of a property list object.
@@ -234,7 +234,7 @@ cdef class PropCopyID(PropInstanceID):
 
 
     @with_phil
-    def set_copy_object(self, unsigned int flags):
+    def set_copy_object(self, unsigned int flags) -> None:
         """(UINT flags)
 
         Set flags for object copying process.  Legal flags are
@@ -259,7 +259,7 @@ cdef class PropCopyID(PropInstanceID):
 
 
     @with_phil
-    def get_copy_object(self):
+    def get_copy_object(self) -> int:
         """() => UINT flags
 
         Get copy process flags. Legal flags are h5o.COPY*.
@@ -281,7 +281,7 @@ cdef class PropFCID(PropOCID):
 
 
     @with_phil
-    def get_version(self):
+    def get_version(self) -> tuple[int, int, int, int]:
         """() => TUPLE version_info
 
         Determine version information of various file attributes.
@@ -304,7 +304,7 @@ cdef class PropFCID(PropOCID):
 
 
     @with_phil
-    def set_userblock(self, hsize_t size):
+    def set_userblock(self, hsize_t size) -> None:
         """(INT/LONG size)
 
         Set the file user block size, in bytes.
@@ -314,7 +314,7 @@ cdef class PropFCID(PropOCID):
 
 
     @with_phil
-    def get_userblock(self):
+    def get_userblock(self) -> hsize_t:
         """() => LONG size
 
         Determine the user block size, in bytes.
@@ -325,7 +325,7 @@ cdef class PropFCID(PropOCID):
 
 
     @with_phil
-    def set_sizes(self, size_t addr, size_t size):
+    def set_sizes(self, size_t addr, size_t size) -> None:
         """(UINT addr, UINT size)
 
         Set the addressing offsets and lengths for objects
@@ -335,7 +335,7 @@ cdef class PropFCID(PropOCID):
 
 
     @with_phil
-    def get_sizes(self):
+    def get_sizes(self) -> tuple[size_t, size_t]:
         """() => TUPLE sizes
 
         Determine addressing offsets and lengths for objects in an
@@ -351,7 +351,7 @@ cdef class PropFCID(PropOCID):
 
 
     @with_phil
-    def set_link_creation_order(self, unsigned int flags):
+    def set_link_creation_order(self, unsigned int flags) -> None:
         """ (UINT flags)
 
         Set tracking and indexing of creation order for links added to this group
@@ -362,7 +362,7 @@ cdef class PropFCID(PropOCID):
 
 
     @with_phil
-    def get_link_creation_order(self):
+    def get_link_creation_order(self) -> int:
         """ () -> UINT flags
 
         Get tracking and indexing of creation order for links added to this group
@@ -373,7 +373,7 @@ cdef class PropFCID(PropOCID):
 
     @with_phil
     def set_file_space_strategy(self, unsigned int strategy, bint persist,
-            unsigned long long threshold):
+            unsigned long long threshold) -> None:
         """ (UINT strategy, BOOL persist, ULONGLONG threshold)
 
         Set the file space handling strategy and persisting free-space values.
@@ -382,7 +382,7 @@ cdef class PropFCID(PropOCID):
                 <hbool_t>persist, <hsize_t>threshold)
 
     @with_phil
-    def get_file_space_strategy(self):
+    def get_file_space_strategy(self) -> tuple[H5F_fspace_strategy_t, hbool_t, hsize_t]:
         """ () => TUPLE(UINT strategy, BOOL persist, ULONGLONG threshold)
 
         Retrieve the file space handling strategy, persisting free-space
@@ -396,7 +396,7 @@ cdef class PropFCID(PropOCID):
         return (strategy, persist, threshold)
 
     @with_phil
-    def set_file_space_page_size(self, hsize_t fsp_size):
+    def set_file_space_page_size(self, hsize_t fsp_size) -> None:
         """ (LONG fsp_size)
 
         Set the file space page size used in paged aggregation and paged
@@ -406,7 +406,7 @@ cdef class PropFCID(PropOCID):
         H5Pset_file_space_page_size(self.id, <hsize_t>fsp_size)
 
     @with_phil
-    def get_file_space_page_size(self):
+    def get_file_space_page_size(self) -> hsize_t:
         """ () -> LONG fsp_size
 
         Retrieve the file space page size.
@@ -423,7 +423,7 @@ cdef class PropDCID(PropOCID):
     """
 
     @with_phil
-    def set_layout(self, int layout_code):
+    def set_layout(self, int layout_code) -> None:
         """(INT layout_code)
 
         Set dataset storage strategy; legal values are:
@@ -437,7 +437,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_layout(self):
+    def get_layout(self) -> int:
         """() => INT layout_code
 
         Determine the storage strategy of a dataset; legal values are:
@@ -450,7 +450,7 @@ cdef class PropDCID(PropOCID):
         return <int>H5Pget_layout(self.id)
 
     @with_phil
-    def set_chunk(self, object chunksize):
+    def set_chunk(self, object chunksize) -> None:
         """(TUPLE chunksize)
 
         Set the dataset chunk size.  It's up to you to provide
@@ -472,7 +472,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_chunk(self):
+    def get_chunk(self) -> tuple:
         """() => TUPLE chunk_dimensions
 
         Obtain the dataset chunk size, as a tuple.
@@ -493,7 +493,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_fill_value(self, ndarray value not None):
+    def set_fill_value(self, ndarray value not None) -> None:
         """(NDARRAY value)
 
         Set the dataset fill value.  The object provided should be an
@@ -524,7 +524,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_fill_value(self, ndarray value not None):
+    def get_fill_value(self, ndarray value not None) -> None:
         """(NDARRAY value)
 
         Read the dataset fill value into a NumPy array.  It will be
@@ -559,7 +559,7 @@ cdef class PropDCID(PropOCID):
         H5Pget_fill_value(self.id, tid.id, value.data)
 
     @with_phil
-    def fill_value_defined(self):
+    def fill_value_defined(self) -> int:
         """() => INT fill_status
 
         Determine the status of the dataset fill value.  Return values are:
@@ -574,7 +574,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_fill_time(self, int fill_time):
+    def set_fill_time(self, int fill_time) -> None:
         """(INT fill_time)
 
         Define when fill values are written to the dataset.  Legal
@@ -588,7 +588,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_fill_time(self):
+    def get_fill_time(self) -> int:
         """ () => INT
 
         Determine when fill values are written to the dataset.  Legal
@@ -604,7 +604,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_alloc_time(self, int alloc_time):
+    def set_alloc_time(self, int alloc_time) -> None:
         """(INT alloc_time)
 
         Set the storage space allocation time.  One of h5d.ALLOC_TIME*.
@@ -613,7 +613,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_alloc_time(self):
+    def get_alloc_time(self) -> int:
         """() => INT alloc_time
 
         Get the storage space allocation time.  One of h5d.ALLOC_TIME*.
@@ -626,7 +626,7 @@ cdef class PropDCID(PropOCID):
     # === Filter functions ====================================================
 
     @with_phil
-    def set_filter(self, int filter_code, unsigned int flags=0, object values=None):
+    def set_filter(self, int filter_code, unsigned int flags=0, object values=None) -> None:
         """(INT filter_code, UINT flags=0, TUPLE values=None)
 
         Set a filter in the pipeline.  Params are:
@@ -668,7 +668,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def all_filters_avail(self):
+    def all_filters_avail(self) -> bint:
         """() => BOOL
 
         Determine if all the filters in the pipelist are available to
@@ -678,7 +678,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_nfilters(self):
+    def get_nfilters(self) -> int:
         """() => INT
 
         Determine the number of filters in the pipeline.
@@ -687,7 +687,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_filter(self, int filter_idx):
+    def get_filter(self, int filter_idx) -> tuple[int, int, tuple[int, ...], str]:
         """(UINT filter_idx) => TUPLE filter_info
 
         Get information about a filter, identified by its index.  Tuple
@@ -722,7 +722,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def _has_filter(self, int filter_code):
+    def _has_filter(self, int filter_code) -> bool:
         """(INT filter_code)
 
         Slow & stupid method to determine if a filter is used in this
@@ -738,7 +738,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_filter_by_id(self, int filter_code):
+    def get_filter_by_id(self, int filter_code) -> tuple[int, tuple[int, ...], str]:
         """(INT filter_code) => TUPLE filter_info or None
 
         Get information about a filter, identified by its code (one
@@ -775,7 +775,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def remove_filter(self, int filter_class):
+    def remove_filter(self, int filter_class) -> None:
         """(INT filter_class)
 
         Remove a filter from the pipeline.  The class code is one of
@@ -785,7 +785,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_deflate(self, unsigned int level=5):
+    def set_deflate(self, unsigned int level=5) -> None:
         """(UINT level=5)
 
         Enable deflate (gzip) compression, at the given level.
@@ -795,7 +795,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_fletcher32(self):
+    def set_fletcher32(self) -> None:
         """()
 
         Enable Fletcher32 error correction on this list.
@@ -804,7 +804,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_shuffle(self):
+    def set_shuffle(self) -> None:
         """()
 
         Enable to use of the shuffle filter.  Use this immediately before
@@ -814,7 +814,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_szip(self, unsigned int options, unsigned int pixels_per_block):
+    def set_szip(self, unsigned int options, unsigned int pixels_per_block) -> None:
         """(UINT options, UINT pixels_per_block)
 
         Enable SZIP compression.  See the HDF5 docs for argument meanings,
@@ -824,7 +824,7 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_scaleoffset(self, H5Z_SO_scale_type_t scale_type, int scale_factor):
+    def set_scaleoffset(self, H5Z_SO_scale_type_t scale_type, int scale_factor) -> None:
         '''(H5Z_SO_scale_type_t scale_type, INT scale_factor)
 
         Enable scale/offset (usually lossy) compression; lossless (e.g. gzip)
@@ -839,7 +839,7 @@ cdef class PropDCID(PropOCID):
     # === External dataset functions ===========================================
 
     @with_phil
-    def set_external(self, name, offset, size):
+    def set_external(self, name, offset, size) -> None:
         '''(STR name, UINT offset, UINT size)
 
         Adds an external file to the list of external files for the dataset.
@@ -850,7 +850,7 @@ cdef class PropDCID(PropOCID):
         H5Pset_external(self.id, name, offset, size)
 
     @with_phil
-    def get_external_count(self):
+    def get_external_count(self) -> int:
         """() => INT
 
         Returns the number of external files for the dataset.
@@ -858,7 +858,7 @@ cdef class PropDCID(PropOCID):
         return <int>(H5Pget_external_count(self.id))
 
     @with_phil
-    def get_external(self, idx=0):
+    def get_external(self, idx=0) -> tuple[str, off_t, hsize_t]:
         """(UINT idx=0) => TUPLE external_file_info
 
         Returns information about the indexed external file.
@@ -884,7 +884,7 @@ cdef class PropDCID(PropOCID):
     # === Virtual dataset functions ===========================================
     @with_phil
     def set_virtual(self, SpaceID vspace not None, char* src_file_name,
-                    char* src_dset_name, SpaceID src_space not None):
+                    char* src_dset_name, SpaceID src_space not None) -> None:
         """(SpaceID vspace, STR src_file_name, STR src_dset_name, SpaceID src_space)
 
         Set the mapping between virtual and source datasets.
@@ -897,7 +897,7 @@ cdef class PropDCID(PropOCID):
         H5Pset_virtual(self.id, vspace.id, src_file_name, src_dset_name, src_space.id)
 
     @with_phil
-    def get_virtual_count(self):
+    def get_virtual_count(self) -> size_t:
         """() => UINT
 
         Get the number of mappings for the virtual dataset.
@@ -907,7 +907,7 @@ cdef class PropDCID(PropOCID):
         return count
 
     @with_phil
-    def get_virtual_dsetname(self, size_t index=0):
+    def get_virtual_dsetname(self, size_t index=0) -> str:
         """(UINT index=0) => STR
 
         Get the name of a source dataset used in the mapping of the virtual
@@ -928,7 +928,7 @@ cdef class PropDCID(PropOCID):
         return src_dset_name
 
     @with_phil
-    def get_virtual_filename(self, size_t index=0):
+    def get_virtual_filename(self, size_t index=0) -> str:
         """(UINT index=0) => STR
 
         Get the file name of a source dataset used in the mapping of the
@@ -949,7 +949,7 @@ cdef class PropDCID(PropOCID):
         return src_fname
 
     @with_phil
-    def get_virtual_vspace(self, size_t index=0):
+    def get_virtual_vspace(self, size_t index=0) -> SpaceID:
         """(UINT index=0) => SpaceID
 
         Get a dataspace for the selection within the virtual dataset used
@@ -958,7 +958,7 @@ cdef class PropDCID(PropOCID):
         return SpaceID(H5Pget_virtual_vspace(self.id, index))
 
     @with_phil
-    def get_virtual_srcspace(self, size_t index=0):
+    def get_virtual_srcspace(self, size_t index=0) -> SpaceID:
         """(UINT index=0) => SpaceID
 
         Get a dataspace for the selection within the source dataset used
@@ -975,7 +975,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fclose_degree(self, int close_degree):
+    def set_fclose_degree(self, int close_degree) -> None:
         """(INT close_degree)
 
         Set the file-close degree, which determines library behavior when
@@ -990,7 +990,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def get_fclose_degree(self):
+    def get_fclose_degree(self) -> int:
         """() => INT close_degree
         - h5fd.
         Get the file-close degree, which determines library behavior when
@@ -1007,7 +1007,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fapl_core(self, size_t block_size=64*1024, hbool_t backing_store=1):
+    def set_fapl_core(self, size_t block_size=64*1024, hbool_t backing_store=1) -> None:
         """(UINT increment=64k, BOOL backing_store=True)
 
         Use the h5fd.CORE (memory-resident) file driver.
@@ -1024,7 +1024,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def get_fapl_core(self):
+    def get_fapl_core(self) -> tuple[size_t, bint]:
         """() => TUPLE core_settings
 
         Determine settings for the h5fd.CORE (memory-resident) file driver.
@@ -1041,7 +1041,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fapl_family(self, hsize_t memb_size=2147483647, PropID memb_fapl=None):
+    def set_fapl_family(self, hsize_t memb_size=2147483647, PropID memb_fapl=None) -> None:
         """(UINT memb_size=2**31-1, PropFAID memb_fapl=None)
 
         Set up the family driver.
@@ -1058,7 +1058,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def get_fapl_family(self):
+    def get_fapl_family(self) -> tuple[hsize_t, PropFAID]:
         """() => TUPLE info
 
         Determine family driver settings. Tuple values are:
@@ -1082,7 +1082,7 @@ cdef class PropFAID(PropInstanceID):
     ### {{if ROS3}}
     @with_phil
     def set_fapl_ros3(self, char* aws_region="", char* secret_id="",
-                        char* secret_key=""):
+                        char* secret_key="") -> None:
         """(STRING aws_region, STRING secret_id, STRING secret_key)
 
         Set up the ros3 driver.
@@ -1100,7 +1100,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def get_fapl_ros3(self):
+    def get_fapl_ros3(self) -> H5FD_ros3_fapl_t:
         """ () => STRUCT config
 
         Retrieve the ROS3 config
@@ -1112,7 +1112,7 @@ cdef class PropFAID(PropInstanceID):
 
     ### {{if HDF5_VERSION >= (1, 14, 2)}}
     @with_phil
-    def get_fapl_ros3_token(self):
+    def get_fapl_ros3_token(self) -> bytes:
         """ () => BYTES token
 
         Get session token from the file access property list.
@@ -1133,7 +1133,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fapl_ros3_token(self, char *token=""):
+    def set_fapl_ros3_token(self, char *token="") -> None:
         """ (BYTES token="")
 
         Set session token in the file access property list.
@@ -1144,7 +1144,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
+    def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size) -> None:
         """(STRING logfile, UINT flags, UINT buf_size)
 
         Enable the use of the logging driver.  See the HDF5 documentation
@@ -1154,7 +1154,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fapl_sec2(self):
+    def set_fapl_sec2(self) -> None:
         """()
 
         Select the "section-2" driver (h5fd.SEC2).
@@ -1163,7 +1163,7 @@ cdef class PropFAID(PropInstanceID):
 
     ### {{if DIRECT_VFD}}
     @with_phil
-    def set_fapl_direct(self, size_t alignment=0, size_t block_size=0, size_t cbuf_size=0):
+    def set_fapl_direct(self, size_t alignment=0, size_t block_size=0, size_t cbuf_size=0) -> None:
         """(size_t alignment, size_t block_size, size_t cbuf_size)
 
         Select the "direct" driver (h5fd.DIRECT).
@@ -1180,7 +1180,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pset_fapl_direct(self.id, alignment, block_size, cbuf_size)
 
     @with_phil
-    def get_fapl_direct(self):
+    def get_fapl_direct(self) -> tuple[size_t, size_t, size_t]:
         """ () => (alignment, block_size, cbuf_size)
 
         Retrieve the DIRECT VFD config
@@ -1195,7 +1195,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fapl_stdio(self):
+    def set_fapl_stdio(self) -> None:
         """()
 
         Select the "stdio" driver (h5fd.STDIO)
@@ -1203,7 +1203,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pset_fapl_stdio(self.id)
 
     @with_phil
-    def set_fapl_split(self, const char* meta_ext="-m.h5", PropID meta_plist_id=None, const char* raw_ext="-r.h5", PropID raw_plist_id=None):
+    def set_fapl_split(self, const char* meta_ext="-m.h5", PropID meta_plist_id=None, const char* raw_ext="-r.h5", PropID raw_plist_id=None) -> None:
         """()
 
         Select the "split" driver (h5fd.SPLIT)
@@ -1212,7 +1212,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_driver(self, hid_t driver_id):
+    def set_driver(self, hid_t driver_id) -> None:
         """(INT driver_id)
 
         Sets the file driver identifier for this file access or data
@@ -1222,7 +1222,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fileobj_driver(self, hid_t driver_id, object fileobj):
+    def set_fileobj_driver(self, hid_t driver_id, object fileobj) -> None:
         """(INT driver_id, OBJECT fileobj)
 
         Select the "fileobj" file driver (h5py-specific).
@@ -1231,7 +1231,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def get_driver(self):
+    def get_driver(self) -> int:
         """() => INT driver code
 
         Return an integer identifier for the driver used by this list.
@@ -1253,7 +1253,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_cache(self, int mdc, int rdcc, size_t rdcc_nbytes, double rdcc_w0):
+    def set_cache(self, int mdc, int rdcc, size_t rdcc_nbytes, double rdcc_w0) -> None:
         """(INT mdc, INT rdcc, UINT rdcc_nbytes, DOUBLE rdcc_w0)
 
         Set the metadata (mdc) and raw data chunk (rdcc) cache properties.
@@ -1263,7 +1263,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def get_cache(self):
+    def get_cache(self) -> tuple[int, size_t, size_t, double]:
         """() => TUPLE cache info
 
         Get the metadata and raw data chunk cache settings.  See the HDF5
@@ -1283,7 +1283,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_sieve_buf_size(self, size_t size):
+    def set_sieve_buf_size(self, size_t size) -> None:
         """ (UINT size)
 
         Set the maximum size of the data sieve buffer (in bytes).  This
@@ -1294,7 +1294,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def get_sieve_buf_size(self):
+    def get_sieve_buf_size(self) -> size_t:
         """ () => UINT size
 
         Get the current maximum size of the data sieve buffer (in bytes).
@@ -1305,7 +1305,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_libver_bounds(self, int low, int high):
+    def set_libver_bounds(self, int low, int high) -> None:
         """ (INT low, INT high)
 
         Set the compatibility level for file format. Legal values are:
@@ -1320,7 +1320,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pset_libver_bounds(self.id, <H5F_libver_t>low, <H5F_libver_t>high)
 
     @with_phil
-    def set_meta_block_size(self, size_t size):
+    def set_meta_block_size(self, size_t size) -> None:
         """ (UINT size)
 
         Set the current minimum size, in bytes, of new metadata block allocations.
@@ -1328,7 +1328,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pset_meta_block_size(self.id, size)
 
     @with_phil
-    def get_meta_block_size(self):
+    def get_meta_block_size(self) -> size_t:
         """ () => UINT size
 
         Get the current minimum size, in bytes, of new metadata block allocations.
@@ -1338,7 +1338,7 @@ cdef class PropFAID(PropInstanceID):
         return size
 
     @with_phil
-    def get_libver_bounds(self):
+    def get_libver_bounds(self) -> tuple[int, int]:
         """ () => (INT low, INT high)
 
         Get the compatibility level for file format. Returned values are from:
@@ -1358,7 +1358,7 @@ cdef class PropFAID(PropInstanceID):
 
     ### {{if MPI}}
     @with_phil
-    def set_fapl_mpio(self, comm, info):
+    def set_fapl_mpio(self, comm, info) -> None:
         """ (Comm comm, Info info)
 
         Set MPI-I/O Parallel HDF5 driver.
@@ -1374,7 +1374,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
 
     @with_phil
-    def get_fapl_mpio(self):
+    def get_fapl_mpio(self) -> tuple[MPI_Comm, MPI_Info]:
         """ () => (mpi4py.MPI.Comm, mpi4py.MPI.Info)
 
         Determine mpio driver MPI information.
@@ -1402,14 +1402,14 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_fapl_mpiposix(self, comm, bint use_gpfs_hints=0):
+    def set_fapl_mpiposix(self, comm, bint use_gpfs_hints=0) -> None:
         """ Obsolete.
         """
         raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
     ### {{endif}}
 
     @with_phil
-    def get_mdc_config(self):
+    def get_mdc_config(self) -> CacheConfig:
         """() => CacheConfig
         Returns an object that stores all the information about the meta-data cache
         configuration
@@ -1423,7 +1423,7 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
-    def set_mdc_config(self, CacheConfig config not None):
+    def set_mdc_config(self, CacheConfig config not None) -> None:
         """(CacheConfig) => None
         Returns an object that stores all the information about the meta-data cache
         configuration
@@ -1431,7 +1431,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pset_mdc_config(self.id, &config.cache_config)
 
     @with_phil
-    def get_alignment(self):
+    def get_alignment(self) -> tuple[hsize_t, hsize_t]:
         """
         Retrieves the current settings for alignment properties from a file access property list.
         """
@@ -1441,14 +1441,14 @@ cdef class PropFAID(PropInstanceID):
         return threshold, alignment
 
     @with_phil
-    def set_alignment(self, threshold, alignment):
+    def set_alignment(self, threshold, alignment) -> None:
         """
         Sets alignment properties of a file access property list.
         """
         H5Pset_alignment(self.id, threshold, alignment)
 
     @with_phil
-    def set_file_image(self, image):
+    def set_file_image(self, image) -> None:
         """
         Copy a file image into the property list. Passing None releases
         any image currently loaded. The parameter image must either be
@@ -1473,7 +1473,7 @@ cdef class PropFAID(PropInstanceID):
 
     @with_phil
     def set_page_buffer_size(self, size_t buf_size, unsigned int min_meta_per=0,
-                             unsigned int min_raw_per=0):
+                             unsigned int min_raw_per=0) -> None:
         """ (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
 
         Set the maximum size in bytes of the page buffer. The default value is
@@ -1488,7 +1488,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pset_page_buffer_size(self.id, buf_size, min_meta_per, min_raw_per)
 
     @with_phil
-    def get_page_buffer_size(self):
+    def get_page_buffer_size(self) -> tuple[size_t, int, int]:
         """ () -> (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
 
         Retrieves the maximum size for the page buffer and the minimum
@@ -1500,7 +1500,7 @@ cdef class PropFAID(PropInstanceID):
         return (buf_size, min_meta_per, min_raw_per)
 
     @with_phil
-    def get_file_locking(self):
+    def get_file_locking(self) -> tuple[hbool_t, hbool_t]:
         """ () => (BOOL, BOOL)
 
         Return file locking information as a 2-tuple of boolean:
@@ -1513,7 +1513,7 @@ cdef class PropFAID(PropInstanceID):
         return use_file_locking, ignore_when_disabled
 
     @with_phil
-    def set_file_locking(self, bint use_file_locking, bint ignore_when_disabled):
+    def set_file_locking(self, bint use_file_locking, bint ignore_when_disabled) -> None:
         """ (BOOL use_file_locking, BOOL ignore_when_disabled)
 
         Set HDF5 file locking behavior.
@@ -1529,7 +1529,7 @@ cdef class PropLCID(PropCreateID):
     """ Link creation property list """
 
     @with_phil
-    def set_char_encoding(self, int encoding):
+    def set_char_encoding(self, int encoding) -> None:
         """ (INT encoding)
 
         Set the character encoding for link names.  Legal values are:
@@ -1541,7 +1541,7 @@ cdef class PropLCID(PropCreateID):
 
 
     @with_phil
-    def get_char_encoding(self):
+    def get_char_encoding(self) -> int:
         """ () => INT encoding
 
         Get the character encoding for link names.  Legal values are:
@@ -1555,7 +1555,7 @@ cdef class PropLCID(PropCreateID):
 
 
     @with_phil
-    def set_create_intermediate_group(self, bint create):
+    def set_create_intermediate_group(self, bint create) -> None:
         """(BOOL create)
 
         Set whether missing intermediate groups are automatically created.
@@ -1564,7 +1564,7 @@ cdef class PropLCID(PropCreateID):
 
 
     @with_phil
-    def get_create_intermediate_group(self):
+    def get_create_intermediate_group(self) -> bint:
         """() => BOOL
 
         Determine if missing intermediate groups are automatically created.
@@ -1578,15 +1578,15 @@ cdef class PropLAID(PropInstanceID):
 
     """ Link access property list """
 
-    def __cinit__(self, *args):
+    def __cinit__(self, *args) -> None:
         self._buf = NULL
 
-    def __dealloc__(self):
+    def __dealloc__(self) -> None:
         efree(self._buf)
 
 
     @with_phil
-    def set_nlinks(self, size_t nlinks):
+    def set_nlinks(self, size_t nlinks) -> None:
         """(UINT nlinks)
 
         Set the maximum traversal depth for soft links
@@ -1595,7 +1595,7 @@ cdef class PropLAID(PropInstanceID):
 
 
     @with_phil
-    def get_nlinks(self):
+    def get_nlinks(self) -> size_t:
         """() => UINT
 
         Get the maximum traversal depth for soft links
@@ -1606,7 +1606,7 @@ cdef class PropLAID(PropInstanceID):
 
 
     @with_phil
-    def set_elink_prefix(self, char* prefix):
+    def set_elink_prefix(self, char* prefix) -> None:
         """(STRING prefix)
 
         Set the external link prefix.
@@ -1623,7 +1623,7 @@ cdef class PropLAID(PropInstanceID):
 
 
     @with_phil
-    def get_elink_prefix(self):
+    def get_elink_prefix(self) -> bytes:
         """() => STRING prefix
 
         Get the external link prefix
@@ -1645,7 +1645,7 @@ cdef class PropLAID(PropInstanceID):
 
 
     @with_phil
-    def set_elink_fapl(self, PropID fapl not None):
+    def set_elink_fapl(self, PropID fapl not None) -> None:
         """ (PropFAID fapl)
 
         Set the file access property list used when opening external files.
@@ -1654,7 +1654,7 @@ cdef class PropLAID(PropInstanceID):
 
 
     @with_phil
-    def get_elink_fapl(self):
+    def get_elink_fapl(self) -> PropFAID:
         """ () => PropFAID fapl
 
         Get the file access property list used when opening external files.
@@ -1667,7 +1667,7 @@ cdef class PropLAID(PropInstanceID):
 
 
     @with_phil
-    def set_elink_acc_flags(self, unsigned int flags):
+    def set_elink_acc_flags(self, unsigned int flags) -> None:
         """ (UNIT flags)
 
         Sets the external link traversal file access flag in a link access property list.
@@ -1676,7 +1676,7 @@ cdef class PropLAID(PropInstanceID):
 
 
     @with_phil
-    def get_elink_acc_flags(self):
+    def get_elink_acc_flags(self) -> int:
         """() => UINT
 
         Retrieves the external link traversal file access flag from the specified link access property list.
@@ -1700,7 +1700,7 @@ cdef class PropGCID(PropOCID):
     """ Group creation property list """
 
     @with_phil
-    def set_link_creation_order(self, unsigned int flags):
+    def set_link_creation_order(self, unsigned int flags) -> None:
         """ (UINT flags)
 
         Set tracking and indexing of creation order for links added to this group
@@ -1711,7 +1711,7 @@ cdef class PropGCID(PropOCID):
 
 
     @with_phil
-    def get_link_creation_order(self):
+    def get_link_creation_order(self) -> int:
         """ () -> UINT flags
 
         Get tracking and indexing of creation order for links added to this group
@@ -1732,7 +1732,7 @@ cdef class PropOCID(PropCreateID):
     """
 
     @with_phil
-    def set_attr_creation_order(self, unsigned int flags):
+    def set_attr_creation_order(self, unsigned int flags) -> None:
         """ (UINT flags)
 
         Set tracking and indexing of creation order for object attributes
@@ -1743,7 +1743,7 @@ cdef class PropOCID(PropCreateID):
 
 
     @with_phil
-    def get_attr_creation_order(self):
+    def get_attr_creation_order(self) -> int:
         """ () -> UINT flags
 
         Get tracking and indexing of creation order for object attributes
@@ -1753,7 +1753,7 @@ cdef class PropOCID(PropCreateID):
         return flags
 
     @with_phil
-    def set_attr_phase_change(self, max_compact=8, min_dense=6):
+    def set_attr_phase_change(self, max_compact=8, min_dense=6) -> None:
         """ (UINT max_compact, UINT min_dense)
 
         Set threshold value for attribute storage on an object
@@ -1766,7 +1766,7 @@ cdef class PropOCID(PropCreateID):
         H5Pset_attr_phase_change(self.id, max_compact, min_dense)
 
     @with_phil
-    def get_attr_phase_change(self):
+    def get_attr_phase_change(self) -> tuple[int, int]:
         """ () -> (max_compact, min_dense)
 
         Retrieves threshold values for attribute storage on an object.
@@ -1778,13 +1778,13 @@ cdef class PropOCID(PropCreateID):
         return (max_compact, min_dense)
 
     @with_phil
-    def set_obj_track_times(self,track_times):
+    def set_obj_track_times(self,track_times) -> None:
         """Sets the recording of times associated with an object."""
         H5Pset_obj_track_times(self.id,track_times)
 
 
     @with_phil
-    def get_obj_track_times(self):
+    def get_obj_track_times(self) -> hbool_t:
         """
         Determines whether times associated with an object are being recorded.
         """
@@ -1801,16 +1801,16 @@ cdef class PropDAID(PropInstanceID):
 
     """ Dataset access property list """
 
-    def __cinit__(self, *args):
+    def __cinit__(self, *args) -> None:
         self._efile_prefix_buf = NULL
         self._virtual_prefix_buf = NULL
 
-    def __dealloc__(self):
+    def __dealloc__(self) -> None:
         efree(self._efile_prefix_buf)
         efree(self._virtual_prefix_buf)
 
     @with_phil
-    def set_chunk_cache(self, size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0):
+    def set_chunk_cache(self, size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0) -> None:
         """(size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0)
 
         Sets the raw data chunk cache parameters.
@@ -1819,7 +1819,7 @@ cdef class PropDAID(PropInstanceID):
 
 
     @with_phil
-    def get_chunk_cache(self):
+    def get_chunk_cache(self) -> tuple[size_t, size_t, double]:
         """() => TUPLE chunk cache info
 
         Get the metadata and raw data chunk cache settings.  See the HDF5
@@ -1837,7 +1837,7 @@ cdef class PropDAID(PropInstanceID):
         return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
 
     @with_phil
-    def get_efile_prefix(self):
+    def get_efile_prefix(self) -> bytes:
         """() => STR
 
         Get the filesystem path prefix configured for accessing external
@@ -1859,7 +1859,7 @@ cdef class PropDAID(PropInstanceID):
         return prefix
 
     @with_phil
-    def set_efile_prefix(self, char* prefix):
+    def set_efile_prefix(self, char* prefix) -> None:
         """(STR prefix)
 
         Set a filesystem path prefix for looking up external datasets.
@@ -1877,7 +1877,7 @@ cdef class PropDAID(PropInstanceID):
 
     # === Virtual dataset functions ===========================================
     @with_phil
-    def set_virtual_view(self, unsigned int view):
+    def set_virtual_view(self, unsigned int view) -> None:
         """(UINT view)
 
         Set the view of the virtual dataset (VDS) to include or exclude
@@ -1897,7 +1897,7 @@ cdef class PropDAID(PropInstanceID):
         H5Pset_virtual_view(self.id, <H5D_vds_view_t>view)
 
     @with_phil
-    def get_virtual_view(self):
+    def get_virtual_view(self) -> int:
         """() => UINT view
 
         Retrieve the view of the virtual dataset.
@@ -1912,7 +1912,7 @@ cdef class PropDAID(PropInstanceID):
         return <unsigned int>view
 
     @with_phil
-    def set_virtual_printf_gap(self, hsize_t gap_size=0):
+    def set_virtual_printf_gap(self, hsize_t gap_size=0) -> None:
         """(LONG gap_size=0)
 
         Set the maximum number of missing source files and/or datasets
@@ -1928,7 +1928,7 @@ cdef class PropDAID(PropInstanceID):
         H5Pset_virtual_printf_gap(self.id, gap_size)
 
     @with_phil
-    def get_virtual_printf_gap(self):
+    def get_virtual_printf_gap(self) -> hsize_t:
         """() => LONG gap_size
 
         Return the maximum number of missing source files and/or datasets
@@ -1940,7 +1940,7 @@ cdef class PropDAID(PropInstanceID):
         return gap_size
 
     @with_phil
-    def get_virtual_prefix(self):
+    def get_virtual_prefix(self) -> bytes:
         """() => STR
 
         Get the filesystem path prefix configured for accessing virtual
@@ -1962,7 +1962,7 @@ cdef class PropDAID(PropInstanceID):
         return prefix
 
     @with_phil
-    def set_virtual_prefix(self, char* prefix):
+    def set_virtual_prefix(self, char* prefix) -> None:
         """(STR prefix)
 
         Set a filesystem path prefix for looking up virtual datasets.
@@ -1983,7 +1983,7 @@ cdef class PropDXID(PropInstanceID):
     """ Data transfer property list """
 
     ### {{if MPI}}
-    def set_dxpl_mpio(self, int xfer_mode):
+    def set_dxpl_mpio(self, int xfer_mode) -> None:
         """ Set the transfer mode for MPI I/O.
         Must be one of:
         - h5fd.MPIO_INDEPENDENT (default)
@@ -1991,7 +1991,7 @@ cdef class PropDXID(PropInstanceID):
         """
         H5Pset_dxpl_mpio(self.id, <H5FD_mpio_xfer_t>xfer_mode)
 
-    def get_dxpl_mpio(self):
+    def get_dxpl_mpio(self) -> int:
         """ Get the current transfer mode for MPI I/O.
         Will be one of:
         - h5fd.MPIO_INDEPENDENT (default)
