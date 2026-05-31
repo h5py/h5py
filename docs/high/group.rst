@@ -454,13 +454,12 @@ Reference
             it grow as needed. If only a name is given instead of an iterable
             of tuples, it is equivalent to
             ``[(name, 0, h5py.h5f.UNLIMITED)]``.
-            Be careful when opening untrusted files containing external
-            datasets: HDF5 will read from or write to the referenced external
-            file paths when dataset data is accessed.  Applications handling
-            untrusted HDF5 files should inspect ``Dataset.external`` before
-            reading or writing these datasets and reject unexpected absolute
-            paths, parent-directory components, or locations outside an
-            application-controlled directory.
+            When opening untrusted files containing external datasets,
+            inspect ``Dataset.external`` before reading or writing dataset
+            data.  HDF5 will read from or write to the referenced external
+            file paths when dataset data is accessed. Reject unexpected
+            absolute paths, parent-directory components, or locations outside
+            an application-controlled directory.
 
         :keyword allow_unknown_filter: Do not check that the requested filter is
             available for use (T/F). This should only be set if you will

@@ -278,6 +278,10 @@ dynamically loaded by the underlying HDF5 library. This is done by passing a
 filter number to :meth:`Group.create_dataset` as the ``compression`` parameter.
 The ``compression_opts`` parameter will then be passed to this filter.
 
+Files using custom filter IDs may require native filter plugins to decode the
+data.  Applications handling untrusted HDF5 files should only enable filter
+plugins from trusted locations.
+
 .. seealso::
 
    `hdf5plugin <https://pypi.org/project/hdf5plugin/>`_
@@ -719,9 +723,9 @@ Reference
        :meth:`Group.create_dataset`. Otherwise, it is ``None``.
 
        For untrusted HDF5 files, inspect this before reading or writing dataset
-       data.  External storage entries can name files outside the HDF5 file, so
-       HDF5 may read from or write to those paths when dataset data is
-       accessed.
+       data and reject unexpected paths.  External storage entries can name
+       files outside the HDF5 file, so HDF5 may read from or write to those
+       paths when dataset data is accessed.
 
     .. attribute:: is_virtual
 
