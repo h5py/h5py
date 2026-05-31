@@ -718,6 +718,11 @@ Reference
        of 3-tuples, like the ``external=`` parameter to
        :meth:`Group.create_dataset`. Otherwise, it is ``None``.
 
+       For untrusted HDF5 files, inspect this before reading or writing dataset
+       data.  External storage entries can name files outside the HDF5 file, so
+       HDF5 may read from or write to those paths when dataset data is
+       accessed.
+
     .. attribute:: is_virtual
 
        True if this dataset is a :doc:`virtual dataset </vds>`, otherwise False.
