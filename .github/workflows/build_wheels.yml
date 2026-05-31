@@ -130,6 +130,10 @@ jobs:
                 github.event_name == 'push'
               ) &&
               contains( env.TIP_COMMIT_MSG , '[pip-pre]' )
+            ) || (
+              github.repository_owner == 'h5py' &&
+              github.event_name == 'push' &&
+              github.ref_type == 'tag'
             )
         env:
           H5PY_LIMITED_API: 1
