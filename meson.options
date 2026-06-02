@@ -1,0 +1,6 @@
+option(
+    'mpi',
+    type : 'boolean',
+    value : false,
+    description : 'build with MPI support',
+)
