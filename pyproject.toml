@@ -98,7 +98,15 @@ packages = [
 ]
 
 [dependency-groups]
-check-manifest = [
+dev = [
+    "meson-python>=0.18.0",
+    "Cython >=3.0.0, <4",
+    "numpy >=1.25.0, <3",
+    "packaging >=23.0",
+    "pkgconfig >=1.5.5",
+    "meson",
+]
+check-manifest = [ # TODO: drop this (and MANIFEST.in)
     "check-manifest>=0.50",
 ]
 check-readme = [
@@ -132,6 +140,7 @@ wheels = [
     "tox>=4.26.0",
     "tox-uv>=1.27.0",
 ]
+
 [tool.cibuildwheel]
 skip = [
     "cp310-win_arm64", # Skipped due to unavailability of Python binary and NumPy for Win-ARM64
@@ -189,3 +198,8 @@ H5PY_DIRECT_VFD = "0"
 [tool.uv]
 # never build numpy from source
 no-build-package = ["numpy"]
+no-build-isolation-package = ["h5py"]
+
+[tool.uv.sources]
+# https://github.com/mesonbuild/meson/issues/15889
+meson = { git = "https://github.com/mesonbuild/meson", rev = "8e705ad9fb5811fa824934fbbfa1896b63551a1f" }
