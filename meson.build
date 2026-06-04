@@ -24,26 +24,72 @@ if get_option('mpi')
     include_directories: dependency('mpi4py'),
   )
 endif
-helpers = 'build_helpers'
-template_subs = custom_target(
-  'template_subs',
-  command: [find_program(helpers / 'config.py'), '-o', '@OUTDIR@'],
-  output: 'template_substitutions.json',
-)
 
-template = generator(
+helpers = 'build_helpers'
+
+config_tgt = custom_target(
+  'config',
+  command: [find_program(helpers / 'config.py'), '-o', '@OUTDIR@'],
+  output: [
+    'h5config.json',
+    'template_substitutions.json'
+  ],
+)
+template_gen = generator(
   find_program(helpers / 'template.py'),
-  arguments: ['@INPUT@', '--config', template_subs.full_path(), '-o', '@OUTPUT@'],
+  arguments: ['@INPUT@', '--config', config_tgt[1].full_path(), '-o', '@OUTPUT@'],
   output: '@BASENAME@',
-  depends: template_subs,
+  depends: config_tgt,
 )
 
 py.extension_module(
-    'h5py.h5r',
-    [template.process('h5py/h5r.pxd.template'), 'h5py/h5r.pyx'],
+    'h5py.api_types_ext',
+    template_gen.process('h5py/api_types_ext.pxd.template'),
     subdir: 'h5py',
     install: true,
-    dependencies : npy_dep,
+    dependencies: npy_dep,
+    c_args: npy_nodeprapi,
+    limited_api: py.language_version(),
+)
+
+py.extension_module(
+    'h5py.api_types_hdf5',
+    template_gen.process('h5py/api_types_hdf5.pxd.template'),
+    subdir: 'h5py',
+    install: true,
+    dependencies: npy_dep,
+    c_args: npy_nodeprapi,
+    limited_api: py.language_version(),
+)
+
+api_tgt = custom_target(
+  'api',
+  command: [
+    find_program(helpers / 'api_gen.py'),
+    '@SOURCE_ROOT@/h5py/api_functions.txt',
+    '--config',
+    config_tgt[1].full_path(),
+    '-o',
+    '@OUTDIR@',
+  ],
+  output: [
+    '_hdf5.pxd',
+    'defs.pxd',
+    'defs.pyx',
+  ],
+  # this part shouldn't be needed (custom_target is *supposed* to
+  # automatically include dependencies from command:
+  # This is likely a bug in meson that it doesn't work with an indexed target ?
+  depends: config_tgt,
+)
+api_dep = declare_dependency(sources: api_tgt)
+
+py.extension_module(
+    'h5py.h5r',
+    [template_gen.process('h5py/h5r.pxd.template'), 'h5py/h5r.pyx'],
+    subdir: 'h5py',
+    install: true,
+    dependencies: [npy_dep, api_dep],
     c_args: npy_nodeprapi,
     limited_api: py.language_version(),
 )
