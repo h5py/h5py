@@ -43,23 +43,23 @@ template_gen = generator(
 )
 
 py.extension_module(
-    'h5py.api_types_ext',
-    template_gen.process('h5py/api_types_ext.pxd.template'),
-    subdir: 'h5py',
-    install: true,
-    dependencies: npy_dep,
-    c_args: npy_nodeprapi,
-    limited_api: py.language_version(),
+  'h5py.api_types_ext',
+  template_gen.process('h5py/api_types_ext.pxd.template'),
+  subdir: 'h5py',
+  install: true,
+  dependencies: npy_dep,
+  c_args: npy_nodeprapi,
+  limited_api: py.language_version(),
 )
 
 py.extension_module(
-    'h5py.api_types_hdf5',
-    template_gen.process('h5py/api_types_hdf5.pxd.template'),
-    subdir: 'h5py',
-    install: true,
-    dependencies: npy_dep,
-    c_args: npy_nodeprapi,
-    limited_api: py.language_version(),
+  'h5py.api_types_hdf5',
+  template_gen.process('h5py/api_types_hdf5.pxd.template'),
+  subdir: 'h5py',
+  install: true,
+  dependencies: npy_dep,
+  c_args: npy_nodeprapi,
+  limited_api: py.language_version(),
 )
 
 api_tgt = custom_target(
@@ -85,13 +85,13 @@ api_tgt = custom_target(
 api_dep = declare_dependency(sources: api_tgt)
 
 py.extension_module(
-    'h5py.h5r',
-    [template_gen.process('h5py/h5r.pxd.template'), 'h5py/h5r.pyx'],
-    subdir: 'h5py',
-    install: true,
-    dependencies: [npy_dep, api_dep],
-    c_args: npy_nodeprapi,
-    limited_api: py.language_version(),
+  'h5py.h5r',
+  [template_gen.process('h5py/h5r.pxd.template'), 'h5py/h5r.pyx'],
+  subdir: 'h5py',
+  install: true,
+  dependencies: [npy_dep, api_dep],
+  c_args: npy_nodeprapi,
+  limited_api: py.language_version(),
 )
 
 py.install_sources(
