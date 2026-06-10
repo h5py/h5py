@@ -28,12 +28,7 @@ def localpath(*args):
 
 
 if USE_PY_LIMITED_API := (os.getenv('H5PY_LIMITED_API', '0') == '1'):
-    if sys.version_info < (3, 11):
-        msg = (
-            "H5PY_LIMITED_API is set but will be ignored "
-            "because it is only supported for Python 3.11 and newer."
-        )
-    elif sysconfig.get_config_var("Py_GIL_DISABLED"):
+    if sysconfig.get_config_var("Py_GIL_DISABLED"):
         msg = (
             "H5PY_LIMITED_API is set but will be ignored "
             "because it is not supported for free-threaded builds."

@@ -181,7 +181,7 @@ jobs:
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_BUILD: "cp310-*"
+          CIBW_BUILD: "cp311-*"
           CIBW_BEFORE_BUILD: ${{ matrix.cibw_before_build }}
           CIBW_BUILD_FRONTEND: 'pip; args: --no-build-isolation'
           ONLY_MINDEPS_TESTS: "1"
