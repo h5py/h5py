@@ -14,6 +14,8 @@
 import posixpath as pp
 import sys
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from typing import assert_never, TypeAlias
 from warnings import warn
 
 import numpy
@@ -364,11 +366,13 @@ if MPI:
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
 
 
+MaybeInt: TypeAlias = int | None
+Selector: TypeAlias = "int | slice[MaybeInt, MaybeInt, MaybeInt]"
 class ChunkIterator:
     """
     Class to iterate through list of chunks of a given dataset
     """
-    def __init__(self, dset, source_sel=None):
+    def __init__(self, dset, source_sel: "Selector | Iterable[Selector] | None" = None):
         self._shape = dset.shape
         rank = len(dset.shape)
 
@@ -383,6 +387,7 @@ class ChunkIterator:
                 slice(0, self._shape[dim]) for dim in range(rank)
             )
         else:
+            sel: list[Selector]
             if isinstance(source_sel, (slice, int)):
                 sel = [source_sel]
             else:
@@ -390,9 +395,9 @@ class ChunkIterator:
             if len(sel) != rank:
                 raise ValueError("Invalid selection - selection region must have same rank as dataset")
             for dim, s in enumerate(sel):
-                start: int | None
-                stop: int | None
-                step: int | None
+                start: MaybeInt
+                stop: MaybeInt
+                step: MaybeInt
                 match s:
                     case int():
                         start = s
@@ -402,9 +407,9 @@ class ChunkIterator:
                         start = s.start or 0
                         stop = s.stop or self._shape[dim]
                         step = s.step
-                    case _:
-                        # TODO: use typing.assert_never when Python 3.10 is dropped
-                        raise AssertionError(f'{s}: Selection object must be a slice or integer')
+                    case _ as unreachable:
+                        assert False, f'{unreachable}: Selection object must be a slice or integer'
+                        assert_never(unreachable)
                 sel[dim] = slice(start, stop, step)
                 self._sel = tuple(sel)
 
