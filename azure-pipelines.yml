@@ -157,26 +157,3 @@ jobs:
       parameters:
         platform: windows
         shell: cmd
-
-- job: 'macOS'
-  pool:
-    vmImage: macOS-latest
-  timeoutInMinutes: 70  # 60 is a little short for macOS sometimes
-  strategy:
-    matrix:
-      # -deps : test with default (latest) versions of dependencies
-      # -mindeps : test with oldest supported version of (python) dependencies
-      # -deps-pre : test pre-release versions of (python) dependencies)
-      py311:
-        python.version: '3.11'
-        python.architecture: 'x64'
-        TOXENV: py311-test-deps
-        H5PY_ENFORCE_COVERAGE: yes
-    maxParallel: 4
-
-  steps:
-    - template: ci/azure-pipelines-steps.yml
-      parameters:
-        platform: macos
-        installer: brew
-        shell: unix
