@@ -125,7 +125,14 @@ jobs:
 
       # For nightlies, also build a future-compatible abi3 wheel
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
-        if: ${{ github.event_name == 'schedule' }}
+        if: github.event_name == 'schedule' ||
+            (
+              (
+                github.event_name == 'pull_request' ||
+                github.event_name == 'push'
+              ) &&
+              contains( env.TIP_COMMIT_MSG , '[pip-pre]' )
+            )
         env:
           H5PY_LIMITED_API: 1
           CIBW_BUILD: cp314-*
