@@ -1,16 +1,20 @@
 [build-system]
-
+# keep in sync with dependency-groups
 # REMEMBER TO KEEP THE VERSIONS IN THIS FILE THE SAME AS IN ci/triage_build.sh
 requires = [
+    "meson-python>=0.18.0",
     "Cython >=3.0.0, <4",
     "numpy >=1.25.0, <3",
     "packaging >=23.0",
     "pkgconfig >=1.5.5",
-    "setuptools >=77.0.1",
 ]
-# use an in-tree build backend, extending setuptools.build_meta
-build-backend = "backend"
-backend-path = ["_custom_build"]
+
+# use an in-tree build backend, extending meson_python.build_meta
+#build-backend = "backend"
+#backend-path = ["_custom_build"]
+
+build-backend = "mesonpy"
+
 
 [project]
 name = "h5py"
@@ -49,7 +53,8 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">=3.10"
-dynamic = ["dependencies"]
+dependencies = []
+#dynamic = ["dependencies"]
 
 [project.readme]
 text = """\
@@ -93,7 +98,15 @@ packages = [
 ]
 
 [dependency-groups]
-check-manifest = [
+dev = [
+    "meson-python>=0.18.0",
+    "Cython >=3.0.0, <4",
+    "numpy >=1.25.0, <3",
+    "packaging >=23.0",
+    "pkgconfig >=1.5.5",
+    "meson",
+]
+check-manifest = [ # TODO: drop this (and MANIFEST.in)
     "check-manifest>=0.50",
 ]
 check-readme = [
@@ -132,6 +145,26 @@ wheels = [
 skip = [
     "cp310-win_arm64", # Skipped due to unavailability of Python binary and NumPy for Win-ARM64
 ]
+build-frontend = "uv; args: --no-config"
+config-settings = { setup-args = ["-Dpython.allow_limited_api=true"] }
+
+[[tool.cibuildwheel.overrides]]
+# CPython 3.14 predates PEP 803
+select = "cp314t-*"
+config-settings = { setup-args = ["-Dpython.allow_limited_api=false"] }
+
+[[tool.cibuildwheel.overrides]]
+# adapted from numpy
+select = "*win_arm64*"
+config-settings = { build-dir = "build" , setup-args = ["--vsenv", "-Dpython.allow_limited_api=true"] }
+
+[[tool.cibuildwheel.overrides]]
+# cibw's override system is not flexible enough to inherit *nested*
+# config items, so instead we need to repeat every other overlapping
+# overrides here.
+select = "cp314t-*win_arm64*"
+config-settings = { build-dir = "build" , setup-args = ["--vsenv", "-Dpython.allow_limited_api=false"] }
+
 
 build-verbosity = 1
 build-frontend = { name = "pip", args = ["--only-binary", "numpy"] }
@@ -165,3 +198,8 @@ H5PY_DIRECT_VFD = "0"
 [tool.uv]
 # never build numpy from source
 no-build-package = ["numpy"]
+no-build-isolation-package = ["h5py"]
+
+[tool.uv.sources]
+# https://github.com/mesonbuild/meson/issues/15889
+meson = { git = "https://github.com/mesonbuild/meson", rev = "8e705ad9fb5811fa824934fbbfa1896b63551a1f" }

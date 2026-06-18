@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 """
     Generate the lowest-level Cython bindings to HDF5.
 
@@ -24,11 +24,13 @@
     h5py/defs.pyx:      Cython implementations of error wrappers
 """
 
+from dataclasses import dataclass
+import argparse
+import json
 import re
 import os
 from hashlib import md5
 from pathlib import Path
-from setup_configure import BuildConfig
 
 
 def replace_or_remove(new: Path) -> None:
@@ -40,6 +42,7 @@ def replace_or_remove(new: Path) -> None:
 
     if not old.exists() or get_hash(new) != get_hash(old):
         os.replace(new, old)
+        print(f"wrote {old}")
     else:
         os.remove(new)
 
@@ -176,21 +179,43 @@ from ._errors cimport set_exception, set_default_error_handler
 
 """
 
+@dataclass(slots=True, frozen=True, kw_only=True)
+class Config:
+    mpi: bool
+    ros3: bool
+    direct_vfd: bool
+    hdf5_version: tuple[int, int, int]
 
 class LineProcessor:
 
-    def __init__(self, config) -> None:
-        self.config = config
+    def __init__(
+        self,
+        *,
+        config: Path,
+        source: Path,
+        output_dir: Path,
+    ) -> None:
+        self.source = source
+        self.output_dir = output_dir
+
+        with config.open('r') as f:
+            config_dict = json.load(f)
+
+        self.config = Config(
+            mpi=config_dict["MPI"],
+            ros3=config_dict["ROS3"],
+            direct_vfd=config_dict["DIRECT_VFD"],
+            hdf5_version=tuple(config_dict["HDF5_VERSION"]),
+        )
 
     def run(self):
-
         # Function definitions file
-        self.functions = Path('h5py', 'api_functions.txt').open('r')
+        self.functions = self.source.open('r')
 
         # Create output files
-        path_raw_defs = Path('h5py', '_hdf5.pxd.new')
-        path_cython_defs = Path('h5py', 'defs.pxd.new')
-        path_cython_imp = Path('h5py', 'defs.pyx.new')
+        path_raw_defs = self.output_dir / '_hdf5.pxd.new'
+        path_cython_defs = self.output_dir / 'defs.pxd.new'
+        path_cython_imp = self.output_dir / 'defs.pyx.new'
         self.raw_defs = path_raw_defs.open('w')
         self.cython_defs = path_cython_defs.open('w')
         self.cython_imp = path_cython_imp.open('w')
@@ -312,12 +337,33 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
         self.cython_imp.write(imp)
 
 
-def run():
-    # Get configuration from environment variables
-    config = BuildConfig.from_env()
-    lp = LineProcessor(config)
-    lp.run()
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "source",
+        type=Path,
+        help="path to api_functions.txt",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        help="path to a json serialized configuration"
+    )
+    parser.add_argument(
+        "-o",
+        dest="output_dir",
+        type=Path,
+        help="path to the output directory",
+    )
+    args = parser.parse_args()
+
+    LineProcessor(
+        config=args.config,
+        source=args.source,
+        output_dir=args.output_dir,
+    ).run()
+    return 0
 
 
 if __name__ == '__main__':
-    run()
+    raise SystemExit(main())
