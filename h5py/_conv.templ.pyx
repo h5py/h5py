@@ -697,6 +697,7 @@ cdef int conv_vlen2ndarray(void* ipt,
         int flags = NPY_ARRAY_WRITEABLE | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_OWNDATA
         npy_intp dims[1]
         void* data
+        void* new_data
         char[:] buf
         void* back_buf = NULL
         cnp.ndarray ndarray
@@ -710,7 +711,11 @@ cdef int conv_vlen2ndarray(void* ipt,
     dims[0] = size
     itemsize = H5Tget_size(outtype.id)
     if itemsize > H5Tget_size(intype.id):
-        data = realloc(data, itemsize * size)
+        new_data = realloc(data, itemsize * size)
+        if new_data == NULL:
+            efree(data)
+            raise MemoryError("Failed to reallocate vlen conversion buffer")
+        data = new_data
 
     if needs_bkg_buffer(intype.id, outtype.id):
         back_buf = emalloc(H5Tget_size(outtype.id)*size)
