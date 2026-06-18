@@ -130,32 +130,13 @@ jobs:
       - uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084 # v3.4.1
         if: matrix.arch != 'ppc64le'
 
-      # Build wheels for ppc64le using cibuildwheel command
+      # Build wheels for ppc64le (config in pyproject.toml overrides)
       - name: Build wheels for ppc64le
         if: matrix.arch == 'ppc64le' && env.ENABLE_PPC64LE == 'true'
         run: |
-          # Install cibuildwheel
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install cibuildwheel
-          
-          # Build wheels
+          python3 -m pip install --upgrade pip setuptools wheel cibuildwheel
           python3 -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_ARCHS_LINUX: ppc64le
-          CIBW_BUILD: "cp311-manylinux_ppc64le cp312-manylinux_ppc64le cp313-manylinux_ppc64le cp314-manylinux_ppc64le"
-          CIBW_BUILD_FRONTEND: "pip"
-          # Configure pip to use IBM's devpi index for prebuilt NumPy wheels
-          # PyPI is used as fallback for other dependencies
-          CIBW_BEFORE_BUILD: |
-            pip config set global.index-url https://devpi.net/ibm/community/+simple/
-            pip config set global.extra-index-url https://pypi.org/simple
-            pip install --upgrade pip setuptools wheel
-          CIBW_BEFORE_TEST: |
-            pip config set global.index-url https://devpi.net/ibm/community/+simple/
-            pip config set global.extra-index-url https://pypi.org/simple
-          # Simple import test for ppc64le
-          CIBW_TEST_COMMAND: "python -c 'import h5py; import numpy; print(f\"h5py {h5py.__version__} with NumPy {numpy.__version__}\")'"
-
+              
       # For nightlies, also build a future-compatible abi3 wheel
       - uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084 # v3.4.1
         if: ${{ github.event_name == 'schedule' }}
