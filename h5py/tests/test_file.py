@@ -279,13 +279,21 @@ class TestPageBuffering(TestCase):
 
     def test_page_buf_size_zero(self):
         """An integer page_buf_size=0 is honoured, like the string "0"."""
-        kw = dict(driver=None, min_meta_keep=50, min_raw_keep=20)
-        int_result = make_fapl(page_buf_size=0, **kw).get_page_buffer_size()
-        self.assertEqual(int_result, (0, 50, 20))
-        str_result = make_fapl(page_buf_size="0", **kw).get_page_buffer_size()
-        self.assertEqual(int_result, str_result)
-        none_result = make_fapl(page_buf_size=None, **kw).get_page_buffer_size()
-        self.assertEqual(none_result, (0, 0, 0))
+        for page_buf_size, expected in [
+            (0, (0, 50, 20)),
+            ("0", (0, 50, 20)),
+            (None, (0, 0, 0)),
+        ]:
+            with self.subTest(page_buf_size=page_buf_size):
+                fapl = make_fapl(driver=None, page_buf_size=page_buf_size,
+                                 min_meta_keep=50, min_raw_keep=20)
+                self.assertEqual(fapl.get_page_buffer_size(), expected)
+
+    def test_page_buf_size_empty_string(self):
+        """A nonsensical empty-string page_buf_size raises ValueError."""
+        with self.assertRaises(ValueError):
+            make_fapl(driver=None, page_buf_size="", min_meta_keep=50,
+                      min_raw_keep=20)
 
 
 class TestModes(TestCase):
