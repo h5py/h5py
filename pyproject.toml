@@ -165,3 +165,9 @@ H5PY_DIRECT_VFD = "0"
 [tool.uv]
 # never build numpy from source
 no-build-package = ["numpy"]
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "sp-nightlies"
+url = "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple"
+exclude-newer = false
