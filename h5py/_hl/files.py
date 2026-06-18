@@ -141,7 +141,7 @@ def make_fapl(
         cache_settings[3] = rdcc_w0
     plist.set_cache(*cache_settings)
 
-    if page_buf_size:
+    if page_buf_size is not None:
         plist.set_page_buffer_size(int(page_buf_size), int(min_meta_keep),
                                    int(min_raw_keep))
 
