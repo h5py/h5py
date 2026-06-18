@@ -26,7 +26,7 @@ from hashlib import sha256
 import pytest
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile, make_name
-from h5py._hl.files import direct_vfd
+from h5py._hl.files import direct_vfd, make_fapl
 from h5py import File
 import h5py
 import pathlib
@@ -276,6 +276,16 @@ class TestPageBuffering(TestCase):
         with File(fname, mode='r', page_buf_size=pbs-1) as f:
             fapl = f.id.get_access_plist()
             self.assertEqual(fapl.get_page_buffer_size()[0], fsp)
+
+    def test_page_buf_size_zero(self):
+        """An integer page_buf_size=0 is honoured, like the string "0"."""
+        kw = dict(driver=None, min_meta_keep=50, min_raw_keep=20)
+        int_result = make_fapl(page_buf_size=0, **kw).get_page_buffer_size()
+        self.assertEqual(int_result, (0, 50, 20))
+        str_result = make_fapl(page_buf_size="0", **kw).get_page_buffer_size()
+        self.assertEqual(int_result, str_result)
+        none_result = make_fapl(page_buf_size=None, **kw).get_page_buffer_size()
+        self.assertEqual(none_result, (0, 0, 0))
 
 
 class TestModes(TestCase):
