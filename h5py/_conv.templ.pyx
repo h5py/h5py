@@ -720,36 +720,15 @@ cdef int conv_vlen2ndarray(void* ipt,
     finally:
         free(back_buf)
 
-    # We need to use different approaches to creating the ndarray with the converted
-    # data depending on the destination dtype.
-    # For simple dtypes, we can use SimpleNewFromData, but types like
-    # string & void need a size specified, so this function can't be used.
-    # Additionally, Cython doesn't expose NumPy C-API functions like NewFromDescr,
-    # so we fall back on copying directly to the underlying buffer
-    # of a new ndarray for other types.
-
-    if elem_dtype.kind in b"biufcmMO":
-        # type_num is enough to create an array for these dtypes
-        ndarray = cnp.PyArray_SimpleNewFromData(1, dims, elem_dtype.type_num, data)
-    elif not elem_dtype.hasobject:
-        # This covers things like string dtypes and simple compound dtypes,
-        # which can't be used with SimpleNewFromData.
-        # Cython doesn't expose NumPy C-API functions
-        # like NewFromDescr, so we'll construct this with a Python function.
-        if size != 0:
-            buf = <char[:itemsize * size]> data
-            ndarray = np.frombuffer(buf, dtype=elem_dtype)
-        else:
-            ndarray = np.empty(0, dtype=elem_dtype)
-    else:
-        # Compound dtypes containing object fields: frombuffer() refuses these,
-        # so we'll fall back to allocating a new array and copying the data in.
-        ndarray = np.empty(size, dtype=elem_dtype)
+    # Always copy HDF5-allocated vlen data into a fresh NumPy-owned buffer and
+    # release the HDF5 buffer with the matching deallocator.  Wrapping the
+    # HDF5 pointer directly (SimpleNewFromData / frombuffer) and then setting
+    # NPY_ARRAY_OWNDATA would let NumPy's allocator free HDF5 memory, which
+    # causes heap corruption when the two allocators differ.
+    ndarray = np.empty(size, dtype=elem_dtype)
+    if size != 0:
         memcpy(PyArray_DATA(ndarray), data, itemsize * size)
-
-        # In this code path, `data`, allocated by hdf5 to hold the v-len data,
-        # will no longer be used since have copied its contents to the ndarray.
-        efree(data)
+    efree(data)
 
     PyArray_ENABLEFLAGS(ndarray, flags)
     ndarray_obj = <PyObject*>ndarray
