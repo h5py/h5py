@@ -120,10 +120,8 @@ jobs:
       # Triage build
       - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}"
 
-      # Now actually build the wheels
-      - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
-
       # For nightlies, also build a future-compatible abi3 wheel
+      # this comes first to avoid inter-job pollution which then fails abi3audit
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         if: github.event_name == 'schedule' ||
             (
@@ -137,6 +135,9 @@ jobs:
           H5PY_LIMITED_API: 1
           CIBW_BUILD: cp314-*
           # CIBW_ENABLE: cpython-prereleases # uncomment when numpy has nightly cp315 wheels
+
+      # Now actually build the wheels
+      - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
