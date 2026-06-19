@@ -146,6 +146,7 @@ test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 environment-pass = [
     "GITHUB_ACTIONS",
     "ONLY_MINDEPS_TESTS",
+    "H5PY_LIMITED_API",
 ]
 
 [tool.cibuildwheel.linux.environment]
