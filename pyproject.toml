@@ -163,5 +163,18 @@ H5PY_ROS3 = "0"
 H5PY_DIRECT_VFD = "0"
 
 [tool.uv]
-# never build numpy from source
-no-build-package = ["numpy"]
+# never build the following packages from source
+no-build-package = [
+    "blosc2",
+    "cffi",
+    "charset-normalizer",
+    "cryptography",
+    "markupsafe",
+    "msgpack",
+    "ndindex",
+    "nh3",
+    "numexpr",
+    "numpy",
+    "pyyaml",
+    "tables",
+]
