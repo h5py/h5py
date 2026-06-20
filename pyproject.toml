@@ -142,11 +142,12 @@ musllinux-aarch64-image = "ghcr.io/h5py/musllinux_1_2_aarch64-hdf5"
 test-groups = ["wheels"]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 
-[tool.cibuildwheel.linux]
 environment-pass = [
     "GITHUB_ACTIONS",
     "ONLY_MINDEPS_TESTS",
     "H5PY_LIMITED_API",
+    "PIP_EXTRA_INDEX_URL",
+    "PIP_PRE",
 ]
 
 [tool.cibuildwheel.linux.environment]

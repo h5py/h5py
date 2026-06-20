@@ -135,6 +135,8 @@ jobs:
           H5PY_LIMITED_API: 1
           CIBW_BUILD: 'cp315*'
           CIBW_ENABLE: cpython-prerelease
+          PIP_EXTRA_INDEX_URL: 'https://pypi.anaconda.org/scientific-python-nightly-wheels/simple'
+          PIP_PRE: '1'
 
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
