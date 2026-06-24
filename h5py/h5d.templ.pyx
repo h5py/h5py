@@ -510,6 +510,7 @@ cdef class DatasetID(ObjectID):
         cdef size_t data_size
         cdef int rank
         cdef Py_buffer view
+        cdef bint view_acquired = False
 
         dset_id = self.id
         dxpl_id = pdefault(dxpl)
@@ -523,10 +524,12 @@ cdef class DatasetID(ObjectID):
             offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(offsets, offset, rank)
             PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
+            view_acquired = True
             H5Dwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
         finally:
             efree(offset)
-            PyBuffer_Release(&view)
+            if view_acquired:
+                PyBuffer_Release(&view)
             if space_id:
                 H5Sclose(space_id)
 

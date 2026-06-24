@@ -174,6 +174,7 @@ test-command = "python -c 'import h5py; import numpy; print(f\"h5py {h5py.__vers
 environment-pass = [
     "GITHUB_ACTIONS",
     "ONLY_MINDEPS_TESTS",
+    "H5PY_LIMITED_API",
 ]
 
 [tool.cibuildwheel.linux.environment]
@@ -193,3 +194,9 @@ H5PY_DIRECT_VFD = "0"
 [tool.uv]
 # never build numpy from source
 no-build-package = ["numpy"]
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "sp-nightlies"
+url = "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple"
+exclude-newer = false
