@@ -148,7 +148,7 @@ jobs:
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         if: matrix.arch != 'ppc64le'
-        
+
       # Build wheels for ppc64le (config in pyproject.toml overrides)
       - name: Build wheels for ppc64le
         if: matrix.arch == 'ppc64le' && env.ENABLE_PPC64LE == 'true'
