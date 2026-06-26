@@ -133,7 +133,7 @@ jobs:
             )
         env:
           H5PY_LIMITED_API: 1
-          CIBW_BUILD: 'cp315*'
+          CIBW_BUILD: 'cp314-* cp315t-*'
           CIBW_ENABLE: cpython-prerelease
           PIP_EXTRA_INDEX_URL: 'https://pypi.anaconda.org/scientific-python-nightly-wheels/simple'
           PIP_PRE: '1'
