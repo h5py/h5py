@@ -103,7 +103,7 @@ class Group(HLObject, MutableMappingHDF5):
             track_order = h5.get_config().track_order
 
         with phil:
-            name, lcpl = self._e(name, lcpl=True)
+            name, lcpl = self._e_lcpl(name)
             gcpl = h5p.create(h5p.GROUP_CREATE)
             if track_order:
                 order_flags = h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED
@@ -559,7 +559,7 @@ class Group(HLObject, MutableMappingHDF5):
             can't understand the resulting array dtype.
         """
         with phil:
-            name, lcpl = self._e(name, lcpl=True)
+            name, lcpl = self._e_lcpl(name)
 
             if isinstance(obj, HLObject):
                 h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._lapl)
@@ -605,11 +605,9 @@ class Group(HLObject, MutableMappingHDF5):
     @with_phil
     def __contains__(self, name):
         """ Test if a member name exists """
-        if hasattr(h5g, "_path_valid"):
-            if not self.id:
-                return False
-            return h5g._path_valid(self.id, self._e(name), self._lapl)
-        return self._e(name) in self.id
+        if not self.id:
+            return False
+        return h5g._path_valid(self.id, self._e(name), self._lapl)
 
     def copy(self, source, dest, name=None,
              shallow=False, expand_soft=False, expand_external=False,
