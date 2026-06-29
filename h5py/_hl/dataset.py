@@ -14,12 +14,10 @@
 import posixpath as pp
 import sys
 from abc import ABC, abstractmethod
-from warnings import warn
 
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
-from ..h5py_warnings import H5pyDeprecationWarning
 from .base import (
     array_for_new_object, cached_property, Empty, find_item_type, HLObject,
     phil, product, with_phil,
@@ -86,16 +84,14 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         dtype = tid.dtype
     else:
         # Validate dtype
-        if dtype is None and data is None:
-            warn(
-                "Creating a dataset without passing data or dtype is deprecated. "
-                "Pass an explicit dtype. Using dtype='f4' will keep the "
-                "current default behaviour.",
-                category=H5pyDeprecationWarning, stacklevel=3,
-            )
-            dtype = numpy.dtype("=f4")
-        elif dtype is None and data is not None:
-            dtype = data.dtype
+        if dtype is None:
+            if data is not None:
+                dtype = data.dtype
+            else:
+                raise TypeError(
+                    "Either data or dtype must be specified. "
+                    "Pass dtype='f4' to use the default from h5py <4"
+                )
         else:
             dtype = numpy.dtype(dtype)
         tid = h5t.py_create(dtype, logical=1)
