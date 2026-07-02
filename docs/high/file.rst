@@ -99,8 +99,10 @@ of supported drivers and their options:
         Enables read-only access to HDF5 files in the `AWS S3
         <https://aws.amazon.com/pm/serv-s3/>`_ or S3-compatible object stores.
         HDF5 file name must be one of \http://, \https://, or s3:// resource
-        location. When h5py is using an HDF5 version before 2.0, it will
-        translate file's s3:// location into an AWS `path-style
+        location. If driver is ``None``, 'ros3' is selected by default when the
+        file name starts with one of the supported resource locations.
+        When h5py is using an HDF5 version before 2.0, it will translate file's
+        s3:// location into an AWS `path-style
         <https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access>`_
         location. Starting from HDF5 2.0, h5py lets the library handle all three
         forms of file locations.
