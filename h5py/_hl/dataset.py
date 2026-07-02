@@ -14,6 +14,7 @@
 import posixpath as pp
 import sys
 from abc import ABC, abstractmethod
+from typing import assert_never
 from warnings import warn
 
 import numpy
@@ -402,9 +403,8 @@ class ChunkIterator:
                         start = s.start or 0
                         stop = s.stop or self._shape[dim]
                         step = s.step
-                    case _:
-                        # TODO: use typing.assert_never when Python 3.10 is dropped
-                        raise AssertionError(f'{s}: Selection object must be a slice or integer')
+                    case _ as unreachable:
+                        assert_never(unreachable)
                 sel[dim] = slice(start, stop, step)
                 self._sel = tuple(sel)
 
