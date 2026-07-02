@@ -36,10 +36,16 @@ import os
 # advertised for EITHER multithreaded use OR use alongside PyTables/NetCDF4,
 # but not both at the same time.
 
+import typing
+if typing.TYPE_CHECKING:
+    from threading import RLock
+
+from typing import ParamSpec, TypeVar, Callable, Iterable
+
 ### {{if OBJECTS_USE_LOCKING}}
   ### {{if FREE_THREADING}}
 from threading import RLock
-_phil = RLock()
+_phil: RLock = RLock()
   ### {{else}}
 cdef FastRLock _phil = FastRLock()
   ### {{endif}}
@@ -48,28 +54,31 @@ cdef BogoLock _phil = BogoLock()
 ### {{endif}}
 
 # Python alias for access from other modules
-phil = _phil
+phil: RLock | BogoLock | FastRLock = _phil
 
-def with_phil(func):
+P = ParamSpec("P")
+T = TypeVar("T")
+
+def with_phil(func: Callable[P, T]) -> Callable[P, T]:
     """ Locking decorator """
 
     import functools
 
-    def wrapper(*args, **kwds):
+    def wrapper(*args: P.args, **kwds: P.kwargs) -> T:
         with _phil:
             return func(*args, **kwds)
 
     functools.update_wrapper(wrapper, func)
     return wrapper
 
-def _phil_before_fork():
+def _phil_before_fork() -> None:
     """
     Acquire the `phil` lock before forking so no thread other
     than the current (forking) thread is holding the lock.
     """
     _phil.acquire()
 
-def _phil_after_fork():
+def _phil_after_fork() -> None:
     """
     Release the lock after forking in both the parent and the child.
     """
@@ -125,13 +134,13 @@ cdef object registry = weakref.WeakValueDictionary()
 # another thread was iterating over it. We can remove these and use the
 # WeakValueDict methods once 3.14 is the minimum supported version.
 # https://github.com/python/cpython/issues/89967
-def wvd_values(self):
+def wvd_values(self) -> Iterable[object]:
     for wr in self.data.copy().values():
         obj = wr()
         if obj is not None:
             yield obj
 
-def wvd_items(self):
+def wvd_items(self) -> Iterable[tuple[int, ObjectID]]:
     for k, wr in self.data.copy().items():
         v = wr()
         if v is not None:
@@ -139,7 +148,7 @@ def wvd_items(self):
 
 
 @with_phil
-def print_reg():
+def print_reg() -> None:
     import h5py
     objs = list(wvd_values(registry))
 
@@ -150,7 +159,7 @@ def print_reg():
 
 
 @with_phil
-def nonlocal_close():
+def nonlocal_close() -> None:
     """ Find dead ObjectIDs and set their integer identifiers to 0.
     """
     cdef ObjectID obj
@@ -189,7 +198,7 @@ cdef class ObjectID:
     """
 
     @property
-    def fileno(self):
+    def fileno(self) -> tuple[int, int]:
         cdef H5G_stat_t stat
         with _phil:
             H5Gget_objinfo(self.id, '.', 0, &stat)
@@ -197,11 +206,11 @@ cdef class ObjectID:
 
 
     @property
-    def valid(self):
+    def valid(self) -> int:
         return is_h5py_obj_valid(self)
 
 
-    def __cinit__(self, id_):
+    def __cinit__(self, id_) -> None:
         with _phil:
             self.id = id_
             self.locked = 0
@@ -212,14 +221,14 @@ cdef class ObjectID:
             registry[self._pyid] = self
 
 
-    def __dealloc__(self):
+    def __dealloc__(self) -> None:
         self._close(debug_message="DEALLOC - unregistering")
 
     # During interpreter shutdown, module attributes are set to None
     # before __dealloc__ and __del__ methods are executed.
     # Here we attach _phil and warnings.warn to the function object as default values
     # so they remain available during shutdown.
-    def _close(self, _phil=_phil, warn=warnings.warn, debug_message="CLOSE -"):
+    def _close(self, _phil=_phil, warn=warnings.warn, debug_message="CLOSE -") -> None:
         """ Manually close this object. """
         with _phil:
             ### {{if OBJECTS_DEBUG_ID}}
@@ -232,16 +241,16 @@ cdef class ObjectID:
                     )
             self.id = 0
 
-    def close(self):
+    def close(self) -> None:
         """ Close this identifier. """
         # Note this is the default close method.  Subclasses, e.g. FileID,
         # which have nonlocal effects should override this.
         self._close()
 
-    def __bool__(self):
+    def __bool__(self) -> int:
         return self.valid
 
-    def __copy__(self):
+    def __copy__(self) -> ObjectID:
         cdef ObjectID cpy
         with _phil:
             cpy = type(self)(self.id)
@@ -249,7 +258,7 @@ cdef class ObjectID:
             return cpy
 
 
-    def __richcmp__(self, object other, int how):
+    def __richcmp__(self, object other, int how) -> bint:
         """ Default comparison mechanism for HDF5 objects (equal/not-equal)
 
         Default equality testing:
@@ -277,7 +286,7 @@ cdef class ObjectID:
             return not equal
 
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """ Default hashing mechanism for HDF5 objects
 
         Default hashing strategy:
