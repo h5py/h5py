@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         persist-credentials: false
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -84,7 +84,7 @@ jobs:
           - os: ubuntu-24.04-ppc64le
             arch: ppc64le
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
           persist-credentials: false
@@ -142,8 +142,10 @@ jobs:
             )
         env:
           H5PY_LIMITED_API: 1
-          CIBW_BUILD: cp314-*
-          # CIBW_ENABLE: cpython-prereleases # uncomment when numpy has nightly cp315 wheels
+          CIBW_BUILD: 'cp314-* cp315t-*'
+          CIBW_ENABLE: cpython-prerelease
+          PIP_EXTRA_INDEX_URL: 'https://pypi.anaconda.org/scientific-python-nightly-wheels/simple'
+          PIP_PRE: '1'
 
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
@@ -181,7 +183,7 @@ jobs:
             cibw_before_build: pip install --only-binary ':all:' 'numpy==2.0.0' 'Cython==3.0.0' 'setuptools==77.0.1' 'pkgconfig==1.5.5'
             label: 'cython-min + numpy 2.0'
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
           persist-credentials: false

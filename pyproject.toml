@@ -147,6 +147,7 @@ musllinux-ppc64le-image = "ghcr.io/h5py/musllinux_1_2_ppc64le-hdf5"
 test-groups = ["wheels"]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 
+<<<<<<< ppc64le-support
 # PPC64LE configuration using IBM Developer Portal for prebuilt dependencies
 [[tool.cibuildwheel.overrides]]
 select = "cp3{11,12,13,14}-*linux_ppc64le"
@@ -177,10 +178,14 @@ environment.ONLY_MINDEPS_TESTS = "0"
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel} || true"
 
 [tool.cibuildwheel.linux]
+=======
+>>>>>>> master
 environment-pass = [
     "GITHUB_ACTIONS",
     "ONLY_MINDEPS_TESTS",
     "H5PY_LIMITED_API",
+    "PIP_EXTRA_INDEX_URL",
+    "PIP_PRE",
 ]
 
 [tool.cibuildwheel.linux.environment]
