@@ -26,7 +26,7 @@ packaging==26.1
     # via sphinx
 pygments==2.20.0
     # via sphinx
-requests==2.33.1
+requests==2.34.2
     # via sphinx
 roman-numerals==4.1.0 ; python_full_version >= '3.11'
     # via roman-numerals-py
