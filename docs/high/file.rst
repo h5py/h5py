@@ -80,7 +80,8 @@ of supported drivers and their options:
         (e.g. %d"), which will be replaced by the file sequence number.
         Keywords:
 
-        memb_size:  Maximum file size (default is 2**31-1).
+        memb_size:
+          Maximum file size (default is 2**31-1).
 
     'fileobj'
         Store the data in a Python file-like object; see below.
