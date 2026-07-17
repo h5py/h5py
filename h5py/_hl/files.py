@@ -496,6 +496,9 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
+        # Automatically select the ros3 driver if it's an S3 URL.
+        # As the other drivers currently do not support HTTP(S), the ros3 driver is
+        # also automatically selected for these schemes.
         if (
             driver is None
             and isinstance(name, str)
