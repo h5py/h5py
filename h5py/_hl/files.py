@@ -14,6 +14,7 @@
 import inspect
 import os
 import sys
+from urllib.parse import urlsplit
 from warnings import warn
 
 from .compat import filename_decode, filename_encode
@@ -498,7 +499,7 @@ class File(Group):
         if (
             driver is None
             and isinstance(name, str)
-            and name.startswith(("http://", "https://", "s3://"))
+            and urlsplit(name).scheme in ("http://", "https://", "s3://")
         ):
             driver = 'ros3'
 
