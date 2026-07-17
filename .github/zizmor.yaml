@@ -2,5 +2,5 @@ rules:
   cache-poisoning:
     ignore:
       # actions/cache is already disabled for releases
-      - build_wheels.yml:98
-      - build_wheels.yml:116
+      - build_wheels.yml:94
+      - build_wheels.yml:112
