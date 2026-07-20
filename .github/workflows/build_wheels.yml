@@ -77,6 +77,8 @@ jobs:
             arch: arm64
           - os: macos-15-intel
             arch: x86_64
+          - os: ubuntu-24.04-ppc64le
+            arch: ppc64le
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -123,13 +125,16 @@ jobs:
       # For nightlies, also build a future-compatible abi3 wheel
       # this comes first to avoid inter-job pollution which then fails abi3audit
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
-        if: github.event_name == 'schedule' ||
+        if: (matrix.arch != 'ppc64le') &&
             (
+              github.event_name == 'schedule' ||
               (
-                github.event_name == 'pull_request' ||
-                github.event_name == 'push'
-              ) &&
-              contains( env.TIP_COMMIT_MSG , '[pip-pre]' )
+                (
+                  github.event_name == 'pull_request' ||
+                  github.event_name == 'push'
+                ) &&
+                contains( env.TIP_COMMIT_MSG , '[pip-pre]' )
+              )
             )
         env:
           H5PY_LIMITED_API: 1
@@ -139,7 +144,21 @@ jobs:
           PIP_PRE: '1'
 
       # Now actually build the wheels
+      # NOTE: ppc64le is excluded here — see the separate step below.
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
+        if: matrix.arch != 'ppc64le'
+
+      # Build wheels for ppc64le by invoking cibuildwheel directly via the CLI
+      # rather than via the pypa/cibuildwheel action. The action is not usable
+      # here because it internally calls actions/setup-python, which has no
+      # ppc64 binaries and always errors out. Calling `python3 -m cibuildwheel`
+      # directly bypasses that and uses the Python already on the self-hosted
+      # runner. All build config still comes from pyproject.toml as normal.
+      - name: Build wheels for ppc64le
+        if: matrix.arch == 'ppc64le'
+        run: |
+          python3 -m pip install "cibuildwheel==4.1.0"
+          python3 -m cibuildwheel --output-dir wheelhouse
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'
