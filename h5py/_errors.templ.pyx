@@ -7,12 +7,38 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from cpython cimport PyErr_Occurred, PyErr_SetObject
+import os
+import re
+import sys
+
+# Optionally ask HDF5 not to install its atexit cleanup routines, which
+# H5dont_atexit() only allows before anything initialises the HDF5 library.
+# This module is the first HDF5-linked module h5py imports, and building the
+# error tables below already initialises the library (in C, every H5E_* error
+# code expands to `H5open(), H5E_..._g`), so the call must happen right here,
+# at the top of the module - it cannot wait until h5py/__init__.py.
+#
+# On Emscripten/WebAssembly (e.g. Pyodide), several wheels may each bundle a
+# statically linked copy of HDF5.  Symbol interposition can make every copy's
+# atexit teardown run against the same, already-freed global state, crashing
+# the interpreter at exit, so there we call H5dont_atexit() by default
+# (see https://github.com/h5py/h5py/issues/2928).  Setting H5PY_DONT_ATEXIT=1
+# or =0 forces the behaviour on or off on any platform.
+_dont_atexit_env = os.environ.get('H5PY_DONT_ATEXIT', '')
+if _dont_atexit_env:
+    hdf5_atexit_disabled = _dont_atexit_env != '0'
+else:
+    hdf5_atexit_disabled = sys.platform == 'emscripten'
+if hdf5_atexit_disabled:
+    # A negative return means the call came too late - something else in this
+    # process already initialised (a copy of) HDF5.  That is expected e.g.
+    # under Pyodide when another wheel's interposed HDF5 got there first, so
+    # it is recorded rather than raised as an error.
+    hdf5_atexit_disabled = H5dont_atexit() >= 0
+
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
-from cpython cimport PyErr_Occurred, PyErr_SetObject
-import re
-
-
 _minor_table = {
     H5E_SEEKERROR:      OSError,    # Seek failed
     H5E_READERROR:      OSError,    # Read failed

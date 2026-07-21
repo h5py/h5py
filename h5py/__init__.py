@@ -30,6 +30,13 @@ except ImportError:
     else:
         raise
 
+# Whether HDF5's atexit cleanup was disabled with H5dont_atexit().  The
+# decision is taken at the top of the _errors module, because importing it
+# (above) already initialises the HDF5 library and H5dont_atexit() must come
+# before that.  See the comments there, the H5PY_DONT_ATEXIT environment
+# variable, and https://github.com/h5py/h5py/issues/2928.
+_hdf5_atexit_disabled = _errors.hdf5_atexit_disabled
+
 from . import version
 
 if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
