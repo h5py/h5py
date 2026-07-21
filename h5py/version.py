@@ -28,7 +28,7 @@ class _H5PY_VERSION_CLS(NamedTuple):
     def __str__(self) -> str:
         s = f"{self.major}.{self.minor}.{self.bugfix}"
         if self.pre is not None:
-            s += version_tuple.pre
+            s += self.pre
         if self.post is not None:
             s += f".post{self.post}"
         if version_tuple.dev is not None:
