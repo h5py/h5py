@@ -135,11 +135,14 @@ jobs:
           H5PY_LIMITED_API: 1
           CIBW_BUILD: 'cp314-* cp315t-*'
           CIBW_ENABLE: cpython-prerelease
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ''
           PIP_EXTRA_INDEX_URL: 'https://pypi.anaconda.org/scientific-python-nightly-wheels/simple'
           PIP_PRE: '1'
 
       # Now actually build the wheels
       - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
+        env:
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ''
 
       - run: python ./ci/bundle_hdf5_whl.py wheelhouse
         if: runner.os == 'Windows'

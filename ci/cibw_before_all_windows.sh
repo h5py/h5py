@@ -10,10 +10,8 @@ PROJECT_PATH="$1"
 
 if [[ "$ARCH" == "ARM64" ]]; then
     export ZLIB_ROOT="$PROJECT_PATH/zlib-win-arm64"
-    export HDF5_VSVERSION="17-arm64"
 elif [[ "$ARCH" == "AMD64" ]]; then
     export ZLIB_ROOT="$PROJECT_PATH/zlib-win-x64"
-    export HDF5_VSVERSION="17-64"
 else
     echo "Got unexpected arch '$ARCH'"
     exit 1

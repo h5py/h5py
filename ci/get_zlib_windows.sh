@@ -16,7 +16,7 @@ if [ ! -d "$ZLIB_DIR" ]; then
   tar -xzf $ZLIB_DIR.tar.gz && rm $ZLIB_DIR.tar.gz
 fi
 
-cmake -S "$ZLIB_DIR" -B build -G "Visual Studio 17 2022" \
+cmake -S "$ZLIB_DIR" -B build \
 -DCMAKE_BUILD_TYPE=Release \
 -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 cmake --build build --config Release --parallel
