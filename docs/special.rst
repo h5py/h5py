@@ -225,13 +225,41 @@ Here's an example of storing and reading a datetime array::
     >>> print(f['data'][:])
     ['2019-09-22T17:38:30']
 
-.. function:: opaque_dtype(dt)
+.. function:: opaque_dtype(dt, *, tag=None)
 
    Return a dtype like the input, tagged to be stored as HDF5 opaque type.
+
+   :param dt: Any numpy dtype whose itemsize is non-zero and which is not an
+              object, structured, or sub-array dtype.
+   :param tag: Optional HDF5 opaque tag (``str`` or ``bytes``). Strings are
+               encoded as UTF-8. When ``None`` (default), h5py auto-generates
+               a ``b"NUMPY:..."`` tag that lets the original numpy dtype be
+               restored on read.
+
+   A user-supplied tag must be non-empty, at most 255 bytes, and must not
+   contain a NUL byte. The prefix ``b"NUMPY:"`` is reserved for h5py's
+   automatic dtype round-trip, and ``b"PYTHON:OBJECT"`` is reserved for
+   h5py internals; both raise :class:`ValueError`.
+
+   Setting a custom tag disables the numpy-dtype round-trip: on read, the
+   dataset dtype is ``|V<n>`` and the tag is exposed via
+   :func:`get_opaque_tag`. Example::
+
+       >>> dt = h5py.opaque_dtype(np.dtype('V16'), tag=b'org.example.uuid')
+       >>> f.create_dataset('ids', shape=(10,), dtype=dt)
+       >>> h5py.get_opaque_tag(f['ids'].dtype)
+       b'org.example.uuid'
 
 .. function:: check_opaque_dtype(dt)
 
    Return True if the dtype given is tagged to be stored as HDF5 opaque data.
+
+.. function:: get_opaque_tag(dt)
+
+   Return the custom HDF5 opaque tag for ``dt`` as ``bytes``, or ``None`` if
+   ``dt`` is not opaque or carries h5py's automatic ``b"NUMPY:..."`` tag.
+   The tag can also be read from a committed opaque datatype via
+   :attr:`Datatype.opaque_tag <h5py.Datatype.opaque_tag>`.
 
 .. note::
 

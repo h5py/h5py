@@ -13,7 +13,7 @@
 
 import posixpath as pp
 
-from ..h5t import TypeID
+from ..h5t import TypeID, TypeOpaqueID
 from .base import HLObject, with_phil
 
 class Datatype(HLObject):
@@ -33,6 +33,19 @@ class Datatype(HLObject):
     def dtype(self):
         """Numpy dtype equivalent for this datatype"""
         return self.id.dtype
+
+    @property
+    @with_phil
+    def opaque_tag(self):
+        """HDF5 opaque tag as ``bytes``, or ``None``.
+
+        Returns the tag stored on the underlying HDF5 opaque datatype, or
+        ``None`` if this committed datatype is not opaque or has no tag set.
+        """
+        if not isinstance(self.id, TypeOpaqueID):
+            return None
+        tag = self.id.get_tag()
+        return tag if tag else None
 
     @with_phil
     def __init__(self, bind):

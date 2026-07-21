@@ -739,6 +739,15 @@ cdef class TypeOpaqueID(TypeID):
             # 6 = len("NUMPY:")
             return np.dtype(tag[6:], metadata={'h5py_opaque': True})
 
+        # A non-empty, non-reserved tag is user-supplied (set via
+        # opaque_dtype(..., tag=...) or by another tool). Surface it in the
+        # dtype metadata so copies and inspection can see it.
+        if tag and tag != b"PYTHON:OBJECT":
+            return np.dtype(
+                "|V" + str(self.get_size()),
+                metadata={'h5py_opaque': True, 'h5py_opaque_tag': tag},
+            )
+
         # Numpy translation function for opaque types
         return np.dtype("|V" + str(self.get_size()))
 
@@ -1613,11 +1622,17 @@ cdef TypeOpaqueID _c_opaque_tagged(cnp.dtype dt):
     Tagged opaque types can be read back easily in h5py, but not in other tools
     (they are *opaque*).
 
-    The default tag is generated via the code:
+    If the dtype metadata carries a user-supplied ``h5py_opaque_tag`` (set by
+    :func:`opaque_dtype` with a ``tag=`` argument), it is used as-is.
+    Otherwise the tag is generated via the code:
     ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
     """
     cdef TypeOpaqueID new_type = _c_opaque(dt)
-    new_type.set_tag(b"NUMPY:" + dt.descr[0][1].encode())
+    user_tag = (dt.metadata or {}).get('h5py_opaque_tag')
+    if user_tag is not None:
+        new_type.set_tag(user_tag)
+    else:
+        new_type.set_tag(b"NUMPY:" + dt.descr[0][1].encode())
 
     return new_type
 
@@ -1918,12 +1933,29 @@ def enum_dtype(values_dict, basetype=np.uint8):
     return np.dtype(dt, metadata={'enum': values_dict})
 
 
-def opaque_dtype(np_dtype):
+def opaque_dtype(np_dtype, *, tag=None):
     """Return an equivalent dtype tagged to be stored in an HDF5 opaque type.
 
     This makes it easy to store numpy data like datetimes for which there is
     no equivalent HDF5 type, but it's not interoperable: other tools won't treat
     the opaque data as datetimes.
+
+    If *tag* is given (``str`` or ``bytes``), it is used as the HDF5 opaque
+    tag for the stored type. Strings are encoded as UTF-8. When *tag* is
+    ``None`` (the default), h5py auto-generates a ``b"NUMPY:..."`` tag that
+    lets the original numpy dtype be restored on read.
+
+    Tag restrictions (HDF5 and h5py):
+
+    - must be non-empty and at most 255 bytes after encoding,
+    - must not contain a NUL byte,
+    - must not start with ``b"NUMPY:"`` (reserved for h5py's automatic
+      dtype round-trip), and must not be ``b"PYTHON:OBJECT"`` or
+      ``b"NUMPY:STRING"`` (reserved for h5py internals).
+
+    A custom tag disables the numpy-dtype round-trip: on read, datasets are
+    returned as plain ``|V<n>`` with the tag exposed via
+    :func:`get_opaque_tag`.
     """
     dt = np.dtype(np_dtype)
     if np.issubdtype(dt, np.object_):
@@ -1935,7 +1967,39 @@ def opaque_dtype(np_dtype):
     if dt.itemsize == 0:
         raise TypeError("dtype for opaque data must have explicit size")
 
-    return np.dtype(dt, metadata={'h5py_opaque': True})
+    if tag is None:
+        return np.dtype(dt, metadata={'h5py_opaque': True})
+
+    if isinstance(tag, str):
+        tag_bytes = tag.encode('utf-8')
+    elif isinstance(tag, (bytes, bytearray)):
+        tag_bytes = bytes(tag)
+    else:
+        raise TypeError(
+            "opaque tag must be str or bytes, got %r" % type(tag).__name__
+        )
+
+    if len(tag_bytes) == 0:
+        raise ValueError("opaque tag must be non-empty")
+    if b'\x00' in tag_bytes:
+        raise ValueError("opaque tag must not contain a NUL byte")
+    if len(tag_bytes) > 255:
+        raise ValueError(
+            "opaque tag is limited to 255 bytes (got %d)" % len(tag_bytes)
+        )
+    if tag_bytes.startswith(b"NUMPY:"):
+        raise ValueError(
+            "tag prefix b'NUMPY:' is reserved for h5py's automatic numpy "
+            "dtype round-trip"
+        )
+    if tag_bytes == b"PYTHON:OBJECT":
+        raise ValueError(
+            "tag b'PYTHON:OBJECT' is reserved for h5py internals"
+        )
+
+    return np.dtype(
+        dt, metadata={'h5py_opaque': True, 'h5py_opaque_tag': tag_bytes}
+    )
 
 
 ref_dtype = np.dtype('O', metadata={'ref': Reference})
@@ -2067,6 +2131,21 @@ def check_opaque_dtype(dt):
         return dt.metadata.get('h5py_opaque', False)
     except AttributeError:
         return False
+
+
+def get_opaque_tag(dt):
+    """Return the custom HDF5 opaque tag for ``dt``, or ``None``.
+
+    If ``dt`` was produced by :func:`opaque_dtype` with a ``tag=`` argument,
+    or is the dtype of a dataset whose stored opaque tag is not an h5py
+    automatic tag, the tag is returned as ``bytes``. Otherwise ``None`` is
+    returned (including for non-opaque dtypes and for h5py's automatic
+    ``b"NUMPY:..."`` tags, which encode the numpy dtype instead).
+    """
+    try:
+        return dt.metadata.get('h5py_opaque_tag')
+    except AttributeError:
+        return None
 
 
 def check_ref_dtype(dt):
