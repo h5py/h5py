@@ -29,7 +29,7 @@ HDF5 dataset.
    older than 1.10.
 
 The HDF Group has overview of the VDS features on their website:
-`Virtual Datasets (VDS) Documentation <https://support.hdfgroup.org/documentation/hdf5/latest/_v_d_s.html>`_.
+`Virtual Datasets (VDS) Documentation <https://support.hdfgroup.org/documentation/hdf5/latest/_v_d_s_t_n.html>`_.
 
 .. _creating_vds:
 
