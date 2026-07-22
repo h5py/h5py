@@ -21,7 +21,7 @@ Steps to make an h5py release:
    - Assemble the release notes in ``docs/whatsnew`` based on the list of merged
      PRs. Commit the changes.
 
-4. Update the version number & commit the changes. The files that need changing
+4. Update the version number to a stable one & commit the changes. The files that need changing
    are:
 
     - ``pyproject.toml``
@@ -44,3 +44,4 @@ Steps to make an h5py release:
    CI job completes.
 9. Close the GitHub milestone for this release and open one for the next
    version.
+10. Change the version number back to a development version (revert step 4. and make a minor bump)
