@@ -14,6 +14,7 @@
 import inspect
 import os
 import sys
+from urllib.parse import urlsplit
 from warnings import warn
 
 from .compat import filename_decode, filename_encode
@@ -391,6 +392,7 @@ class File(Group):
         driver
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'direct', 'stdio', 'mpio', 'ros3'.
+            If None, the ros3 driver is automatically selected for supported URLs.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
             'v110', 'v112', 'v114', 'v200' and 'latest' depending on the
@@ -495,6 +497,16 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
+        # Automatically select the ros3 driver if it's an S3 URL.
+        # As the other drivers currently do not support HTTP(S), the ros3 driver is
+        # also automatically selected for these schemes.
+        if (
+            driver is None
+            and isinstance(name, str)
+            and urlsplit(name).scheme in ("http", "https", "s3")
+        ):
+            driver = 'ros3'
+
         if driver == 'ros3':
             if not ros3:
                 raise ValueError("h5py was built without ROS3 support, can't use ros3 driver")
