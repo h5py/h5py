@@ -392,6 +392,7 @@ class File(Group):
         driver
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'direct', 'stdio', 'mpio', 'ros3'.
+            If None, the ros3 driver is automatically selected for supported URLs.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
             'v110', 'v112', 'v114', 'v200' and 'latest' depending on the
