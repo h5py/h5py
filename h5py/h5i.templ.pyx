@@ -15,24 +15,28 @@
 from .utils cimport emalloc
 from ._objects import phil, with_phil
 
+import typing
+if typing.TYPE_CHECKING:
+    from .h5f import FileID
+
 
 # === Public constants and data structures ====================================
 
-INVALID_HID = H5I_INVALID_HID
-BADID       = H5I_BADID
-FILE        = H5I_FILE
-GROUP       = H5I_GROUP
-DATASPACE   = H5I_DATASPACE
-DATASET     = H5I_DATASET
-ATTR        = H5I_ATTR
+INVALID_HID: int = H5I_INVALID_HID
+BADID: int       = H5I_BADID
+FILE: int        = H5I_FILE
+GROUP: int       = H5I_GROUP
+DATASPACE: int   = H5I_DATASPACE
+DATASET: int     = H5I_DATASET
+ATTR: int        = H5I_ATTR
 
 ### {{if HDF5_VERSION < VOL_MIN_HDF5_VERSION}}
-REFERENCE   = H5I_REFERENCE
+REFERENCE: int   = H5I_REFERENCE
 ### {{endif}}
 
-GENPROP_CLS = H5I_GENPROP_CLS
-GENPROP_LST = H5I_GENPROP_LST
-DATATYPE    = H5I_DATATYPE
+GENPROP_CLS: int = H5I_GENPROP_CLS
+GENPROP_LST: int = H5I_GENPROP_LST
+DATATYPE: int    = H5I_DATATYPE
 
 cpdef ObjectID wrap_identifier(hid_t ident):
 
@@ -67,7 +71,7 @@ cpdef ObjectID wrap_identifier(hid_t ident):
 # === Identifier API ==========================================================
 
 @with_phil
-def get_type(ObjectID obj not None):
+def get_type(ObjectID obj not None) -> int:
     """ (ObjectID obj) => INT type_code
 
         Determine the HDF5 typecode of an arbitrary HDF5 object.  The return
@@ -78,7 +82,7 @@ def get_type(ObjectID obj not None):
 
 
 @with_phil
-def get_name(ObjectID obj not None):
+def get_name(ObjectID obj not None) -> bytes | None:
     """ (ObjectID obj) => STRING name, or None
 
         Determine (a) name of an HDF5 object.  Because an object has as many
@@ -111,7 +115,7 @@ def get_name(ObjectID obj not None):
 
 
 @with_phil
-def get_file_id(ObjectID obj not None):
+def get_file_id(ObjectID obj not None) -> FileID:
     """ (ObjectID obj) => FileID
 
         Obtain an identifier for the file in which this object resides.
@@ -123,7 +127,7 @@ def get_file_id(ObjectID obj not None):
 
 
 @with_phil
-def inc_ref(ObjectID obj not None):
+def inc_ref(ObjectID obj not None) -> None:
     """ (ObjectID obj)
 
         Increment the reference count for the given object.
@@ -136,7 +140,7 @@ def inc_ref(ObjectID obj not None):
 
 
 @with_phil
-def get_ref(ObjectID obj not None):
+def get_ref(ObjectID obj not None) -> int:
     """ (ObjectID obj) => INT
 
         Retrieve the reference count for the given object.
@@ -145,7 +149,7 @@ def get_ref(ObjectID obj not None):
 
 
 @with_phil
-def dec_ref(ObjectID obj not None):
+def dec_ref(ObjectID obj not None) -> None:
     """ (ObjectID obj)
 
         Decrement the reference count for the given object.
