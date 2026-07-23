@@ -129,7 +129,6 @@ jobs:
         TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
         HDF5_VERSION: 1.10.7
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "17-64"
         H5PY_ENFORCE_COVERAGE: yes
     # 64 bit - HDF5 1.12
     # Fewer combinations here; test_windows_wheels also tests HDF5 1.12
@@ -139,7 +138,6 @@ jobs:
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.12.1
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "17-64"
         H5PY_ENFORCE_COVERAGE: yes
     # 64 bit - HDF5 1.14
       py310-hdf5114:
@@ -148,7 +146,6 @@ jobs:
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.14.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "17-64"
         H5PY_ENFORCE_COVERAGE: yes
     maxParallel: 4
 
