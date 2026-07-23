@@ -502,7 +502,7 @@ class File(Group):
         if (
             driver is None
             and isinstance(name, str)
-            and urlsplit(name).scheme in ("http://", "https://", "s3://")
+            and urlsplit(name).scheme in ("http", "https", "s3")
         ):
             driver = 'ros3'
 
