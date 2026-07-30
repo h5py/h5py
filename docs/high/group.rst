@@ -378,11 +378,15 @@ Reference
         :return:        The new :class:`Group` object.
 
 
-    .. method:: require_group(name)
+    .. method:: require_group(name, track_order=None)
 
         Open a group in the file, creating it if it doesn't exist.
         TypeError is raised if a conflicting object already exists.
         Parameters as in :meth:`Group.create_group`.
+
+        :param track_order: Track dataset/group/attribute creation order under
+                        this group if ``True``. If ``None``, use
+                        ``h5.get_config().track_order``.
 
 
     .. method:: create_dataset(name, shape=None, dtype=None, data=None, **kwds)
