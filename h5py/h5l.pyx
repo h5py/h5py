@@ -117,6 +117,7 @@ cdef class LinkProxy:
         # The identifier in question is the hid_t for the parent GroupID.
         # We "borrow" this reference.
         self.id = id_
+    H5Iinc_ref(self.id)
 
     def __richcmp__(self, object other, int how):
         return NotImplemented
