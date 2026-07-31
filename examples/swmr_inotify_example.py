@@ -17,7 +17,7 @@
     concurrently writing data to the file, the writer must have have switched
     the file into SWMR mode before this script can open the file.
 """
-import asyncore
+import asyncio
 import pyinotify
 import sys
 import h5py
