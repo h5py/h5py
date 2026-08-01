@@ -38,7 +38,7 @@ class _H5PY_VERSION_CLS(NamedTuple):
 hdf5_built_version_tuple = _h5.HDF5_VERSION_COMPILED_AGAINST
 
 # keep in sync with project.version (pyproject.toml)
-version_tuple = _H5PY_VERSION_CLS(major=3, minor=16, bugfix=0, dev=0)
+version_tuple = _H5PY_VERSION_CLS(major=3, minor=17, bugfix=0, dev=0)
 version = str(version_tuple)
 
 hdf5_version_tuple = _h5.get_libversion()
