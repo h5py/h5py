@@ -12,7 +12,10 @@ ZLIB_VERSION="1.3.2"
 ZLIB_DIR="zlib-$ZLIB_VERSION"
 
 if [ ! -d "$ZLIB_DIR" ]; then
-  curl -sLO https://zlib.net/fossils/$ZLIB_DIR.tar.gz
+  # Without -f, an HTTP error page from zlib.net gets saved as the tarball;
+  # fall back to the zlib GitHub release mirror if zlib.net is unavailable.
+  curl -fsSLO --retry 5 https://zlib.net/fossils/$ZLIB_DIR.tar.gz \
+      || curl -fsSLO --retry 5 https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/$ZLIB_DIR.tar.gz
   tar -xzf $ZLIB_DIR.tar.gz && rm $ZLIB_DIR.tar.gz
 fi
 
