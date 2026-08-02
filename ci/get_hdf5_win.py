@@ -74,10 +74,13 @@ VSVERSION_TO_GENERATOR = {
 
 
 def download_hdf5(version, outfile):
-    zip_fmt1 = "hdf5-" + version.replace(".", "_") + ".zip"
-    zip_fmt2 = "hdf5_" + version.replace("-", ".") + ".zip"
+    # releases after 2.1.0 are tagged with the plain version only
+    zip_fmt1 = version + ".zip"
+    zip_fmt2 = "hdf5-" + version.replace(".", "_") + ".zip"
+    zip_fmt3 = "hdf5_" + version.replace("-", ".") + ".zip"
     files = [HDF5_URL.format(zip_file=zip_fmt1),
              HDF5_URL.format(zip_file=zip_fmt2),
+             HDF5_URL.format(zip_file=zip_fmt3),
              ]
 
     for file in files:

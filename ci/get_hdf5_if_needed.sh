@@ -34,7 +34,9 @@ else
         echo "building HDF5"
 
         IFS='.-' read MAJOR_V MINOR_V REL_V PATCH_V <<< "$HDF5_VERSION"
-        # the assets in GitHub (currently) have two naming conventions
+        # the assets in GitHub (currently) have three naming conventions;
+        # releases after 2.1.0 are tagged with the plain version only
+        ASSET_FMT3="${HDF5_VERSION}"
         if [[ -n "${PATCH_V}" ]]; then
             ASSET_FMT1="hdf5-${MAJOR_V}_${MINOR_V}_${REL_V}-${PATCH_V}"
             ASSET_FMT2="hdf5_${MAJOR_V}.${MINOR_V}.${REL_V}.${PATCH_V}"
@@ -79,7 +81,7 @@ else
 
         pushd /tmp
         url_base="https://github.com/HDFGroup/hdf5/archive/refs/tags/"
-        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT1}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT2}.tar.gz"
+        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT3}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT1}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT2}.tar.gz"
 
         mkdir -p hdf5-$HDF5_VERSION && tar -xzvf hdf5-$HDF5_VERSION.tar.gz --strip-components=1 -C hdf5-$HDF5_VERSION
 
