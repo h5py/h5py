@@ -81,7 +81,23 @@ else
 
         pushd /tmp
         url_base="https://github.com/HDFGroup/hdf5/archive/refs/tags/"
-        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT3}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT1}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT2}.tar.gz"
+        urls=(
+            "${url_base}${ASSET_FMT3}.tar.gz"
+            "${url_base}${ASSET_FMT1}.tar.gz"
+            "${url_base}${ASSET_FMT2}.tar.gz"
+        )
+        set +e
+        for url in "${urls[@]}"; do
+            echo "downloading from $url"
+            curl --location "$url" --output "hdf5-$HDF5_VERSION.tar.gz" --fail --silent --show-error
+            if [[ "$?" == 0 ]]; then
+                echo "download succeeded"
+                break
+            else
+                echo "download failed"
+            fi
+        done
+        set -e
 
         mkdir -p hdf5-$HDF5_VERSION && tar -xzvf hdf5-$HDF5_VERSION.tar.gz --strip-components=1 -C hdf5-$HDF5_VERSION
 
