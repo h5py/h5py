@@ -133,7 +133,11 @@ class BuildConfig:
         ]) > 1:
             raise ValueError(
                 "Specify only one of: HDF5 lib/include dirs, HDF5 prefix dir, "
-                "or HDF5 pkgconfig name"
+                "or HDF5 pkgconfig name. Received:\n"
+                f"HDF5={hdf5}\n"
+                f"HDF5_INCLUDEDIR={hdf5_includedir}\n"
+                f"HDF5_LIBDIR={hdf5_libdir}\n"
+                f"HDF5_PKGCONFIG_NAME={hdf5_pkgconfig_name}\n"
             )
 
         if hdf5_includedir or hdf5_libdir:
