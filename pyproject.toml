@@ -153,6 +153,7 @@ environment-pass = [
 
 [tool.cibuildwheel.linux.environment]
 CFLAGS = "-g1"
+HDF5_LIBDIR = "/usr/local/lib"
 
 [tool.cibuildwheel.macos]
 # https://cibuildwheel.pypa.io/en/stable/faq/#macos-passing-dyld_library_path-to-delocate
