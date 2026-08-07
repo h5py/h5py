@@ -1979,14 +1979,12 @@ def opaque_dtype(np_dtype, *, tag=None):
             "opaque tag must be str or bytes, got %r" % type(tag).__name__
         )
 
-    if len(tag_bytes) == 0:
+    if (tag_size := len(tag_bytes)) == 0:
         raise ValueError("opaque tag must be non-empty")
+    if tag_size > 255:
+        raise ValueError(f"opaque tag is limited to 255 bytes (got {tag_size})")
     if b'\x00' in tag_bytes:
-        raise ValueError("opaque tag must not contain a NUL byte")
-    if len(tag_bytes) > 255:
-        raise ValueError(
-            "opaque tag is limited to 255 bytes (got %d)" % len(tag_bytes)
-        )
+        raise ValueError("opaque tag must not contain a NULL byte")
     if tag_bytes.startswith(b"NUMPY:"):
         raise ValueError(
             "tag prefix b'NUMPY:' is reserved for h5py's automatic numpy "
