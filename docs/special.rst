@@ -237,7 +237,7 @@ Here's an example of storing and reading a datetime array::
                restored on read.
 
    A user-supplied tag must be non-empty, at most 255 bytes, and must not
-   contain a NUL byte. The prefix ``b"NUMPY:"`` is reserved for h5py's
+   contain a NULL byte. The prefix ``b"NUMPY:"`` is reserved for h5py's
    automatic dtype round-trip, and ``b"PYTHON:OBJECT"`` is reserved for
    h5py internals; both raise :class:`ValueError`.
 
