@@ -306,6 +306,8 @@ hdf5:
   ROS3 herr_t    H5Pset_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa)
   ROS3 1.14.2 herr_t H5Pget_fapl_ros3_token(hid_t fapl_id, size_t size, char *token)
   ROS3 1.14.2 herr_t H5Pset_fapl_ros3_token(hid_t fapl_id, const char *token)
+  ROS3 2.2.0 herr_t H5Pget_fapl_ros3_block_caching(hid_t fapl_id, size_t *block_size, size_t *block_cache_size, hbool_t *lock_superblock)
+  ROS3 2.2.0 herr_t H5Pset_fapl_ros3_block_caching(hid_t fapl_id, size_t block_size, size_t block_cache_size, hbool_t lock_superblock)
   DIRECT_VFD herr_t H5Pget_fapl_direct(hid_t fapl_id, size_t *boundary, size_t *block_size, size_t *cbuf_size);
   DIRECT_VFD herr_t H5Pset_fapl_direct(hid_t fapl_id, size_t alignment, size_t block_size, size_t cbuf_size);
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)

@@ -136,6 +136,49 @@ of supported drivers and their options:
         The argument values must be ``bytes`` objects. Arguments aws_region,
         secret_id, and secret_key are required to activate AWS authentication.
 
+        Starting with HDF5 2.2, the driver no longer sends a separate request to
+        the object store for every read. It instead fetches the file in
+        fixed-size blocks and keeps recently used blocks in memory, so that any
+        read landing in a block which has already been fetched is served without
+        going back to the network. This usually makes the biggest difference for
+        files that were not written with cloud access in mind, where the
+        metadata a reader needs is spread across many small regions of the file.
+        The three keywords below tune that behaviour, and unlike the
+        credential keywords above they take plain integers and a boolean rather
+        than ``bytes``. Each of them requires HDF5 2.2.0 or later, and passing
+        any of them to an older library raises a ``ValueError``.
+
+        block_size:
+          Size, in bytes, of the block the driver requests from a file in a
+          single read. The default is 16 MiB. Larger blocks mean fewer requests,
+          but they can also transfer a good deal more data than actually
+          required. Setting it to ``0`` disables block caching altogether and
+          returns the driver to the behaviour it had before HDF5 2.2, where
+          every read becomes its own request.
+
+        block_cache_size:
+          Total size, in bytes, that the cached blocks are allowed to occupy.
+          The default is 128 MiB. Since the cache only ever holds whole blocks,
+          it makes sense to choose a multiple of ``block_size``. For a
+          value smaller than ``block_size``, HDF5 quietly reduces ``block_size``
+          to match so that at least one block still fits. As with
+          ``block_size``, setting this to ``0`` disables block caching.
+
+        lock_superblock:
+          Whether the block holding the file's superblock should be pinned in
+          the cache and never evicted to make room for other blocks. The default
+          is ``True``, because that metadata is usually worth keeping around for
+          as long as the file is open. Note that the driver assumes the first
+          block it caches contains the superblock, so a file with a
+          user block as large as, or larger than, ``block_size`` will not get the
+          superblock pinned unless ``block_size`` is increased accordingly.
+
+        .. note::
+          The driver only caches blocks for files that do not use paged file
+          space allocation (cloud optimized). If a file was created with ``fs_strategy="page"``,
+          the library's own page buffer handles this instead, and the three
+          keywords above have no effect. See ``page_buf_size``.
+
         .. note::
           Pre-built h5py packages on PyPI do not include ros3 driver support. If
           you need this driver, you could use packages from conda-forge or

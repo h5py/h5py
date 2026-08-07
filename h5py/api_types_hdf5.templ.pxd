@@ -363,6 +363,10 @@ cdef extern from "hdf5.h":
   ### {{if HDF5_VERSION >= (1, 14, 2)}}
   size_t H5FD_ROS3_MAX_SECRET_TOK_LEN
   ### {{endif}}
+  ### {{if HDF5_VERSION >= (2, 2, 0)}}
+  size_t HDF5_ROS3_VFD_DEFAULT_BLOCK_SIZE
+  size_t HDF5_ROS3_VFD_DEFAULT_BLOCK_CACHE_SIZE
+  ### {{endif}}
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:

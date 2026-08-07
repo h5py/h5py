@@ -25,13 +25,19 @@ from .h5t cimport TypeID, py_create
 from .h5s cimport SpaceID
 from .h5ac cimport CacheConfig
 
-# Python level imports
-from ._objects import phil, with_phil
-
 ### {{if MPI}}
 from mpi4py.libmpi cimport (
     MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
     MPI_Comm_free, MPI_Info_free)
+### {{endif}}
+
+# Python level imports
+from collections import namedtuple
+from ._objects import phil, with_phil
+
+### {{if ROS3 and HDF5_VERSION >= (2, 2, 0)}}
+Ros3_BlockConfig = namedtuple(
+    'Ros3_BlockConfig', ['block_size', 'block_cache_size', 'lock_superblock'])
 ### {{endif}}
 
 # Initialization
@@ -1139,6 +1145,59 @@ cdef class PropFAID(PropInstanceID):
         Set session token in the file access property list.
         """
         H5Pset_fapl_ros3_token(self.id, token)
+    ### {{endif}}
+
+    ### {{if HDF5_VERSION >= (2, 2, 0)}}
+    @with_phil
+    def set_fapl_ros3_block_caching(
+        self,
+        size_t block_size=HDF5_ROS3_VFD_DEFAULT_BLOCK_SIZE,
+        size_t block_cache_size=HDF5_ROS3_VFD_DEFAULT_BLOCK_CACHE_SIZE,
+        bint lock_superblock=True
+    ):
+        """(UINT block_size, UINT block_cache_size, BOOL lock_superblock=True)
+
+        Set ROS3 block access and caching parameters. Block reading and caching
+        helps improve performance of typical (non-cloud optimized) files. This
+        method sets all three parameters at once, so the unspecified ones are
+        reset to their defaults and not preserved at the previous value.
+
+        ``block_size`` is the size, in bytes, of S3 request for one block from
+        the file. The default is ``HDF5_ROS3_VFD_DEFAULT_BLOCK_SIZE``.
+
+        ``block_cache_size`` is the total size, in bytes, of the block cache.
+        The default is ``HDF5_ROS3_VFD_DEFAULT_BLOCK_CACHE_SIZE``.
+
+        Setting either size to 0 disables the cache (the legacy, inefficient,
+        one-request-per-read behaviour).
+
+        ``lock_superblock`` instructs whether or not to protect the block with
+        the file's superblock from eviction from the cache. The default value is
+        ``True``.
+
+        Available since HDF5 2.2.0.
+        """
+        H5Pset_fapl_ros3_block_caching(
+            self.id, block_size, block_cache_size, <hbool_t>lock_superblock)
+
+
+    @with_phil
+    def get_fapl_ros3_block_caching(self):
+        """ () => NAMEDTUPLE Ros3_BlockConfig('block_size', 'block_cache_size',
+        'lock_superblock')
+
+        Get ROS3 block caching configuration: block request size, block cache
+        size, and superblock cache lock flag.
+
+        Available since HDF5 2.2.0.
+        """
+        cdef size_t block_size
+        cdef size_t block_cache_size
+        cdef hbool_t lock_superblock
+
+        H5Pget_fapl_ros3_block_caching(
+            self.id, &block_size, &block_cache_size, &lock_superblock)
+        return Ros3_BlockConfig(block_size, block_cache_size, <bint>lock_superblock)
     ### {{endif}}
     ### {{endif}}
 
