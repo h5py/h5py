@@ -1010,8 +1010,16 @@ class Dataset(HLObject):
 
             val = numpy.asarray(val, dtype=dtype.base, order='C')
             if cast_compound:
-                val = val.view(numpy.dtype([(names[0], dtype)]))
-                val = val.reshape(val.shape[:len(val.shape) - len(dtype.shape)])
+                cast_dtype = numpy.dtype([(names[0], dtype)])
+                cast_shape = val.shape[:len(val.shape) - len(dtype.shape)]
+                if dtype.base.kind == 'O':
+                    # Vlen data is held in object arrays, which numpy refuses to
+                    # reinterpret as another dtype, so copy it into place instead.
+                    tmp = numpy.empty(cast_shape, dtype=cast_dtype)
+                    tmp[names[0]] = val
+                    val = tmp
+                else:
+                    val = val.view(cast_dtype).reshape(cast_shape)
         elif (self.dtype.kind == 'S'
               and (h5t.check_string_dtype(self.dtype).encoding == 'utf-8')
               and (find_item_type(val) is str)
