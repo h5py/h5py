@@ -39,7 +39,7 @@ sphinx==8.1.3 ; python_full_version < '3.11'
     #   h5py (pyproject.toml:docs)
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx==8.2.3 ; python_full_version >= '3.11'
+sphinx==9.1.0 ; python_full_version >= '3.11'
     # via
     #   h5py (pyproject.toml:docs)
     #   sphinx-rtd-theme
