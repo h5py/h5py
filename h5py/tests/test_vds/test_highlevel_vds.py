@@ -463,6 +463,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
             source_dset[10:, 1] = np.zeros((10,), dtype=int)
             np.testing.assert_array_equal(comp3, virtual_dset)
 
+    @pytest.mark.thread_unsafe(reason="Grows a shared VDS source file")
     def test_readonly_vds_tracks_source_growth(self):
         vds_path = osp.join(self.tmpdir, make_name("resize_vds{}.h5"))
         layout = h5.VirtualLayout((10, 1), int, maxshape=(None, 1))
