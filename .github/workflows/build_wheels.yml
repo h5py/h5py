@@ -133,7 +133,7 @@ jobs:
             )
         env:
           H5PY_LIMITED_API: 1
-          CIBW_BUILD: 'cp315*'
+          CIBW_BUILD: 'cp315-* cp315t-*'
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ''
 
       # Now actually build the wheels
