@@ -532,7 +532,9 @@ cdef class PropDCID(PropOCID):
         rank, only the first element will contain the value.
         """
         from .h5t import check_string_dtype
+        from .h5s import create as create_space, SCALAR
         cdef TypeID tid
+        cdef SpaceID sid
         cdef char * c_ptr = NULL
 
         check_numpy_write(value, -1)
@@ -542,7 +544,7 @@ cdef class PropDCID(PropOCID):
         string_info = check_string_dtype(value.dtype)
         if string_info is not None and string_info.length is None:
             tid = py_create(value.dtype, logical=1)
-            ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
+            H5Pget_fill_value(self.id, tid.id, &c_ptr)
             if c_ptr == NULL:
                 # If the pointer is NULL (either the value did not get changed,
                 # or maybe the 0 length string, it's unclear currently), if
@@ -551,8 +553,16 @@ cdef class PropDCID(PropOCID):
                 # shouldn't segfault.
                 value[0] = b""
                 return
-            fill_value = c_ptr
-            value[0] = fill_value
+            try:
+                # Copies the C string into a Python bytes object
+                fill_value = c_ptr
+                value[0] = fill_value
+            finally:
+                # HDF5 allocated the string when converting the fill value to
+                # the requested type, and handed us ownership of it.  Without
+                # this the buffer is leaked on every call.
+                sid = create_space(SCALAR)
+                H5Dvlen_reclaim(tid.id, sid.id, H5P_DEFAULT, &c_ptr)
             return
 
         tid = py_create(value.dtype)

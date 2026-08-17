@@ -629,6 +629,37 @@ def test_get_unset_fill_value(dt, expected, writable_file):
     assert dset.fillvalue == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="resource is POSIX-only")
+def test_vlen_fillvalue_not_leaked(writable_file):
+    """ Reading a vlen string fillvalue must not leak the buffer HDF5 hands us
+    """
+    import resource
+
+    # ru_maxrss is in bytes on macOS, kilobytes elsewhere
+    scale = 1 if sys.platform == 'darwin' else 1024
+
+    def maxrss():
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * scale
+
+    fill_value = b'x' * 65536
+    dset = writable_file.create_dataset(
+        make_name(), (4,), dtype=h5py.string_dtype(), fillvalue=fill_value)
+
+    # Warm up, so the high-water mark reflects a settled allocator
+    for _ in range(100):
+        assert dset.fillvalue == fill_value
+
+    n = 4000
+    before = maxrss()
+    for _ in range(n):
+        dset.fillvalue
+    growth = maxrss() - before
+
+    # Leaking grows the high-water mark by n * len(fill_value) (256 MiB here).
+    # The margin is deliberately wide; this only has to catch the leak.
+    assert growth < n * len(fill_value) // 8
+
+
 class TestCreateNamedType(BaseDataset):
 
     """
