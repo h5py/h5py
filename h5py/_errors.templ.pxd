@@ -411,6 +411,18 @@ cdef extern from "hdf5.h":
     ctypedef herr_t (*H5E_walk_t)(unsigned int n, const H5E_error_t *err_desc, void* client_data)
     herr_t    H5Ewalk(hid_t estack_id, H5E_direction_t direction, H5E_walk_t func, void* client_data)
 
+    # --- Not error-related ---------------------------------------------------
+    # H5dont_atexit() is declared here rather than in api_functions.txt
+    # because the auto-generated wrappers in defs.pyx call
+    # set_default_error_handler() (-> H5Eset_auto) before the real HDF5
+    # function, which would initialise the HDF5 library and turn the
+    # H5dont_atexit() call into a no-op.  It is called at the top of
+    # _errors.pyx: _errors is the first HDF5-linked module h5py imports,
+    # and its own module init is also the first thing to initialise the
+    # HDF5 library (building the error tables expands each H5E_* code to
+    # `H5open(), H5E_..._g` in C).
+    herr_t    H5dont_atexit() nogil
+
 # --- Functions for managing the HDF5 error callback mechanism ---
 
 ctypedef struct err_cookie:
