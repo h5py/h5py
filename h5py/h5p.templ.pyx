@@ -415,6 +415,28 @@ cdef class PropFCID(PropOCID):
         H5Pget_file_space_page_size(self.id, &fsp_size)
         return fsp_size
 
+cdef int _check_fill_buffer(ndarray value, TypeID mtype) except -1:
+    # H5Pset_fill_value/H5Pget_fill_value read and write exactly
+    # H5Tget_size(mtype) bytes at the start of the buffer, with no size
+    # checking of their own.  check_numpy_read/check_numpy_write only validate
+    # contiguity and writability, so the size has to be checked here.
+    cdef size_t size = mtype.get_size()
+
+    # An object array holds PyObject* where HDF5 expects the variable-length
+    # or reference data itself.  Those are the same width, so the size check
+    # below cannot catch it.
+    if value.dtype.hasobject:
+        raise NotImplementedError(
+            "Fill values for datatypes with variable-length or reference "
+            "components are not supported")
+
+    if <size_t>value.nbytes < size:
+        raise ValueError(
+            "Fill value buffer is %d bytes; datatype needs %d"
+            % (value.nbytes, size))
+    return 0
+
+
 # Dataset creation
 cdef class PropDCID(PropOCID):
 
@@ -493,18 +515,28 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_fill_value(self, ndarray value not None):
-        """(NDARRAY value)
+    def set_fill_value(self, ndarray value not None, TypeID mtype=None):
+        """(NDARRAY value, TypeID mtype=None)
 
         Set the dataset fill value.  The object provided should be an
         0-dimensional NumPy array; otherwise, the value will be read from
         the first element.
+
+        mtype is the HDF5 datatype describing the buffer.  Pass it for
+        datatypes NumPy cannot express on an array itself, such as H5T_ARRAY;
+        by default the type is inferred from value.dtype.  Datatypes with
+        variable-length components are not supported this way.
         """
         from .h5t import check_string_dtype
         cdef TypeID tid
         cdef char * c_ptr
 
         check_numpy_read(value, -1)
+
+        if mtype is not None:
+            _check_fill_buffer(value, mtype)
+            H5Pset_fill_value(self.id, mtype.id, value.data)
+            return
 
         # check for strings
         # create correct typeID and pointer to c_str
@@ -524,12 +556,17 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def get_fill_value(self, ndarray value not None):
-        """(NDARRAY value)
+    def get_fill_value(self, ndarray value not None, TypeID mtype=None):
+        """(NDARRAY value, TypeID mtype=None)
 
         Read the dataset fill value into a NumPy array.  It will be
         converted to match the array dtype.  If the array has nonzero
         rank, only the first element will contain the value.
+
+        mtype is the HDF5 datatype describing the buffer.  Pass it for
+        datatypes NumPy cannot express on an array itself, such as H5T_ARRAY;
+        by default the type is inferred from value.dtype.  Datatypes with
+        variable-length components are not supported this way.
         """
         from .h5t import check_string_dtype
         from .h5s import create as create_space, SCALAR
@@ -538,6 +575,11 @@ cdef class PropDCID(PropOCID):
         cdef char * c_ptr = NULL
 
         check_numpy_write(value, -1)
+
+        if mtype is not None:
+            _check_fill_buffer(value, mtype)
+            H5Pget_fill_value(self.id, mtype.id, value.data)
+            return
 
         # check for vlen strings
         # create correct typeID and convert from c_str pointer to string

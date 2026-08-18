@@ -712,6 +712,15 @@ Reference
         type-appropriate default value.  Can't be changed after the dataset is
         created.
 
+        For a dataset with an array datatype, such as ``('f4', (3,))``, this is
+        an array of the base type.  The base type may be anything of a fixed
+        size, including a compound type. Array datatypes built on
+        variable-length strings, variable-length sequences or references do not
+        support fill values yet.
+
+        .. versionchanged:: 3.17
+           Array fixed-size datatypes are supported.
+
     .. attribute:: external
 
        If this dataset is stored in one or more external files, this is a list

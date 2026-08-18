@@ -230,21 +230,29 @@ class VirtualLayout:
         """ Return a new low-level dataset identifier for a virtual dataset """
         dcpl = self._get_dcpl(parent.file.filename)
 
-        if fillvalue is not None:
-            dcpl.set_fill_value(np.array([fillvalue]))
-
-        maxshape = self.maxshape
-        if maxshape is not None:
-            maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
-
-        virt_dspace = h5s.create_simple(self.shape, maxshape)
-
         if isinstance(self.dtype, Datatype):
             # Named types are used as-is
             tid = self.dtype.id
         else:
             dtype = np.dtype(self.dtype)
             tid = h5t.py_create(dtype, logical=1)
+
+        if fillvalue is not None:
+            dt = tid.dtype
+            if dt.subdtype is not None and not dt.hasobject:
+                # Array dtypes cannot go through ndarray.dtype; pass the
+                # H5T_ARRAY type explicitly
+                fill_buf = np.zeros((), dtype=dt)
+                fill_buf[...] = fillvalue
+                dcpl.set_fill_value(fill_buf, tid)
+            else:
+                dcpl.set_fill_value(np.array([fillvalue]))
+
+        maxshape = self.maxshape
+        if maxshape is not None:
+            maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
+
+        virt_dspace = h5s.create_simple(self.shape, maxshape)
 
         return h5d.create(parent.id, name=name, tid=tid, space=virt_dspace,
                           dcpl=dcpl)

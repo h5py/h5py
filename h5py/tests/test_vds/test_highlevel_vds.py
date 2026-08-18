@@ -478,5 +478,27 @@ def test_no_mappings(writable_file):
     np.testing.assert_array_equal(dset[()], np.zeros((10, 20), np.int32))
 
 
+@pytest.mark.skipif(not vds_support, reason='VDS requires HDF5 >= 1.9.233')
+def test_array_dtype_fillvalue(tmp_path):
+    """ A virtual dataset with an array datatype accepts a fill value """
+    dt = np.dtype(('f4', (3,)))
+    src_path = tmp_path / 'src.h5'
+    with h5.File(src_path, 'w') as f:
+        f.create_dataset('x', (2,), dtype=dt)[...] = [[1, 2, 3], [4, 5, 6]]
+
+    layout = h5.VirtualLayout(shape=(4,), dtype=dt)
+    layout[0:2] = h5.VirtualSource(src_path, 'x', shape=(2,), dtype=dt)
+
+    vds_path = tmp_path / 'vds.h5'
+    with h5.File(vds_path, 'w') as f:
+        f.create_virtual_dataset('v', layout, fillvalue=[-1, -2, -3])
+
+    with h5.File(vds_path, 'r') as f:
+        dset = f['v']
+        assert_array_equal(dset.fillvalue, [-1, -2, -3])
+        assert_array_equal(dset[0], [1, 2, 3])
+        assert_array_equal(dset[3], [-1, -2, -3])
+
+
 if __name__ == "__main__":
     ut.main()

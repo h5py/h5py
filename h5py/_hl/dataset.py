@@ -139,9 +139,23 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
             # to not trigger unwanted encoding
             dtype = h5t.string_dtype(string_info.encoding)
             fillvalue = numpy.array(fillvalue, dtype=dtype)
+            dcpl.set_fill_value(fillvalue)
+        elif dtype.subdtype is not None:
+            # NumPy collapses an array dtype into the array's own shape, so it
+            # can never appear as ndarray.dtype.  The H5T_ARRAY type therefore
+            # has to be handed to HDF5 explicitly.
+            if dtype.hasobject:
+                raise NotImplementedError(
+                    "Fill values are not supported for array datatypes with "
+                    "variable-length or reference components"
+                )
+            # 0-d array of an array dtype is exactly one element of it
+            fill_buf = numpy.zeros((), dtype=dtype)
+            fill_buf[...] = fillvalue
+            dcpl.set_fill_value(fill_buf, tid)
         else:
             fillvalue = numpy.array(fillvalue)
-        dcpl.set_fill_value(fillvalue)
+            dcpl.set_fill_value(fillvalue)
 
     if track_times is None:
         # In case someone explicitly passes None for the default
@@ -716,8 +730,15 @@ class Dataset(HLObject):
     @with_phil
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
-        arr = numpy.zeros((1,), dtype=self.dtype)
-        self._dcpl.get_fill_value(arr)
+        dt = self.dtype
+        arr = numpy.zeros((1,), dtype=dt)
+        if dt.subdtype is not None and not dt.hasobject:
+            # NumPy cannot hand back an array dtype on an array, so the
+            # H5T_ARRAY type has to be passed explicitly.  numpy.zeros sized
+            # the buffer to one element of it already.
+            self._dcpl.get_fill_value(arr, h5t.py_create(dt, logical=1))
+        else:
+            self._dcpl.get_fill_value(arr)
         return arr[0]
 
     @cached_property

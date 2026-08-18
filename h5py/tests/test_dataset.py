@@ -660,6 +660,154 @@ def test_vlen_fillvalue_not_leaked(writable_file):
     assert growth < n * len(fill_value) // 8
 
 
+ARRAY_DTYPE_FILLVALUES = [
+    (np.dtype(('f4', (3,))), [1.5, 2.5, 3.5]),
+    (np.dtype(('f4', (3,))), 7),                       # broadcast a scalar
+    (np.dtype(('i2', (2, 2))), [[1, 2], [3, 4]]),
+    (np.dtype(('>f8', (2,))), [1.25, -2.5]),           # non-native byte order
+    (np.dtype(('i4', (4,))), np.array([9, 8, 7, 6])),
+    (np.dtype(('S5', (3,))), [b'aa', b'bb', b'cc']),   # fixed-length strings
+    (np.dtype(('S4', (3,))), b'pad'),                  # broadcast one string
+    (np.dtype(('c8', (2,))), [1 + 2j, 3 - 4j]),        # stored as compound
+    (np.dtype(('?', (3,))), [True, False, True]),      # HDF5 enum
+    (np.dtype(([('a', 'i4'), ('b', 'f8')], (2,))),     # compound base
+     [(1, 2.0), (3, 4.0)]),
+]
+
+
+@pytest.mark.parametrize('dt,fillvalue', ARRAY_DTYPE_FILLVALUES)
+def test_array_dtype_fillvalue(dt, fillvalue, writable_file):
+    """ Datasets with an array datatype accept and report a fill value """
+    expected = np.zeros((), dtype=dt)
+    expected[...] = fillvalue
+
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt,
+                                        fillvalue=fillvalue)
+
+    assert dset.fillvalue.dtype == dt.base
+    np.testing.assert_array_equal(dset.fillvalue, expected)
+    # unwritten elements come back as the fill value
+    np.testing.assert_array_equal(dset[0], expected)
+    np.testing.assert_array_equal(dset[1], expected)
+
+
+@pytest.mark.parametrize('dt,fillvalue', ARRAY_DTYPE_FILLVALUES)
+def test_array_dtype_fillvalue_reopen(dt, fillvalue, tmp_path):
+    """ An array datatype fill value survives a round trip through a file """
+    expected = np.zeros((), dtype=dt)
+    expected[...] = fillvalue
+
+    path = tmp_path / 'array_fillvalue.h5'
+    with File(path, 'w') as f:
+        f.create_dataset('x', (2,), dtype=dt, fillvalue=fillvalue)
+
+    with File(path, 'r') as f:
+        np.testing.assert_array_equal(f['x'].fillvalue, expected)
+        np.testing.assert_array_equal(f['x'][1], expected)
+
+
+def test_array_dtype_fillvalue_defined(writable_file):
+    """ An array datatype fill value is recorded as user-defined """
+    dt = np.dtype(('f4', (3,)))
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt,
+                                        fillvalue=[1, 2, 3])
+    assert dset._dcpl.fill_value_defined() == h5py.h5d.FILL_VALUE_USER_DEFINED
+
+
+def test_array_dtype_unset_fillvalue(writable_file):
+    """ An array datatype without a fill value reports zeros """
+    dt = np.dtype(('f4', (3,)))
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt)
+    np.testing.assert_array_equal(dset.fillvalue, np.zeros(3, dtype='f4'))
+
+
+@pytest.mark.skipif(h5py.version.hdf5_version_tuple < (2, 0, 0),
+                    reason="Requires HDF5 >= 2.0")
+@pytest.mark.skipif(not h5py.get_config().has_native_complex,
+                    reason="Native HDF5 complex number datatypes not available")
+def test_array_dtype_native_complex_fillvalue(tmp_path):
+    """ An array of native H5T_COMPLEX accepts a fill value
+
+    py_create() maps a NumPy complex dtype to an HDF5 compound, so the native
+    complex type has to be built explicitly and passed as the dtype. The
+    buffer is still filled from the NumPy dtype, which is where passing the
+    dataset's own type rather than re-deriving one from the dtype matters.
+    """
+    fillvalue = [1 + 2j, 3 - 4j]
+    expected = np.array(fillvalue, dtype='c8')
+    path = tmp_path / 'native_complex.h5'
+
+    with File(path, 'w') as f:
+        tid = h5t.array_create(h5t.NATIVE_FLOAT_COMPLEX, (2,))
+        dset = f.create_dataset('x', (2,), dtype=tid, fillvalue=fillvalue)
+
+        assert dset.id.get_type().get_super().get_class() == h5t.COMPLEX
+        np.testing.assert_array_equal(dset.fillvalue, expected)
+        np.testing.assert_array_equal(dset[1], expected)
+
+    with File(path, 'r') as f:
+        dset = f['x']
+        assert dset.id.get_type().get_super().get_class() == h5t.COMPLEX
+        np.testing.assert_array_equal(dset.fillvalue, expected)
+        np.testing.assert_array_equal(dset[1], expected)
+
+
+def test_array_dtype_fixed_utf8_fillvalue(writable_file):
+    """ An array of fixed-length UTF-8 strings keeps its character set """
+    dt = np.dtype((h5py.string_dtype(encoding='utf-8', length=6), (2,)))
+    fillvalue = ['b\u00e1r'.encode('utf-8'), b'ok']
+
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt,
+                                        fillvalue=fillvalue)
+
+    assert dset.id.get_type().get_super().get_cset() == h5t.CSET_UTF8
+    np.testing.assert_array_equal(dset.fillvalue,
+                                  np.array(fillvalue, dtype='S6'))
+    np.testing.assert_array_equal(dset[1], dset.fillvalue)
+
+
+@pytest.mark.parametrize('base', [
+    h5py.string_dtype(),                # variable-length string
+    h5py.vlen_dtype(np.int32),          # variable-length sequence
+    h5py.ref_dtype,                     # object reference
+    h5py.regionref_dtype,               # region reference
+])
+def test_array_dtype_object_fillvalue_rejected(base, writable_file):
+    """ Array datatypes needing a deep copy reject a fill value for now
+
+    These are exactly the dtypes NumPy represents with object elements.
+    """
+    dt = np.dtype((base, (2,)))
+    with pytest.raises(NotImplementedError, match='variable-length or ref'):
+        writable_file.create_dataset(make_name(), (2,), dtype=dt,
+                                     fillvalue=[None, None])
+
+
+@pytest.mark.parametrize('method', ['set_fill_value', 'get_fill_value'])
+def test_fill_value_object_buffer_rejected(method):
+    """ An object array must not be paired with an explicit datatype
+
+    Its elements are PyObject pointers, not the variable-length data HDF5
+    expects, and the two are the same width so the size check cannot catch it.
+    """
+    dcpl = h5py.h5p.create(h5py.h5p.DATASET_CREATE)
+    tid = h5t.py_create(np.dtype((h5py.string_dtype(), (2,))), logical=1)
+    buf = np.zeros((2,), dtype=object)
+    assert buf.nbytes == tid.get_size()   # the size check would let this pass
+
+    with pytest.raises(NotImplementedError, match='variable-length or ref'):
+        getattr(dcpl, method)(buf, tid)
+
+
+@pytest.mark.parametrize('method', ['set_fill_value', 'get_fill_value'])
+def test_fill_value_buffer_too_small(method):
+    """ An explicit type must not be able to overrun the supplied buffer """
+    dcpl = h5py.h5p.create(h5py.h5p.DATASET_CREATE)
+    tid = h5t.py_create(np.dtype(('f4', (3,))), logical=1)
+    with pytest.raises(ValueError, match='too small|needs'):
+        getattr(dcpl, method)(np.zeros(1, dtype='f4'), tid)
+
+
 class TestCreateNamedType(BaseDataset):
 
     """
