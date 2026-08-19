@@ -44,6 +44,31 @@ version = str(version_tuple)
 hdf5_version_tuple = _h5.get_libversion()
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
 
+
+def _hdf5_abi_compatible(built_version, running_version):
+    """Can h5py built against ``built_version`` safely use ``running_version``?
+
+    From 2.0.0 onwards HDF5 guarantees ABI backwards compatibility within a
+    major version: an application linked against X.Y.Z runs without
+    recompilation against any later X.A.B.  See
+    https://github.com/HDFGroup/hdf5/wiki/HDF5-Version-Numbers-and-Branch-Strategy
+
+    HDF5 1.x predates that promise -- its minor number played the role the
+    major number plays now, and the ABI was known to change even between
+    maintenance releases (e.g. H5Oget_info* in 1.10.4) -- so there we only
+    accept an exact match, as h5py always has.
+    """
+    if running_version == built_version:
+        return True
+
+    if built_version[0] < 2:
+        return False
+
+    # The majors must match, and an older library of the same major version may
+    # be missing symbols and features h5py was built against, so only accept
+    # newer ones.
+    return (running_version[0] == built_version[0]) and (running_version > built_version)
+
 api_version_tuple = (1,8)
 api_version = "%d.%d" % api_version_tuple
 
