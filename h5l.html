@@ -54,10 +54,10 @@ LinkProxy, which comes attached to <a class="reference internal" href="h5g.html#
 <p>These come attached to <a class="reference internal" href="h5g.html#h5py.h5g.GroupID" title="h5py.h5g.GroupID"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupID</span></code></a> objects as “obj.links”.  Since every
 <code class="xref py py-data docutils literal notranslate"><span class="pre">H5L</span></code> function operates on at least one group, the methods provided
 operate on their parent group identifier.  For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">h5g</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">links</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;MyGroup&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">h5g</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="s1">'/'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">links</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"MyGroup"</span><span class="p">)</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">links</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;FooBar&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">links</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"FooBar"</span><span class="p">)</span>
 <span class="go">False</span>
 </pre></div>
 </div>
@@ -286,7 +286,7 @@ anything else aborts iteration and returns that value.</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 14, 2026.
+      Last updated on Aug 19, 2026.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>

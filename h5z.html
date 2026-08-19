@@ -80,7 +80,7 @@ filter code should be one of:</p>
 library:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
 
-<span class="n">filter_clib</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="s2">&quot;/path/to/my_hdf5_filter_plugin.so&quot;</span><span class="p">)</span>
+<span class="n">filter_clib</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="s2">"/path/to/my_hdf5_filter_plugin.so"</span><span class="p">)</span>
 <span class="n">filter_clib</span><span class="o">.</span><span class="n">H5PLget_plugin_info</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span>
 
 <span class="n">h5py</span><span class="o">.</span><span class="n">h5z</span><span class="o">.</span><span class="n">register_filter</span><span class="p">(</span><span class="n">filter_clib</span><span class="o">.</span><span class="n">H5PLget_plugin_info</span><span class="p">())</span>
@@ -364,7 +364,7 @@ library:</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 14, 2026.
+      Last updated on Aug 19, 2026.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
