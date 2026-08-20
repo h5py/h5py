@@ -34,6 +34,18 @@ from .vds import VDSmap, vds_support
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
 
+_ALLOC_TIME_OPTIONS = {
+    "default": h5d.ALLOC_TIME_DEFAULT,
+    "early": h5d.ALLOC_TIME_EARLY,
+    "incr": h5d.ALLOC_TIME_INCR,
+    "late": h5d.ALLOC_TIME_LATE,
+}
+_FILL_TIME_OPTIONS = {
+    "alloc": h5d.FILL_TIME_ALLOC,
+    "never": h5d.FILL_TIME_NEVER,
+    "ifset": h5d.FILL_TIME_IFSET,
+}
+
 
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
@@ -42,7 +54,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   external=None, track_order=None, dcpl=None, dapl=None,
                   efile_prefix=None, virtual_prefix=None, allow_unknown_filter=False,
                   rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, *,
-                  fill_time=None):
+                  alloc_time=None, fill_time=None):
     """ Return a new low-level dataset identifier """
 
     # Convert data to a C-contiguous ndarray
@@ -119,8 +131,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     dcpl = filters.fill_dcpl(
         dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
         chunks, compression, compression_opts, shuffle, fletcher32,
-        maxshape, scaleoffset, external, allow_unknown_filter,
-        fill_time=fill_time)
+        maxshape, scaleoffset, external, allow_unknown_filter)
 
     # Check that compression roundtrips correctly if it was specified
     if compression is not None:
@@ -157,6 +168,21 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         dcpl.set_attr_creation_order(0)
     elif track_order is not None:
         raise TypeError("track_order must be either True or False")
+
+    if alloc_time is not None:
+        if (at := _ALLOC_TIME_OPTIONS.get(alloc_time)) is not None:
+            dcpl.set_alloc_time(at)
+        else:
+            raise ValueError(
+                "alloc_time parameter must be default/early/incr/late or None"
+            )
+    if fill_time is not None:
+        if (ft := _FILL_TIME_OPTIONS.get(fill_time)) is not None:
+            dcpl.set_fill_time(ft)
+        else:
+            msg = ("fill_time must be one of the following choices: 'alloc', "
+                   f"'never' or 'ifset', but it is {fill_time}.")
+            raise ValueError(msg)
 
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
