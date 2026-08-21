@@ -549,9 +549,9 @@ class Dataset(HLObject):
         with phil:
             shape = self.id.shape
 
-        # If the file is read-only, cache the shape to speed-up future uses.
-        # This cache is invalidated by .refresh() when using SWMR.
-        if self._readonly:
+        # Cache the shape for read-only, non-VDS datasets. This cache is
+        # invalidated by .refresh() when using SWMR.
+        if self._should_cache_props:
             self._cache_props['shape'] = shape
         return shape
 
@@ -572,11 +572,16 @@ class Dataset(HLObject):
         else:
             size = product(self.shape)
 
-        # If the file is read-only, cache the size to speed-up future uses.
-        # This cache is invalidated by .refresh() when using SWMR.
-        if self._readonly:
+        # Cache the size for read-only, non-VDS datasets. This cache is
+        # invalidated by .refresh() when using SWMR.
+        if self._should_cache_props:
             self._cache_props['size'] = size
         return size
+
+    @property
+    def _should_cache_props(self):
+        """Whether dataspace-derived properties can be cached safely."""
+        return self._readonly and (not vds_support or not self.is_virtual)
 
     @property
     def nbytes(self):
@@ -594,9 +599,9 @@ class Dataset(HLObject):
 
         slr = _selector.Selector(self.id.get_space())
 
-        # If the file is read-only, cache the reader to speed up future uses.
-        # This cache is invalidated by .refresh() when using SWMR.
-        if self._readonly:
+        # Cache the selector for read-only, non-VDS datasets. This cache is
+        # invalidated by .refresh() when using SWMR.
+        if self._should_cache_props:
             self._cache_props['_selector'] = slr
         return slr
 
@@ -608,9 +613,9 @@ class Dataset(HLObject):
 
         rdr = _selector.Reader(self.id)
 
-        # If the file is read-only, cache the reader to speed up future uses.
-        # This cache is invalidated by .refresh() when using SWMR.
-        if self._readonly:
+        # Cache the reader for read-only, non-VDS datasets. This cache is
+        # invalidated by .refresh() when using SWMR.
+        if self._should_cache_props:
             self._cache_props['_fast_reader'] = rdr
         return rdr
 
