@@ -27,7 +27,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from h5py import File, Dataset
 from h5py._hl.base import is_empty_dataspace, product
-from h5py import h5f, h5t
+from h5py import h5d, h5f, h5t
 import h5py
 
 from .common import ut, TestCase, NUMPY_RELEASE_VERSION, is_main_thread, make_name
@@ -2363,3 +2363,18 @@ def test_store_regionrefs(writable_file):
     refs_ds = writable_file.create_dataset(make_name("refs"), shape=(1,), dtype=h5py.ref_dtype)
     with pytest.raises(TypeError, match="convert"):
         refs_ds[0] = ds1.regionref[:6]
+
+
+@pytest.mark.parametrize("alloc_time,alloc_const", [
+    # Default -> late for contiguous datasets
+    ("default", h5d.ALLOC_TIME_LATE),
+    ("early", h5d.ALLOC_TIME_EARLY),
+    ("incr", h5d.ALLOC_TIME_INCR),
+    ("late", h5d.ALLOC_TIME_LATE),
+])
+def test_alloc_time(writable_file, alloc_time, alloc_const):
+    ds = writable_file.create_dataset(
+        make_name(), shape=(5,), dtype='i4', alloc_time=alloc_time
+    )
+    dcpl = ds.id.get_create_plist()
+    assert dcpl.get_alloc_time() == alloc_const
