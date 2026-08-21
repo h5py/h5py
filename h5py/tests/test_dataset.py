@@ -22,6 +22,7 @@ import sys
 import numpy as np
 import platform
 import pytest
+import subprocess
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
@@ -627,6 +628,396 @@ class TestFillTime(BaseDataset):
 def test_get_unset_fill_value(dt, expected, writable_file):
     dset = writable_file.create_dataset(make_name(), (10,), dtype=dt)
     assert dset.fillvalue == expected
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="resource is POSIX-only")
+@pytest.mark.thread_unsafe(reason="measures process-wide maxRSS")
+def test_vlen_fillvalue_not_leaked(writable_file):
+    """ Reading a vlen string fillvalue must not leak the buffer HDF5 hands us
+    """
+    import resource
+
+    # ru_maxrss is in bytes on macOS, kilobytes elsewhere
+    scale = 1 if sys.platform == 'darwin' else 1024
+
+    def maxrss():
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * scale
+
+    fill_value = b'x' * 65536
+    dset = writable_file.create_dataset(
+        make_name(), (4,), dtype=h5py.string_dtype(), fillvalue=fill_value)
+
+    # Warm up, so the high-water mark reflects a settled allocator
+    for _ in range(100):
+        assert dset.fillvalue == fill_value
+
+    n = 4000
+    before = maxrss()
+    for _ in range(n):
+        dset.fillvalue
+    growth = maxrss() - before
+
+    # Leaking grows the high-water mark by n * len(fill_value) (256 MiB here).
+    # The margin is deliberately wide; this only has to catch the leak.
+    assert growth < n * len(fill_value) // 8
+
+
+# Run in a child process: before the guards existed, two of these cases killed
+# the interpreter outright (SIGABRT), which would take the whole pytest run down
+# with them rather than failing a single test.
+_FILLVALUE_PROBE = """\
+import sys
+
+import numpy as np
+import h5py
+
+case, path = sys.argv[1], sys.argv[2]
+
+if case == "set_vlen_seq":
+    fill = np.array([1, 2, 3], dtype="i4")
+    with h5py.File(path, "w") as f:
+        d = f.create_dataset("x", (2,), dtype=h5py.vlen_dtype(np.int32),
+                             fillvalue=fill)
+        assert np.array_equal(d.fillvalue, fill), d.fillvalue
+        assert np.array_equal(d[1], fill), d[1]
+
+elif case == "set_compound_vlen":
+    dt = np.dtype([("a", "i4"), ("b", h5py.string_dtype())])
+    with h5py.File(path, "w") as f:
+        d = f.create_dataset("x", (2,), dtype=dt, fillvalue=(7, b"xy"))
+        assert d.fillvalue["a"] == 7 and d.fillvalue["b"] == b"xy", d.fillvalue
+    # the file must be readable afterwards -- this used to be corrupt
+    with h5py.File(path, "r") as f:
+        assert f["x"][1]["b"] == b"xy"
+
+elif case == "get_vlen_seq":
+    # A vlen sequence fill value written by the HDF5 C API
+    with h5py.File(path, "r") as f:
+        got = f["vlen_int32"].fillvalue
+        assert np.array_equal(got, [10, 20, 30]), got
+
+else:
+    raise AssertionError("unknown case " + case)
+
+print("OK")
+"""
+
+
+@pytest.mark.parametrize('case', [
+    'set_vlen_seq',
+    'set_compound_vlen',
+    'get_vlen_seq',
+])
+def test_vlen_fillvalue_roundtrip(case, tmp_path):
+    """ Fill values work for variable-length datatypes
+
+    Run in a child process: before this worked, `get_vlen_seq` aborted the
+    interpreter, which would kill the whole test run rather than fail one test.
+    """
+    script = tmp_path / 'probe.py'
+    script.write_text(_FILLVALUE_PROBE)
+
+    if case == 'get_vlen_seq':
+        target = pathlib.Path(get_data_file_path('vlen_seq_fillvalue.h5'))
+    else:
+        target = tmp_path / 'out.h5'
+
+    # The child must import the h5py under test, whatever the working directory
+    env = dict(os.environ)
+    env['PYTHONPATH'] = os.pathsep.join(
+        entry for entry in (str(pathlib.Path(h5py.__file__).parents[1]),
+                            env.get('PYTHONPATH', '')) if entry
+    )
+    proc = subprocess.run([sys.executable, script, case, target],
+                          capture_output=True, text=True, env=env, timeout=120)
+
+    assert proc.returncode >= 0, (
+        f'child process was killed by signal {-proc.returncode}'
+    )
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    assert 'OK' in proc.stdout
+
+
+VLEN_FILLVALUES = [
+    (h5py.vlen_dtype(np.int32), np.array([10, 20, 30], dtype='i4')),
+    (h5py.vlen_dtype(np.float64), np.array([1.5, 2.5], dtype='f8')),
+    (h5py.vlen_dtype(np.int8), np.array([1, 2], dtype='i1')),
+    (h5py.vlen_dtype(np.bool_), np.array([True, False])),
+    (h5py.string_dtype(), b'hello'),
+]
+
+
+@pytest.mark.parametrize('dt,fill', VLEN_FILLVALUES)
+def test_vlen_fillvalue(dt, fill, writable_file):
+    """ A variable-length fill value round-trips and fills unwritten elements
+    """
+    dset = writable_file.create_dataset(make_name(), (3,), dtype=dt,
+                                        fillvalue=fill)
+
+    np.testing.assert_array_equal(dset.fillvalue, fill)
+    np.testing.assert_array_equal(dset[1], fill)
+
+
+@pytest.mark.parametrize('dt,fill', [
+    (np.dtype([('a', 'i4'), ('b', h5py.string_dtype())]), (7, b'xy')),
+    (np.dtype([('a', 'i4'), ('b', h5py.vlen_dtype(np.int32))]),
+     (7, np.array([1, 2, 3], dtype='i4'))),
+])
+def test_compound_vlen_member_fillvalue(dt, fill, tmp_path):
+    """ A compound with a vlen member keeps its fill value, and the file reads
+
+    This previously wrote a file that no HDF5 tool could open, reporting no
+    error at the time it was written.
+    """
+    path = tmp_path / 'compound_vlen.h5'
+    with File(path, 'w') as f:
+        f.create_dataset('x', (3,), dtype=dt, fillvalue=fill)
+
+    with File(path, 'r') as f:
+        dset = f['x']
+        assert dset.fillvalue['a'] == fill[0]
+        np.testing.assert_array_equal(dset.fillvalue['b'], fill[1])
+        np.testing.assert_array_equal(dset[1]['b'], fill[1])
+
+
+@pytest.mark.thread_unsafe(reason="sometimes fails with >= 8 threads")
+def test_vlen_fillvalue_from_created_file():
+    """ A vlen fill value written by another tool reads back
+
+    h5py could not write such a file before, and reading one aborted the
+    process.
+    """
+    with File(get_data_file_path('vlen_seq_fillvalue.h5'), 'r') as f:
+        np.testing.assert_array_equal(f['vlen_int32'].fillvalue, [10, 20, 30])
+        np.testing.assert_array_equal(f['vlen_int32'][0], [10, 20, 30])
+
+
+def test_vlen_fillvalue_hvl_t_is_wider_than_an_object_slot():
+    """ Why the fill value cannot be read straight into the caller's buffer
+
+    A variable-length sequence is an hvl_t, twice the width of the PyObject*
+    that NumPy stores, so the value is converted through a buffer sized for
+    the file datatype.  A variable-length string is a bare char*, which is why
+    that one case happened to work before.
+    """
+    object_slot = np.zeros((1,), dtype=object).nbytes
+    seq_size = h5t.py_create(h5py.vlen_dtype(np.int32), logical=1).get_size()
+    str_size = h5t.py_create(h5py.string_dtype(), logical=1).get_size()
+
+    assert seq_size == 2 * object_slot
+    assert str_size == object_slot
+
+
+@pytest.mark.parametrize('dt', [
+    h5py.vlen_dtype(np.int32),
+    h5py.string_dtype(),
+    np.dtype([('a', 'i4'), ('b', h5py.string_dtype())]),
+    np.dtype([('a', 'i4'), ('b', h5py.vlen_dtype(np.int32))]),
+])
+def test_vlen_unset_fillvalue_still_readable(dt, writable_file):
+    """ Datasets with no fill value report the HDF5 default, an empty value """
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt)
+    fill = dset.fillvalue
+
+    assert dset._dcpl.fill_value_defined() != h5py.h5d.FILL_VALUE_USER_DEFINED
+    # for a compound, the default is empty in the variable-length member
+    assert len(fill['b'] if dt.names else fill) == 0
+
+
+# Ways a datatype can carry a reference, from a bare reference to a reference
+# nested three deep. H5Tconvert recurses, so the same conversion covers all of
+# them. The point of testing the whole spectrum is that nothing here is coded
+# for individually.
+REFERENCE_CONTAINERS = [
+    pytest.param(lambda base: base,
+                 lambda ref: ref,
+                 id='plain'),
+    pytest.param(lambda base: np.dtype([('a', 'i4'), ('b', base)]),
+                 lambda ref: (7, ref),
+                 id='compound-member'),
+    pytest.param(lambda base: np.dtype((base, (2,))),
+                 lambda ref: [ref, ref],
+                 id='array'),
+    pytest.param(lambda base: h5py.vlen_dtype(base),
+                 lambda ref: np.array([ref, ref], dtype=object),
+                 id='vlen'),
+    pytest.param(lambda base: np.dtype((h5py.vlen_dtype(base), (2,))),
+                 lambda ref: [np.array([ref], dtype=object)] * 2,
+                 id='array-of-vlen'),
+    pytest.param(lambda base: np.dtype([('a', 'i4'),
+                                        ('b', h5py.vlen_dtype(base))]),
+                 lambda ref: (7, np.array([ref], dtype=object)),
+                 id='compound-of-vlen'),
+    pytest.param(lambda base: np.dtype([('a', 'i4'), ('b', base, (2,))]),
+                 lambda ref: (7, [ref, ref]),
+                 id='compound-of-array'),
+]
+
+
+def _unwrap_reference(value):
+    """Pull the first reference out of whatever container holds it """
+    for _ in range(4):
+        if isinstance(value, np.void):
+            value = value['b']
+        elif isinstance(value, np.ndarray) and value.shape:
+            value = value[0]
+        else:
+            break
+    return value
+
+
+@pytest.mark.parametrize('ref_kind', ['object', 'region'])
+@pytest.mark.parametrize('make_dtype,make_fill', REFERENCE_CONTAINERS)
+def test_reference_fillvalue(make_dtype, make_fill, ref_kind, tmp_path):
+    """ Fill values carrying references round-trip and still dereference
+
+    Asserting the reference resolves to the right object matters: a corrupted
+    reference still reads back as an <HDF5 object reference> and would pass a
+    round-trip check.
+    """
+    base = h5py.ref_dtype if ref_kind == 'object' else h5py.regionref_dtype
+    path = tmp_path / 'refs.h5'
+
+    with File(path, 'w') as f:
+        target = f.create_dataset('target', (3,), dtype='i4')
+        ref = target.ref if ref_kind == 'object' else target.regionref[0:2]
+        f.create_dataset('x', (2,), dtype=make_dtype(base),
+                         fillvalue=make_fill(ref))
+
+    with File(path, 'r') as f:
+        for value in (f['x'].fillvalue, f['x'][1]):
+            assert f[_unwrap_reference(value)].name == '/target'
+
+
+ARRAY_DTYPE_FILLVALUES = [
+    (np.dtype(('f4', (3,))), [1.5, 2.5, 3.5]),
+    (np.dtype(('f4', (3,))), 7),                       # broadcast a scalar
+    (np.dtype(('i2', (2, 2))), [[1, 2], [3, 4]]),
+    (np.dtype(('>f8', (2,))), [1.25, -2.5]),           # non-native byte order
+    (np.dtype(('i4', (4,))), np.array([9, 8, 7, 6])),
+    (np.dtype(('S5', (3,))), [b'aa', b'bb', b'cc']),   # fixed-length strings
+    (np.dtype(('S4', (3,))), b'pad'),                  # broadcast one string
+    (np.dtype(('c8', (2,))), [1 + 2j, 3 - 4j]),        # stored as compound
+    (np.dtype(('?', (3,))), [True, False, True]),      # HDF5 enum
+    (np.dtype(([('a', 'i4'), ('b', 'f8')], (2,))),     # compound base
+     [(1, 2.0), (3, 4.0)]),
+]
+
+
+@pytest.mark.parametrize('dt,fillvalue', ARRAY_DTYPE_FILLVALUES)
+def test_array_dtype_fillvalue(dt, fillvalue, writable_file):
+    """ Datasets with an array datatype accept and report a fill value """
+    expected = np.zeros((1,), dtype=dt)
+    expected[0] = fillvalue
+
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt,
+                                        fillvalue=fillvalue)
+
+    assert dset.fillvalue.dtype == dt.base
+    np.testing.assert_array_equal(dset.fillvalue, expected[0])
+    np.testing.assert_array_equal(dset[0], expected[0])
+    np.testing.assert_array_equal(dset[1], expected[0])
+
+
+@pytest.mark.parametrize('dt,fillvalue', ARRAY_DTYPE_FILLVALUES)
+def test_array_dtype_fillvalue_reopen(dt, fillvalue, tmp_path):
+    """ An array datatype fill value survives a round trip through a file """
+    expected = np.zeros((1,), dtype=dt)
+    expected[0] = fillvalue
+
+    path = tmp_path / 'array_fillvalue.h5'
+    with File(path, 'w') as f:
+        f.create_dataset('x', (2,), dtype=dt, fillvalue=fillvalue)
+
+    with File(path, 'r') as f:
+        np.testing.assert_array_equal(f['x'].fillvalue, expected[0])
+        np.testing.assert_array_equal(f['x'][1], expected[0])
+
+
+@pytest.mark.parametrize('base,fill', [
+    (h5py.vlen_dtype(np.int32),
+     [np.array([1, 2], dtype='i4'), np.array([3], dtype='i4')]),
+    (h5py.string_dtype(), [b'ab', b'cde']),
+])
+def test_array_of_vlen_fillvalue(base, fill, tmp_path):
+    """ An array datatype over a variable-length base takes a fill value
+
+    This needs both halves of this change: naming the array datatype, which
+    NumPy cannot express on an array, and converting the variable-length
+    members through the registered converters.
+    """
+    dt = np.dtype((base, (2,)))
+    path = tmp_path / 'array_vlen.h5'
+    with File(path, 'w') as f:
+        f.create_dataset('x', (2,), dtype=dt, fillvalue=fill)
+
+    with File(path, 'r') as f:
+        got = f['x'].fillvalue
+        assert len(got) == 2
+        for actual, want in zip(got, fill):
+            np.testing.assert_array_equal(actual, want)
+        np.testing.assert_array_equal(f['x'][1][0], fill[0])
+
+
+def test_array_dtype_fillvalue_defined(writable_file):
+    """ An array datatype fill value is recorded as user-defined """
+    dt = np.dtype(('f4', (3,)))
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt,
+                                        fillvalue=[1, 2, 3])
+    assert dset._dcpl.fill_value_defined() == h5py.h5d.FILL_VALUE_USER_DEFINED
+
+
+def test_array_dtype_unset_fillvalue(writable_file):
+    """ An array datatype without a fill value reports zeros """
+    dt = np.dtype(('f4', (3,)))
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt)
+    np.testing.assert_array_equal(dset.fillvalue, np.zeros(3, dtype='f4'))
+
+
+@pytest.mark.skipif(h5py.version.hdf5_version_tuple < (2, 0, 0),
+                    reason="Requires HDF5 >= 2.0")
+@pytest.mark.skipif(not h5py.get_config().has_native_complex,
+                    reason="Native HDF5 complex number datatypes not available")
+def test_array_dtype_native_complex_fillvalue(tmp_path):
+    """ An array of native H5T_COMPLEX accepts a fill value """
+    fillvalue = [1 + 2j, 3 - 4j]
+    expected = np.array(fillvalue, dtype='c8')
+    path = tmp_path / 'native_complex.h5'
+
+    with File(path, 'w') as f:
+        tid = h5t.array_create(h5t.NATIVE_FLOAT_COMPLEX, (2,))
+        dset = f.create_dataset('x', (2,), dtype=tid, fillvalue=fillvalue)
+
+        assert dset.id.get_type().get_super().get_class() == h5t.COMPLEX
+        np.testing.assert_array_equal(dset.fillvalue, expected)
+        np.testing.assert_array_equal(dset[1], expected)
+
+    with File(path, 'r') as f:
+        dset = f['x']
+        assert dset.id.get_type().get_super().get_class() == h5t.COMPLEX
+        np.testing.assert_array_equal(dset.fillvalue, expected)
+
+
+def test_array_dtype_fixed_utf8_fillvalue(writable_file):
+    """ An array of fixed-length UTF-8 strings keeps its character set """
+    dt = np.dtype((h5py.string_dtype(encoding='utf-8', length=6), (2,)))
+    fillvalue = ['b\u00e1r'.encode('utf-8'), b'ok']
+
+    dset = writable_file.create_dataset(make_name(), (2,), dtype=dt,
+                                        fillvalue=fillvalue)
+
+    assert dset.id.get_type().get_super().get_cset() == h5t.CSET_UTF8
+    np.testing.assert_array_equal(dset.fillvalue,
+                                  np.array(fillvalue, dtype='S6'))
+
+
+@pytest.mark.parametrize('method', ['set_fill_value', 'get_fill_value'])
+def test_fill_value_buffer_too_small(method):
+    """ Naming a datatype must not let it overrun the supplied buffer """
+    dcpl = h5py.h5p.create(h5py.h5p.DATASET_CREATE)
+    dt = np.dtype(('f4', (3,)))
+    with pytest.raises(ValueError, match='too small|needs'):
+        getattr(dcpl, method)(np.zeros(1, dtype='f4'), dt)
 
 
 class TestCreateNamedType(BaseDataset):
