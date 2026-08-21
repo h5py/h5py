@@ -824,6 +824,71 @@ def test_vlen_unset_fillvalue_still_readable(dt, writable_file):
     assert len(fill['b'] if dt.names else fill) == 0
 
 
+# Ways a datatype can carry a reference, from a bare reference to a reference
+# nested three deep. H5Tconvert recurses, so the same conversion covers all of
+# them. The point of testing the whole spectrum is that nothing here is coded
+# for individually.
+REFERENCE_CONTAINERS = [
+    pytest.param(lambda base: base,
+                 lambda ref: ref,
+                 id='plain'),
+    pytest.param(lambda base: np.dtype([('a', 'i4'), ('b', base)]),
+                 lambda ref: (7, ref),
+                 id='compound-member'),
+    pytest.param(lambda base: np.dtype((base, (2,))),
+                 lambda ref: [ref, ref],
+                 id='array'),
+    pytest.param(lambda base: h5py.vlen_dtype(base),
+                 lambda ref: np.array([ref, ref], dtype=object),
+                 id='vlen'),
+    pytest.param(lambda base: np.dtype((h5py.vlen_dtype(base), (2,))),
+                 lambda ref: [np.array([ref], dtype=object)] * 2,
+                 id='array-of-vlen'),
+    pytest.param(lambda base: np.dtype([('a', 'i4'),
+                                        ('b', h5py.vlen_dtype(base))]),
+                 lambda ref: (7, np.array([ref], dtype=object)),
+                 id='compound-of-vlen'),
+    pytest.param(lambda base: np.dtype([('a', 'i4'), ('b', base, (2,))]),
+                 lambda ref: (7, [ref, ref]),
+                 id='compound-of-array'),
+]
+
+
+def _unwrap_reference(value):
+    """Pull the first reference out of whatever container holds it """
+    for _ in range(4):
+        if isinstance(value, np.void):
+            value = value['b']
+        elif isinstance(value, np.ndarray) and value.shape:
+            value = value[0]
+        else:
+            break
+    return value
+
+
+@pytest.mark.parametrize('ref_kind', ['object', 'region'])
+@pytest.mark.parametrize('make_dtype,make_fill', REFERENCE_CONTAINERS)
+def test_reference_fillvalue(make_dtype, make_fill, ref_kind, tmp_path):
+    """ Fill values carrying references round-trip and still dereference
+
+    Asserting the reference resolves to the right object matters: a corrupted
+    reference still reads back as an <HDF5 object reference> and would pass a
+    round-trip check.
+    """
+    base = h5py.ref_dtype if ref_kind == 'object' else h5py.regionref_dtype
+    path = tmp_path / 'refs.h5'
+
+    with File(path, 'w') as f:
+        target = f.create_dataset('target', (3,), dtype='i4')
+        ref = target.ref if ref_kind == 'object' else target.regionref[0:2]
+        f.create_dataset('x', (2,), dtype=make_dtype(base),
+                         fillvalue=make_fill(ref))
+
+    with File(path, 'r') as f:
+        for value in (f['x'].fillvalue, f['x'][1]):
+            assert f[_unwrap_reference(value)].name == '/target'
+
+
 ARRAY_DTYPE_FILLVALUES = [
     (np.dtype(('f4', (3,))), [1.5, 2.5, 3.5]),
     (np.dtype(('f4', (3,))), 7),                       # broadcast a scalar
