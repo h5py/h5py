@@ -175,6 +175,14 @@ class TestRequire(BaseGroup):
         self.assertIsInstance(grp, Group)
         self.assertEqual(grp.name, '/' + name)
 
+    def test_create_track_order(self):
+        """ Track creation order when creating a group through require_group. """
+        name = make_name()
+        grp = self.f.require_group(name, track_order=True)
+        grp.create_group("b")
+        grp.create_group("a")
+        self.assertEqual(list(grp), ["b", "a"])
+
     def test_require_exception(self):
         """ Opening conflicting object results in TypeError """
         name = make_name()
