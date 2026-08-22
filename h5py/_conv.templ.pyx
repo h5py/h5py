@@ -12,16 +12,16 @@
     Low-level type-conversion routines.
 """
 
-from logging import getLogger
+from logging import getLogger, Logger
 
-from .h5 import get_config
+from .h5 cimport get_config, H5PYConfig
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID, H5PY_PYTHON_OPAQUE_TAG
 from libc.stdlib cimport realloc
 from libc.string cimport strcmp
 from .utils cimport emalloc, efree
 from ._proxy cimport needs_bkg_buffer
-cfg = get_config()
+cfg: H5PYConfig = get_config()
 
 # Initialization of numpy
 cimport numpy as cnp
@@ -35,7 +35,7 @@ from cpython.buffer cimport (
 from cpython.object cimport PyObject
 from cpython.ref cimport Py_INCREF, Py_XDECREF, Py_XINCREF
 
-logger = getLogger(__name__)
+logger: Logger = getLogger(__name__)
 
 cdef PyObject* Py_None = <PyObject*> None
 

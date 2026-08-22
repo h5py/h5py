@@ -9,10 +9,10 @@
 
 from .defs cimport *
 
-cpdef append(const char* search_path)
-cpdef prepend(const char* search_path)
-cpdef replace(const char* search_path, unsigned int index)
-cpdef insert(const char* search_path, unsigned int index)
-cpdef remove(unsigned int index)
-cpdef get(unsigned int index)
-cpdef size()
+cpdef void append(const char* search_path)
+cpdef void prepend(const char* search_path)
+cpdef void replace(const char* search_path, unsigned int index)
+cpdef void insert(const char* search_path, unsigned int index)
+cpdef void remove(unsigned int index)
+cpdef object get(unsigned int index)
+cpdef unsigned int size()

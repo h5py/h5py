@@ -22,10 +22,14 @@ from .h5t cimport TypeID, typewrap, py_create
 from .utils cimport emalloc, efree, convert_dims
 from ._objects import phil, with_phil
 
+import typing
+if typing.TYPE_CHECKING:
+    from ._hl.selections import SimpleSelection, FancySelection
+
 import_array()
 
 
-cdef object convert_bools(bint* data, hsize_t rank):
+cdef tuple convert_bools(bint* data, hsize_t rank):
     # Convert a bint array to a Python tuple of bools.
     cdef list bools_l
     cdef hsize_t i
@@ -49,7 +53,7 @@ cdef class Selector:
     cdef hsize_t* block
     cdef bint* scalar
 
-    def __cinit__(self, SpaceID space):
+    def __cinit__(self, SpaceID space) -> None:
         self.spaceobj = space
         self.space = space.id
         self.is_fancy = False
@@ -65,7 +69,7 @@ cdef class Selector:
         self.block = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.scalar = <bint*>emalloc(sizeof(bint) * self.rank)
 
-    def __dealloc__(self):
+    def __dealloc__(self) -> None:
         efree(self.dims)
         efree(self.start)
         efree(self.stride)
@@ -282,7 +286,7 @@ cdef class Selector:
             efree(tmp_count)
 
     @with_phil
-    def make_selection(self, tuple args):
+    def make_selection(self, tuple args) -> SimpleSelection | FancySelection:
         """Apply indexing/slicing args and create a high-level selection object
 
         Returns an instance of SimpleSelection or FancySelection, with a copy
@@ -323,7 +327,7 @@ cdef class Reader:
     cdef int np_typenum
     cdef bint native_byteorder
 
-    def __cinit__(self, DatasetID dsid):
+    def __cinit__(self, DatasetID dsid) -> None:
         self.dataset = dsid.id
         self.selector = Selector(dsid.get_space())
 
@@ -364,7 +368,7 @@ cdef class Reader:
         return arr
 
     @with_phil
-    def read(self, tuple args):
+    def read(self, tuple args) -> np.ndarray:
         """Index the dataset using args and read into a new numpy array
 
         Only works for simple numeric dtypes.
@@ -419,7 +423,7 @@ class MultiBlockSlice:
 
     """
 
-    def __init__(self, start=0, stride=1, count=None, block=1):
+    def __init__(self, start: int = 0, stride: int = 1, count: int | None = None, block: int = 1) -> None:
         if start < 0:
             raise ValueError("Start can't be negative")
         if stride < 1 or (count is not None and count < 1) or block < 1:
@@ -432,7 +436,7 @@ class MultiBlockSlice:
         self.count = count
         self.block = block
 
-    def indices(self, length):
+    def indices(self, length: int) -> tuple[int, int, int, int]:
         """Calculate and validate start, stride, count and block for the given length"""
         if self.count is None:
             # Select as many full blocks as possible without exceeding extent
@@ -454,12 +458,12 @@ class MultiBlockSlice:
 
         return self.start, self.stride, count, self.block
 
-    def _repr(self, count=None):
+    def _repr(self, count: int | None = None) -> str:
         if count is None:
             count = self.count
         return "{}(start={}, stride={}, count={}, block={})".format(
             self.__class__.__name__, self.start, self.stride, count, self.block
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._repr(count=None)
