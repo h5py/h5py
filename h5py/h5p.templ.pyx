@@ -418,6 +418,16 @@ cdef class PropFCID(PropOCID):
         H5Pget_file_space_page_size(self.id, &fsp_size)
         return fsp_size
 
+cdef bint _fill_value_is_ours(TypeID ftype) except -1:
+    # After conversion, only variable-length data is heap-allocated and ours to
+    # release.  References convert to plain addresses with nothing behind them,
+    # but HDF5 classifies reference types as relocatable, so handing one to
+    # H5Dvlen_reclaim lets it walk bytes that were never an allocation.  Fixed
+    # strings are caught by the H5T_STRING test and reclaim harmlessly.
+    return (H5Tdetect_class(ftype.id, H5T_VLEN)
+            or H5Tdetect_class(ftype.id, H5T_STRING))
+
+
 cdef int _check_fill_buffer(ndarray value, size_t needed) except -1:
     # check_numpy_read/check_numpy_write validate contiguity and writability,
     # but never size, and the fill value is transferred as a fixed number of
@@ -552,7 +562,7 @@ cdef class PropDCID(PropOCID):
             # whether or not that call succeeds. Before this point the buffer
             # still held the caller's PyObject*, which must never be freed as
             # heap data.
-            owned = dtype.hasobject
+            owned = _fill_value_is_ours(ftype)
             H5Pset_fill_value(self.id, ftype.id, buf)
         finally:
             if owned:
@@ -601,7 +611,7 @@ cdef class PropDCID(PropOCID):
             H5Pget_fill_value(self.id, ftype.id, buf)
             # HDF5 allocated the variable-length data into the buffer and
             # handed it to us.
-            owned = dtype.hasobject
+            owned = _fill_value_is_ours(ftype)
             if needs_bkg_buffer(ftype.id, mtype.id):
                 bkg = emalloc(bufsize)
                 memset(bkg, 0, bufsize)
