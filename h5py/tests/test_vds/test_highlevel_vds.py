@@ -8,12 +8,13 @@ import shutil
 import tempfile
 
 import numpy as np
-from numpy.testing import assert_array_equal
 import pytest
+from numpy.testing import assert_array_equal
 
 import h5py as h5
-from ..common import ut, make_name
+
 from ..._hl.vds import vds_support
+from ..common import make_name, ut
 
 
 @ut.skipUnless(vds_support,
@@ -110,7 +111,7 @@ class TestExcaliburHighLevel(ut.TestCase):
 
     def setUp(self):
         self.working_dir = tempfile.mkdtemp()
-        self.fname = ["stripe_%d.h5" % stripe for stripe in range(1,7)]
+        self.fname = [f"stripe_{_}.h5" for _ in range(1,7)]
         self.fname = [osp.join(self.working_dir, f) for f in self.fname]
         nframes = 5
         self.edata = ExcaliburData()
@@ -161,7 +162,7 @@ class TestExcaliburHighLevel(ut.TestCase):
 
 '''
 Unit test for the high level vds interface for percival
-https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
+https://support.hdfgroup.org/releases/hdf5/documentation/rfc/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
 '''
 
 
@@ -172,12 +173,10 @@ class TestPercivalHighLevel(ut.TestCase):
     def setUp(self):
         self.working_dir = tempfile.mkdtemp()
         self.fname = ['raw_file_1.h5','raw_file_2.h5','raw_file_3.h5']
-        k = 0
-        for outfile in self.fname:
+        for k, outfile in enumerate(self.fname):
             filename = osp.join(self.working_dir, outfile)
             f = h5.File(filename,'w')
             f['data'] = np.ones((20,200,200))*k
-            k +=1
             f.close()
 
         f = h5.File(osp.join(self.working_dir, 'raw_file_4.h5'), 'w')
@@ -239,7 +238,7 @@ class SlicingTestCase(ut.TestCase):
         self.tmpdir = tempfile.mkdtemp()
         # Create source files (1.h5 to 4.h5)
         for n in range(1, 5):
-            with h5.File(osp.join(self.tmpdir, '{}.h5'.format(n)), 'w') as f:
+            with h5.File(osp.join(self.tmpdir, f'{n}.h5'), 'w') as f:
                 d = f.create_dataset('data', (100,), 'i4')
                 d[:] = np.arange(100) + n
 
@@ -248,7 +247,7 @@ class SlicingTestCase(ut.TestCase):
         layout = h5.VirtualLayout((4, 100), 'i4', maxshape=(4, None))
 
         for n in range(1, 5):
-            filename = osp.join(self.tmpdir, "{}.h5".format(n))
+            filename = osp.join(self.tmpdir, f"{n}.h5")
             vsource = h5.VirtualSource(filename, 'data', shape=(100,))
             # Fill the first half with positions 0, 2, 4... from the source
             layout[n - 1, :50] = vsource[0:100:2]
@@ -282,7 +281,7 @@ class SlicingTestCase(ut.TestCase):
             ds = f['/group/data']
             assert ds.is_virtual
 
-            src_files = {osp.join(self.tmpdir, '{}.h5'.format(n))
+            src_files = {osp.join(self.tmpdir, f'{n}.h5')
                          for n in range(1, 5)}
             assert {s.file_name for s in ds.virtual_sources()} == src_files
 
@@ -478,25 +477,47 @@ def test_no_mappings(writable_file):
     np.testing.assert_array_equal(dset[()], np.zeros((10, 20), np.int32))
 
 
-def test_array_dtype_fillvalue(tmp_path):
+def test_named_dtype(writable_file):
+    """ A virtual dataset can be built from a committed datatype
+
+    The layout keeps the Datatype as-is rather than deriving a transient type
+    from a NumPy dtype, so the dataset it creates stays committed.
+    """
+    dt_name = make_name('dt{}')
+    src_name = make_name('src{}')
+    name = make_name()
+
+    writable_file[dt_name] = np.dtype('i4')
+    named = writable_file[dt_name]
+    writable_file.create_dataset(src_name, (2,), dtype=named)[...] = [1, 2]
+
+    layout = h5.VirtualLayout(shape=(4,), dtype=named)
+    layout[0:2] = h5.VirtualSource(writable_file.filename, src_name, shape=(2,))
+    dset = writable_file.create_virtual_dataset(name, layout, fillvalue=-1)
+
+    assert dset.id.get_type().committed()
+    assert dset.dtype == np.dtype('i4')
+    assert_array_equal(dset[...], [1, 2, -1, -1])
+
+
+def test_array_dtype_fillvalue(writable_file):
     """ A virtual dataset with an array datatype accepts a fill value """
     dt = np.dtype(('f4', (3,)))
-    src_path = tmp_path / 'src.h5'
-    with h5.File(src_path, 'w') as f:
-        f.create_dataset('x', (2,), dtype=dt)[...] = [[1, 2, 3], [4, 5, 6]]
+    src_name = make_name('src{}')
+    name = make_name()
+
+    writable_file.create_dataset(src_name, (2,), dtype=dt)[...] = [[1, 2, 3],
+                                                                  [4, 5, 6]]
 
     layout = h5.VirtualLayout(shape=(4,), dtype=dt)
-    layout[0:2] = h5.VirtualSource(src_path, 'x', shape=(2,), dtype=dt)
+    layout[0:2] = h5.VirtualSource(writable_file.filename, src_name,
+                                   shape=(2,), dtype=dt)
+    dset = writable_file.create_virtual_dataset(name, layout,
+                                                fillvalue=[-1, -2, -3])
 
-    vds_path = tmp_path / 'vds.h5'
-    with h5.File(vds_path, 'w') as f:
-        f.create_virtual_dataset('v', layout, fillvalue=[-1, -2, -3])
-
-    with h5.File(vds_path, 'r') as f:
-        dset = f['v']
-        assert_array_equal(dset.fillvalue, [-1, -2, -3])
-        assert_array_equal(dset[0], [1, 2, 3])
-        assert_array_equal(dset[3], [-1, -2, -3])
+    assert_array_equal(dset.fillvalue, [-1, -2, -3])
+    assert_array_equal(dset[0], [1, 2, 3])
+    assert_array_equal(dset[3], [-1, -2, -3])
 
 
 if __name__ == "__main__":
