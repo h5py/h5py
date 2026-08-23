@@ -18,7 +18,7 @@ from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID, H5PY_PYTHON_OPAQUE_TAG
 from libc.stdlib cimport realloc
-from libc.string cimport strcmp
+from libc.string cimport strcmp, memset
 from .utils cimport emalloc, efree
 from ._proxy cimport needs_bkg_buffer
 cfg = get_config()
@@ -718,7 +718,11 @@ cdef int conv_vlen2ndarray(void* ipt,
         data = new_data
 
     if needs_bkg_buffer(intype.id, outtype.id):
+        # The background buffer holds the existing destination value, which a
+        # converter may release -- conv_regref2pyref decrefs it.  It has to be
+        # zeroed rather than left holding whatever was on the heap.
         back_buf = emalloc(H5Tget_size(outtype.id)*size)
+        memset(back_buf, 0, H5Tget_size(outtype.id)*size)
 
     try:
         H5Tconvert(intype.id, outtype.id, size, data, back_buf, H5P_DEFAULT)
@@ -869,7 +873,9 @@ cdef int conv_ndarray2vlen(void* ipt,
         PyBuffer_Release(&view)
 
         if needs_bkg_buffer(intype.id, outtype.id):
+            # Zeroed for the same reason as in conv_vlen2ndarray above
             back_buf = emalloc(H5Tget_size(outtype.id)*len)
+            memset(back_buf, 0, H5Tget_size(outtype.id)*len)
 
         H5Tconvert(intype.id, outtype.id, len, data, back_buf, H5P_DEFAULT)
 
