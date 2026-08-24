@@ -829,29 +829,42 @@ def test_vlen_unset_fillvalue_still_readable(dt, writable_file):
 # them. The point of testing the whole spectrum is that nothing here is coded
 # for individually.
 REFERENCE_CONTAINERS = [
-    pytest.param(lambda base: base,
+    pytest.param('plain',
+                 lambda base: base,
                  lambda ref: ref,
                  id='plain'),
-    pytest.param(lambda base: np.dtype([('a', 'i4'), ('b', base)]),
+    pytest.param('compound-member',
+                 lambda base: np.dtype([('a', 'i4'), ('b', base)]),
                  lambda ref: (7, ref),
                  id='compound-member'),
-    pytest.param(lambda base: np.dtype((base, (2,))),
+    pytest.param('array',
+                 lambda base: np.dtype((base, (2,))),
                  lambda ref: [ref, ref],
                  id='array'),
-    pytest.param(lambda base: h5py.vlen_dtype(base),
+    pytest.param('vlen',
+                 lambda base: h5py.vlen_dtype(base),
                  lambda ref: np.array([ref, ref], dtype=object),
                  id='vlen'),
-    pytest.param(lambda base: np.dtype((h5py.vlen_dtype(base), (2,))),
+    pytest.param('array-of-vlen',
+                 lambda base: np.dtype((h5py.vlen_dtype(base), (2,))),
                  lambda ref: [np.array([ref], dtype=object)] * 2,
                  id='array-of-vlen'),
-    pytest.param(lambda base: np.dtype([('a', 'i4'),
+    pytest.param('compound-of-vlen',
+                 lambda base: np.dtype([('a', 'i4'),
                                         ('b', h5py.vlen_dtype(base))]),
                  lambda ref: (7, np.array([ref], dtype=object)),
                  id='compound-of-vlen'),
-    pytest.param(lambda base: np.dtype([('a', 'i4'), ('b', base, (2,))]),
+    pytest.param('compound-of-array',
+                 lambda base: np.dtype([('a', 'i4'), ('b', base, (2,))]),
                  lambda ref: (7, [ref, ref]),
                  id='compound-of-array'),
 ]
+
+# Reading a variable-length sequence of region references segfaults, on every
+# platform except macOS.  That is not a fill value problem, it reproduces on
+# master with a plain write and read of such a dataset. These combinations are
+# skipped until it is fixed.
+_VLEN_REGREF_CRASH = {'vlen', 'array-of-vlen', 'compound-of-vlen'}
 
 
 def _unwrap_reference(value):
@@ -867,14 +880,18 @@ def _unwrap_reference(value):
 
 
 @pytest.mark.parametrize('ref_kind', ['object', 'region'])
-@pytest.mark.parametrize('make_dtype,make_fill', REFERENCE_CONTAINERS)
-def test_reference_fillvalue(make_dtype, make_fill, ref_kind, tmp_path):
+@pytest.mark.parametrize('container,make_dtype,make_fill', REFERENCE_CONTAINERS)
+def test_reference_fillvalue(container, make_dtype, make_fill, ref_kind,
+                             tmp_path):
     """ Fill values carrying references round-trip and still dereference
 
     Asserting the reference resolves to the right object matters: a corrupted
     reference still reads back as an <HDF5 object reference> and would pass a
     round-trip check.
     """
+    if ref_kind == 'region' and container in _VLEN_REGREF_CRASH:
+        pytest.skip('reading vlen region reference data segfaults, see gh-2966')
+
     base = h5py.ref_dtype if ref_kind == 'object' else h5py.regionref_dtype
     path = tmp_path / 'refs.h5'
 
