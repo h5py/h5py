@@ -1576,13 +1576,17 @@ class TestCompound(BaseDataset):
         """ A single vlen field can be written on its own (issue 1857)"""
         dt = np.dtype([('a_float', np.float64),
                        ('a_string', h5py.string_dtype(encoding='utf-8')),
-                       ('a_seq', h5py.vlen_dtype(np.int32))])
+                       ('a_seq', h5py.vlen_dtype(np.int32)),
+                       # dtype.base drops the (2,), so an array valued field
+                       # goes down the same path as a plain vlen one
+                       ('a_pair', h5py.string_dtype(encoding='utf-8'), (2,))])
 
         ds = self.f.create_dataset(make_name(), (3,), dtype=dt)
         ds['a_float'] = [1.0, 2.0, 3.0]
         ds['a_string'] = ['one', 'two', 'three']
         ds['a_seq'] = np.array([np.arange(n, dtype=np.int32) for n in (1, 2, 3)],
                                dtype=object)
+        ds['a_pair'] = [['a', 'bb'], ['ccc', 'dddd'], ['e', 'ff']]
 
         outdata = ds[...]
         self.assertArrayEqual(outdata['a_float'], np.array([1.0, 2.0, 3.0]))
@@ -1590,6 +1594,9 @@ class TestCompound(BaseDataset):
                               np.array([b'one', b'two', b'three'], dtype=object))
         for got, expected in zip(outdata['a_seq'], (1, 2, 3)):
             self.assertArrayEqual(got, np.arange(expected, dtype=np.int32))
+        self.assertArrayEqual(outdata['a_pair'],
+                              np.array([[b'a', b'bb'], [b'ccc', b'dddd'],
+                                        [b'e', b'ff']], dtype=object))
 
         # A scalar is broadcast over the field, leaving other fields alone
         ds['a_string'] = 'same'
