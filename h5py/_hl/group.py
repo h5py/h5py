@@ -128,9 +128,8 @@ class Group(HLObject, MutableMappingHDF5):
             Dataset shape.  Use "()" for scalar datasets.  Required if "data"
             isn't provided.
         dtype
-            Numpy dtype or string.  If omitted, dtype('f') will be used.
-            Required if "data" isn't provided; otherwise, overrides data
-            array's dtype.
+            Numpy dtype or string. Required if "data" isn't provided; otherwise,
+            overrides data array's dtype.
         data
             Provide data to initialize the dataset.  If used, you can omit
             shape and dtype arguments.
