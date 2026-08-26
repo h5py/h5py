@@ -1474,3 +1474,16 @@ class TestMutableMapping(BaseGroup):
         Group.__delitem__
         Group.__iter__
         Group.__len__
+
+
+def test_non_utf8(writable_file):
+    name_b = make_name('café').encode('latin-1')
+    writable_file.create_group(name_b)
+
+    name_s = name_b.decode('utf8', 'surrogateescape')
+    assert set(writable_file) == {name_s}
+    assert name_s in writable_file
+    assert name_b in writable_file
+
+    assert isinstance(writable_file[name_s], h5py.Group)
+    assert isinstance(writable_file[name_b], h5py.Group)

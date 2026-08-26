@@ -173,57 +173,54 @@ class CommonStateObject:
         """
         return dlcpl
 
-    def _e(self, name, lcpl=None):
-        """ Encode a name according to the current file settings.
-
-        Returns name, or 2-tuple (name, lcpl) if lcpl is True
-
-        - Binary strings are always passed as-is, h5t.CSET_ASCII
-        - Unicode strings are encoded utf8, h5t.CSET_UTF8
-
-        If name is None, returns either None or (None, None) appropriately.
-        """
-        def get_lcpl(coding):
-            """ Create an appropriate link creation property list """
-            lcpl = self._lcpl.copy()
-            lcpl.set_char_encoding(coding)
-            return lcpl
-
+    @staticmethod
+    def _e(name):
+        """Encode a name to bytes"""
         if name is None:
-            return (None, None) if lcpl else None
-
-        if isinstance(name, bytes):
-            coding = h5t.CSET_ASCII
+            return None
+        elif isinstance(name, bytes):
+            return name
         elif isinstance(name, str):
-            try:
-                name = name.encode('ascii')
-                coding = h5t.CSET_ASCII
-            except UnicodeEncodeError:
-                name = name.encode('utf8')
-                coding = h5t.CSET_UTF8
+            return name.encode('utf-8', 'surrogateescape')
         else:
             raise TypeError(f"A name should be string or bytes, not {type(name)}")
 
-        if lcpl:
-            return name, get_lcpl(coding)
-        return name
+    def _e_lcpl(self, name):
+        """ Encode a name and prepare a link creation property list.
 
-    def _d(self, name):
-        """ Decode a name according to the current file settings.
+        Returns a 2-tuple (name, lcpl)
 
-        - Try to decode utf8
-        - Failing that, return the byte string
+        - str with only ASCII characters are marked as ASCII, otherwise UTF-8
+        - bytes are recorded as ASCII, regardless of their contents.
+        """
+        lcpl = default_lcpl()
+
+        if name is None:
+            return None, lcpl
+
+        coding = h5t.CSET_ASCII
+        if isinstance(name, str):
+            try:
+                name = name.encode('ascii')
+            except UnicodeEncodeError:
+                name = name.encode('utf8', 'surrogateescape')
+                coding = h5t.CSET_UTF8
+        elif not isinstance(name, bytes):
+            raise TypeError(f"A name should be string or bytes, not {type(name)}")
+
+        lcpl.set_char_encoding(coding)
+        return name, lcpl
+
+    @staticmethod
+    def _d(name):
+        """ Decode a name from (probably UTF-8) bytes.
 
         If name is None, returns None.
         """
         if name is None:
             return None
 
-        try:
-            return name.decode('utf8')
-        except UnicodeDecodeError:
-            pass
-        return name
+        return name.decode('utf8', 'surrogateescape')
 
 
 class _RegionProxy:
