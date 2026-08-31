@@ -181,6 +181,19 @@ no-build-package = ["numpy"]
 index-strategy = "unsafe-best-match"
 
 [[tool.uv.index]]
+# explicitly configure PyPI as the first index to look up instead of the default
+# fallback. This ensures that, if:
+# 1. pre-releases are not allowed and
+# 2. a package with a non-dev version is found on sp-nightlies,
+# then it still won't be preferred over its PyPI counterpart.
+name = "pypi"
+url = "https://pypi.org/simple"
+# exclude packages published less than a week ago (ISO 8601)
+exclude-newer = "P7D"
+
+[[tool.uv.index]]
 name = "sp-nightlies"
 url = "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple"
 exclude-newer = false
+# cache metadata for up to 10min (600s), and packages for 12h (43200s)
+cache-control = { api = "max-age=600", files = "max-age=43200, immutable" }
