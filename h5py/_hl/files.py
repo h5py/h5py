@@ -167,11 +167,25 @@ def make_fapl(
     else:
         if driver == 'ros3':
             token = kwds.pop('session_token', None)
+            block_size = kwds.pop('block_size', None)
+            block_cache_size = kwds.pop('block_cache_size', None)
+            lock_superblock = kwds.pop('lock_superblock', None)
             set_fapl(plist, **kwds)
             if token:
                 if hdf5_version < (1, 14, 2):
                     raise ValueError('HDF5 >= 1.14.2 required for AWS session token')
                 plist.set_fapl_ros3_token(token)
+            block_config = {}
+            if block_size is not None:
+                block_config['block_size'] = int(block_size)
+            if block_cache_size is not None:
+                block_config['block_cache_size'] = int(block_cache_size)
+            if lock_superblock is not None:
+                block_config['lock_superblock'] = bool(lock_superblock)
+            if block_config:
+                if hdf5_version < (2, 2, 0):
+                    raise ValueError('HDF5 >= 2.2.0 required to configure the ROS3 block cache')
+                plist.set_fapl_ros3_block_caching(**block_config)
         else:
             set_fapl(plist, **kwds)
 
