@@ -2363,3 +2363,28 @@ def test_store_regionrefs(writable_file):
     refs_ds = writable_file.create_dataset(make_name("refs"), shape=(1,), dtype=h5py.ref_dtype)
     with pytest.raises(TypeError, match="convert"):
         refs_ds[0] = ds1.regionref[:6]
+
+
+@pytest.mark.parametrize('ref_dtype,make_ref', [
+    (h5py.ref_dtype, lambda ds: ds.ref),
+    (h5py.regionref_dtype, lambda ds: ds.regionref[:6]),
+], ids=['object', 'region'])
+def test_store_vlen_refs(ref_dtype, make_ref, writable_file):
+    """ A variable-length sequence of references round-trips
+
+    Converting region references needs a background buffer, and that buffer
+    used to be allocated without being zeroed.  Reading one back released
+    whatever pointer happened to be in it, which segfaulted on every platform
+    whose allocator does not hand back zeroed memory.
+    """
+    ds1 = writable_file.create_dataset(make_name("foo"), data=np.arange(12))
+    ref = make_ref(ds1)
+
+    vlen_ds = writable_file.create_dataset(make_name("vlen_refs"), (2,),
+                                           dtype=h5py.vlen_dtype(ref_dtype))
+    vlen_ds[0] = np.array([ref, ref], dtype=object)
+
+    stored = vlen_ds[0]
+    assert len(stored) == 2
+    for r in stored:
+        assert writable_file[r] == ds1
