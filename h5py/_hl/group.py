@@ -170,8 +170,17 @@ class Group(HLObject, MutableMappingHDF5):
         fletcher32
             (T/F) Enable fletcher32 error detection. Not permitted in
             conjunction with the scale/offset filter.
+        alloc_time
+            One of early/incr/late/default or None. early allocates space for
+            the dataset up front, late allocates on first write, incr allocates
+            each chunk when written. The default is incr for chunked datasets
+            and late for contiguous.
         fillvalue
             (Scalar) Use this value for uninitialized parts of the dataset.
+        fill_time
+            One of alloc/ifset/never or None. alloc writes fill values,
+            including the default of 0, when the dataset is allocated, ifset
+            (default) does so only if a fill value is specified.
         track_times
             (T/F) Enable dataset creation timestamps.
         track_order
