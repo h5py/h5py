@@ -141,6 +141,18 @@ To write to the dataset, combine the indexes in a single step:
    >>> print(dset[0, 1])
    3.0
 
+Modifying an existing dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Open the file in ``r+`` mode when you need to update data in an existing dataset.
+Changes made through the dataset object are written back to the file::
+
+   >>> with h5py.File("my_hdf5_file.h5", "r+") as f:
+   ...     dset = f["test"]
+   ...     dset[0, 1] = 3.0
+   ...     dset[0, 1]
+   3.0
+
 .. _dataset_iter:
 
 Length and iteration
