@@ -17,53 +17,53 @@ from ._objects import phil, with_phil
 
 # === Public constants and data structures ====================================
 
-CLASS_T_VERS = H5Z_CLASS_T_VERS
+CLASS_T_VERS: int = H5Z_CLASS_T_VERS
 
-FILTER_LZF = H5PY_FILTER_LZF
+FILTER_LZF: int = H5PY_FILTER_LZF
 
-FILTER_ERROR    = H5Z_FILTER_ERROR
-FILTER_NONE     = H5Z_FILTER_NONE
-FILTER_ALL      = H5Z_FILTER_ALL
-FILTER_DEFLATE  = H5Z_FILTER_DEFLATE
-FILTER_SHUFFLE  = H5Z_FILTER_SHUFFLE
-FILTER_FLETCHER32 = H5Z_FILTER_FLETCHER32
-FILTER_SZIP     = H5Z_FILTER_SZIP
-FILTER_NBIT     = H5Z_FILTER_NBIT
-FILTER_SCALEOFFSET = H5Z_FILTER_SCALEOFFSET
-FILTER_RESERVED = H5Z_FILTER_RESERVED
-FILTER_MAX      = H5Z_FILTER_MAX
+FILTER_ERROR: int    = H5Z_FILTER_ERROR
+FILTER_NONE: int     = H5Z_FILTER_NONE
+FILTER_ALL: int      = H5Z_FILTER_ALL
+FILTER_DEFLATE: int  = H5Z_FILTER_DEFLATE
+FILTER_SHUFFLE: int  = H5Z_FILTER_SHUFFLE
+FILTER_FLETCHER32: int = H5Z_FILTER_FLETCHER32
+FILTER_SZIP: int     = H5Z_FILTER_SZIP
+FILTER_NBIT: int     = H5Z_FILTER_NBIT
+FILTER_SCALEOFFSET: int = H5Z_FILTER_SCALEOFFSET
+FILTER_RESERVED: int = H5Z_FILTER_RESERVED
+FILTER_MAX: int      = H5Z_FILTER_MAX
 
-FLAG_DEFMASK    = H5Z_FLAG_DEFMASK
-FLAG_MANDATORY  = H5Z_FLAG_MANDATORY
-FLAG_OPTIONAL   = H5Z_FLAG_OPTIONAL
-FLAG_INVMASK    = H5Z_FLAG_INVMASK
-FLAG_REVERSE    = H5Z_FLAG_REVERSE
-FLAG_SKIP_EDC   = H5Z_FLAG_SKIP_EDC
+FLAG_DEFMASK: int    = H5Z_FLAG_DEFMASK
+FLAG_MANDATORY: int  = H5Z_FLAG_MANDATORY
+FLAG_OPTIONAL: int   = H5Z_FLAG_OPTIONAL
+FLAG_INVMASK: int    = H5Z_FLAG_INVMASK
+FLAG_REVERSE: int    = H5Z_FLAG_REVERSE
+FLAG_SKIP_EDC: int   = H5Z_FLAG_SKIP_EDC
 
-SZIP_ALLOW_K13_OPTION_MASK  = H5_SZIP_ALLOW_K13_OPTION_MASK   #1
-SZIP_CHIP_OPTION_MASK       = H5_SZIP_CHIP_OPTION_MASK        #2
-SZIP_EC_OPTION_MASK         = H5_SZIP_EC_OPTION_MASK          #4
-SZIP_NN_OPTION_MASK         = H5_SZIP_NN_OPTION_MASK          #32
-SZIP_MAX_PIXELS_PER_BLOCK   = H5_SZIP_MAX_PIXELS_PER_BLOCK    #32
+SZIP_ALLOW_K13_OPTION_MASK: int  = H5_SZIP_ALLOW_K13_OPTION_MASK   #1
+SZIP_CHIP_OPTION_MASK: int       = H5_SZIP_CHIP_OPTION_MASK        #2
+SZIP_EC_OPTION_MASK: int         = H5_SZIP_EC_OPTION_MASK          #4
+SZIP_NN_OPTION_MASK: int         = H5_SZIP_NN_OPTION_MASK          #32
+SZIP_MAX_PIXELS_PER_BLOCK: int   = H5_SZIP_MAX_PIXELS_PER_BLOCK    #32
 
-SO_FLOAT_DSCALE = H5Z_SO_FLOAT_DSCALE
-SO_FLOAT_ESCALE = H5Z_SO_FLOAT_ESCALE
-SO_INT          = H5Z_SO_INT
-SO_INT_MINBITS_DEFAULT = H5Z_SO_INT_MINBITS_DEFAULT
+SO_FLOAT_DSCALE: int = H5Z_SO_FLOAT_DSCALE
+SO_FLOAT_ESCALE: int = H5Z_SO_FLOAT_ESCALE
+SO_INT: int          = H5Z_SO_INT
+SO_INT_MINBITS_DEFAULT: int = H5Z_SO_INT_MINBITS_DEFAULT
 
-FILTER_CONFIG_ENCODE_ENABLED = H5Z_FILTER_CONFIG_ENCODE_ENABLED
-FILTER_CONFIG_DECODE_ENABLED = H5Z_FILTER_CONFIG_DECODE_ENABLED
+FILTER_CONFIG_ENCODE_ENABLED: int = H5Z_FILTER_CONFIG_ENCODE_ENABLED
+FILTER_CONFIG_DECODE_ENABLED: int = H5Z_FILTER_CONFIG_DECODE_ENABLED
 
-ERROR_EDC   = H5Z_ERROR_EDC
-DISABLE_EDC = H5Z_DISABLE_EDC
-ENABLE_EDC  = H5Z_ENABLE_EDC
-NO_EDC      = H5Z_NO_EDC
+ERROR_EDC: int   = H5Z_ERROR_EDC
+DISABLE_EDC: int = H5Z_DISABLE_EDC
+ENABLE_EDC: int  = H5Z_ENABLE_EDC
+NO_EDC: int      = H5Z_NO_EDC
 
 
 # === Filter API  =============================================================
 
 @with_phil
-def filter_avail(int filter_code):
+def filter_avail(int filter_code) -> bint:
     """(INT filter_code) => BOOL
 
     Determine if the given filter is available to the library. The
@@ -78,7 +78,7 @@ def filter_avail(int filter_code):
 
 
 @with_phil
-def get_filter_info(int filter_code):
+def get_filter_info(int filter_code) -> int:
     """(INT filter_code) => INT filter_flags
 
     Retrieve a bitfield with information about the given filter. The
@@ -100,7 +100,7 @@ def get_filter_info(int filter_code):
 
 
 @with_phil
-def register_filter(uintptr_t cls_pointer_address):
+def register_filter(uintptr_t cls_pointer_address) -> int:
     '''(INT cls_pointer_address) => BOOL
 
     Register a new filter from the memory address of a buffer containing a
@@ -121,7 +121,7 @@ def register_filter(uintptr_t cls_pointer_address):
 
 
 @with_phil
-def unregister_filter(int filter_code):
+def unregister_filter(int filter_code) -> int:
     '''(INT filter_code) => BOOL
 
     Unregister a filter
@@ -130,5 +130,5 @@ def unregister_filter(int filter_code):
     return <int>H5Zunregister(<H5Z_filter_t>filter_code) >= 0
 
 
-def _register_lzf():
+def _register_lzf() -> None:
     register_lzf()

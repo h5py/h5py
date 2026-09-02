@@ -29,6 +29,11 @@ from cpython cimport PyBUF_ANY_CONTIGUOUS, \
                      PyBytes_AsString, \
                      PyBytes_FromStringAndSize, \
                      PyObject_GetBuffer
+import numpy as np
+from typing import TypeAlias, Callable
+
+
+_DType: TypeAlias = np.dtype[np.generic]
 
 
 # Initialization
@@ -36,30 +41,30 @@ import_array()
 
 # === Public constants and data structures ====================================
 
-COMPACT     = H5D_COMPACT
-CONTIGUOUS  = H5D_CONTIGUOUS
-CHUNKED     = H5D_CHUNKED
+COMPACT: int     = H5D_COMPACT
+CONTIGUOUS: int  = H5D_CONTIGUOUS
+CHUNKED: int     = H5D_CHUNKED
 
-ALLOC_TIME_DEFAULT  = H5D_ALLOC_TIME_DEFAULT
-ALLOC_TIME_LATE     = H5D_ALLOC_TIME_LATE
-ALLOC_TIME_EARLY    = H5D_ALLOC_TIME_EARLY
-ALLOC_TIME_INCR     = H5D_ALLOC_TIME_INCR
+ALLOC_TIME_DEFAULT: int  = H5D_ALLOC_TIME_DEFAULT
+ALLOC_TIME_LATE: int     = H5D_ALLOC_TIME_LATE
+ALLOC_TIME_EARLY: int    = H5D_ALLOC_TIME_EARLY
+ALLOC_TIME_INCR: int     = H5D_ALLOC_TIME_INCR
 
-SPACE_STATUS_NOT_ALLOCATED  = H5D_SPACE_STATUS_NOT_ALLOCATED
-SPACE_STATUS_PART_ALLOCATED = H5D_SPACE_STATUS_PART_ALLOCATED
-SPACE_STATUS_ALLOCATED      = H5D_SPACE_STATUS_ALLOCATED
+SPACE_STATUS_NOT_ALLOCATED: int  = H5D_SPACE_STATUS_NOT_ALLOCATED
+SPACE_STATUS_PART_ALLOCATED: int = H5D_SPACE_STATUS_PART_ALLOCATED
+SPACE_STATUS_ALLOCATED: int      = H5D_SPACE_STATUS_ALLOCATED
 
-FILL_TIME_ALLOC = H5D_FILL_TIME_ALLOC
-FILL_TIME_NEVER = H5D_FILL_TIME_NEVER
-FILL_TIME_IFSET = H5D_FILL_TIME_IFSET
+FILL_TIME_ALLOC: int = H5D_FILL_TIME_ALLOC
+FILL_TIME_NEVER: int = H5D_FILL_TIME_NEVER
+FILL_TIME_IFSET: int = H5D_FILL_TIME_IFSET
 
-FILL_VALUE_UNDEFINED    = H5D_FILL_VALUE_UNDEFINED
-FILL_VALUE_DEFAULT      = H5D_FILL_VALUE_DEFAULT
-FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
+FILL_VALUE_UNDEFINED: int    = H5D_FILL_VALUE_UNDEFINED
+FILL_VALUE_DEFAULT: int      = H5D_FILL_VALUE_DEFAULT
+FILL_VALUE_USER_DEFINED: int = H5D_FILL_VALUE_USER_DEFINED
 
-VIRTUAL = H5D_VIRTUAL
-VDS_FIRST_MISSING   = H5D_VDS_FIRST_MISSING
-VDS_LAST_AVAILABLE  = H5D_VDS_LAST_AVAILABLE
+VIRTUAL: int = H5D_VIRTUAL
+VDS_FIRST_MISSING: int   = H5D_VDS_FIRST_MISSING
+VDS_LAST_AVAILABLE: int  = H5D_VDS_LAST_AVAILABLE
 
 StoreInfo = namedtuple('StoreInfo',
                        'chunk_offset, filter_mask, byte_offset, size')
@@ -73,7 +78,7 @@ cdef class _ChunkVisitor:
     cdef object func
     cdef object retval
 
-    def __init__(self, rank, func):
+    def __init__(self, rank: int, func: Callable) -> None:
         self.rank = rank
         self.func = func
         self.retval = None
@@ -118,7 +123,7 @@ cdef int _cb_chunk_info(const hsize_t *offset, unsigned filter_mask, haddr_t add
 @with_phil
 def create(ObjectID loc not None, object name, TypeID tid not None,
            SpaceID space not None, PropID dcpl=None, PropID lcpl=None,
-           PropID dapl = None):
+           PropID dapl = None) -> DatasetID:
     """ (objectID loc, STRING name or None, TypeID tid, SpaceID space,
          PropDCID dcpl=None, PropID lcpl=None) => DatasetID
 
@@ -139,7 +144,7 @@ def create(ObjectID loc not None, object name, TypeID tid not None,
     return DatasetID(dsid)
 
 @with_phil
-def open(ObjectID loc not None, char* name, PropID dapl=None):
+def open(ObjectID loc not None, char* name, PropID dapl=None) -> DatasetID:
     """ (ObjectID loc, STRING name, PropID dapl=None) => DatasetID
 
     Open an existing dataset attached to a group or file object, by name.
@@ -187,7 +192,7 @@ cdef class DatasetID(ObjectID):
     """
 
     @property
-    def dtype(self):
+    def dtype(self) -> _DType:
         """ Numpy dtype object representing the dataset type """
         # Dataset type can't change
         cdef TypeID tid
@@ -198,7 +203,7 @@ cdef class DatasetID(ObjectID):
             return self._dtype
 
     @property
-    def shape(self):
+    def shape(self) -> tuple:
         """ Numpy-style shape tuple representing the dataspace """
         # Shape can change (DatasetID.extend), so don't cache it
         cdef SpaceID sid
@@ -207,7 +212,7 @@ cdef class DatasetID(ObjectID):
             return sid.get_simple_extent_dims()
 
     @property
-    def rank(self):
+    def rank(self) -> int:
         """ Integer giving the dataset rank (0 = scalar) """
         cdef SpaceID sid
         with phil:
@@ -218,7 +223,7 @@ cdef class DatasetID(ObjectID):
     @with_phil
     def read(self, SpaceID mspace not None, SpaceID fspace not None,
              ndarray arr_obj not None, TypeID mtype=None,
-             PropID dxpl=None):
+             PropID dxpl=None) -> None:
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
              TypeID mtype=None, PropDXID dxpl=None)
 
@@ -263,7 +268,7 @@ cdef class DatasetID(ObjectID):
     @with_phil
     def write(self, SpaceID mspace not None, SpaceID fspace not None,
               ndarray arr_obj not None, TypeID mtype=None,
-              PropID dxpl=None):
+              PropID dxpl=None) -> None:
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
              TypeID mtype=None, PropDXID dxpl=None)
 
@@ -306,7 +311,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def extend(self, tuple shape):
+    def extend(self, tuple shape) -> None:
         """ (TUPLE shape)
 
             Extend the given dataset so it's at least as big as "shape".  Note
@@ -335,7 +340,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def set_extent(self, tuple shape):
+    def set_extent(self, tuple shape) -> None:
         """ (TUPLE shape)
 
             Set the size of the dataspace to match the given shape.  If the new
@@ -364,7 +369,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_space(self):
+    def get_space(self) -> SpaceID:
         """ () => SpaceID
 
             Create and return a new copy of the dataspace for this dataset.
@@ -373,7 +378,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_space_status(self):
+    def get_space_status(self) -> int:
         """ () => INT space_status_code
 
             Determine if space has been allocated for a dataset.
@@ -389,7 +394,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_type(self):
+    def get_type(self) -> TypeID:
         """ () => TypeID
 
             Create and return a new copy of the datatype for this dataset.
@@ -398,7 +403,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_create_plist(self):
+    def get_create_plist(self) -> PropID:
         """ () => PropDCID
 
             Create an return a new copy of the dataset creation property list
@@ -408,7 +413,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_access_plist(self):
+    def get_access_plist(self) -> PropID:
         """ () => PropDAID
 
             Create an return a new copy of the dataset access property list.
@@ -417,7 +422,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_offset(self):
+    def get_offset(self) -> haddr_t:
         """ () => LONG offset or None
 
             Get the offset of this dataset in the file, in bytes, or None if
@@ -433,7 +438,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_storage_size(self):
+    def get_storage_size(self) -> hsize_t:
         """ () => LONG storage_size
 
             Report the size of storage, in bytes, that is allocated in the
@@ -452,7 +457,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def flush(self):
+    def flush(self) -> None:
         """ no return
 
         Flushes all buffers associated with a dataset to disk.
@@ -466,7 +471,7 @@ cdef class DatasetID(ObjectID):
         H5Dflush(self.id)
 
     @with_phil
-    def refresh(self):
+    def refresh(self) -> None:
         """ no return
 
         Refreshes all buffers associated with a dataset.
@@ -483,7 +488,7 @@ cdef class DatasetID(ObjectID):
         H5Drefresh(self.id)
 
     @with_phil
-    def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None):
+    def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None) -> None:
         """ (offsets, data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
         This function bypasses any filters HDF5 would normally apply to
@@ -537,7 +542,7 @@ cdef class DatasetID(ObjectID):
     @with_phil
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def read_direct_chunk(self, offsets, PropID dxpl=None, unsigned char[::1] out=None):
+    def read_direct_chunk(self, offsets, PropID dxpl=None, unsigned char[::1] out=None) -> tuple[int, bytes | memoryview]:
         """ (offsets, PropID dxpl=None, out=None)
 
         Reads data to a bytes array directly from a chunk at position
@@ -604,7 +609,7 @@ cdef class DatasetID(ObjectID):
         return filters, retval
 
     @with_phil
-    def get_num_chunks(self, SpaceID space=None):
+    def get_num_chunks(self, SpaceID space=None) -> hsize_t:
         """ (SpaceID space=None) => INT num_chunks
 
         Retrieve the number of chunks that have nonempty intersection with a
@@ -621,7 +626,7 @@ cdef class DatasetID(ObjectID):
         return num_chunks
 
     @with_phil
-    def get_chunk_info(self, hsize_t index, SpaceID space=None):
+    def get_chunk_info(self, hsize_t index, SpaceID space=None) -> StoreInfo:
         """ (hsize_t index, SpaceID space=None) => StoreInfo
 
         Retrieve storage information about a chunk specified by its index.
@@ -661,7 +666,7 @@ cdef class DatasetID(ObjectID):
 
 
     @with_phil
-    def get_chunk_info_by_coord(self, tuple chunk_offset not None):
+    def get_chunk_info_by_coord(self, tuple chunk_offset not None) -> StoreInfo:
         """ (TUPLE chunk_offset) => StoreInfo
 
         Retrieve information about a chunk specified by the array
@@ -693,7 +698,7 @@ cdef class DatasetID(ObjectID):
 
     ### {{if HDF5_VERSION >= (1, 12, 3) or (HDF5_VERSION >= (1, 10, 10) and HDF5_VERSION < (1, 10, 99))}}
     @with_phil
-    def chunk_iter(self, object func, PropID dxpl=None):
+    def chunk_iter(self, object func, PropID dxpl=None) -> object:
         """(CALLABLE func, PropDXID dxpl=None) => <Return value from func>
 
         Iterate over each chunk and invoke user-supplied "func" callable object.

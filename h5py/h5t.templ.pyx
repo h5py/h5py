@@ -32,20 +32,24 @@ import re
 import sys
 from collections import namedtuple
 import numpy as np
-from .h5 import get_config
+from typing import Type, TypeAlias, Literal
+
+from .h5 import get_config, H5PYConfig
 
 from ._objects import phil, with_phil
 
-cfg = get_config()
+_DType: TypeAlias = np.dtype[np.generic]
 
-_UNAME_MACHINE = platform.uname()[4]
-_IS_PPC64 = _UNAME_MACHINE == "ppc64"
-_IS_PPC64LE = _UNAME_MACHINE == "ppc64le"
+cfg: H5PYConfig = get_config()
+
+_UNAME_MACHINE: str = platform.uname()[4]
+_IS_PPC64: bool = _UNAME_MACHINE == "ppc64"
+_IS_PPC64LE: bool = _UNAME_MACHINE == "ppc64le"
 
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 cdef char* H5PY_NUMPY_STRING_TAG = "NUMPY:STRING"
 
-NUMPY_RUNTIME_VERSION_TUPLE = tuple(int(x) for x in re.findall(r'\d+', np.__version__)[:3])
+NUMPY_RUNTIME_VERSION_TUPLE: tuple[int, ...] = tuple(int(x) for x in re.findall(r'\d+', np.__version__)[:3])
 
 # === Custom C API ============================================================
 
@@ -85,7 +89,7 @@ cpdef TypeID typewrap(hid_t id_):
 
     return pcls(id_)
 
-cdef object lockid(hid_t id_in):
+cdef TypeID lockid(hid_t id_in):
     cdef TypeID tid
     tid = typewrap(id_in)
     tid.locked = 1
@@ -95,53 +99,53 @@ cdef object lockid(hid_t id_in):
 
 
 # Enumeration H5T_class_t
-NO_CLASS  = H5T_NO_CLASS
-INTEGER   = H5T_INTEGER
-FLOAT     = H5T_FLOAT
-TIME      = H5T_TIME
-STRING    = H5T_STRING
-BITFIELD  = H5T_BITFIELD
-OPAQUE    = H5T_OPAQUE
-COMPOUND  = H5T_COMPOUND
-REFERENCE = H5T_REFERENCE
-ENUM      = H5T_ENUM
-VLEN      = H5T_VLEN
-ARRAY     = H5T_ARRAY
+NO_CLASS: int  = H5T_NO_CLASS
+INTEGER: int   = H5T_INTEGER
+FLOAT: int     = H5T_FLOAT
+TIME: int      = H5T_TIME
+STRING: int    = H5T_STRING
+BITFIELD: int  = H5T_BITFIELD
+OPAQUE: int    = H5T_OPAQUE
+COMPOUND: int  = H5T_COMPOUND
+REFERENCE: int = H5T_REFERENCE
+ENUM: int      = H5T_ENUM
+VLEN: int      = H5T_VLEN
+ARRAY: int     = H5T_ARRAY
 ### {{if HDF5_VERSION >= (2, 0, 0)}}
-COMPLEX   = H5T_COMPLEX
+COMPLEX: int   = H5T_COMPLEX
 ### {{endif}}
 
 # Enumeration H5T_sign_t
-SGN_NONE   = H5T_SGN_NONE
-SGN_2      = H5T_SGN_2
+SGN_NONE: int   = H5T_SGN_NONE
+SGN_2: int      = H5T_SGN_2
 
 # Enumeration H5T_order_t
-ORDER_LE    = H5T_ORDER_LE
-ORDER_BE    = H5T_ORDER_BE
-ORDER_VAX   = H5T_ORDER_VAX
-ORDER_NONE  = H5T_ORDER_NONE
+ORDER_LE: int    = H5T_ORDER_LE
+ORDER_BE: int    = H5T_ORDER_BE
+ORDER_VAX: int   = H5T_ORDER_VAX
+ORDER_NONE: int  = H5T_ORDER_NONE
 
-DIR_DEFAULT = H5T_DIR_DEFAULT
-DIR_ASCEND  = H5T_DIR_ASCEND
-DIR_DESCEND = H5T_DIR_DESCEND
+DIR_DEFAULT: int = H5T_DIR_DEFAULT
+DIR_ASCEND: int  = H5T_DIR_ASCEND
+DIR_DESCEND: int = H5T_DIR_DESCEND
 
 # Enumeration H5T_str_t
-STR_NULLTERM = H5T_STR_NULLTERM
-STR_NULLPAD  = H5T_STR_NULLPAD
-STR_SPACEPAD = H5T_STR_SPACEPAD
+STR_NULLTERM: int = H5T_STR_NULLTERM
+STR_NULLPAD: int  = H5T_STR_NULLPAD
+STR_SPACEPAD: int = H5T_STR_SPACEPAD
 
 # Enumeration H5T_norm_t
-NORM_IMPLIED = H5T_NORM_IMPLIED
-NORM_MSBSET = H5T_NORM_MSBSET
-NORM_NONE = H5T_NORM_NONE
+NORM_IMPLIED: int = H5T_NORM_IMPLIED
+NORM_MSBSET: int = H5T_NORM_MSBSET
+NORM_NONE: int = H5T_NORM_NONE
 
 # Enumeration H5T_cset_t:
-CSET_ASCII = H5T_CSET_ASCII
+CSET_ASCII: int = H5T_CSET_ASCII
 
 # Enumeration H5T_pad_t:
-PAD_ZERO = H5T_PAD_ZERO
-PAD_ONE = H5T_PAD_ONE
-PAD_BACKGROUND = H5T_PAD_BACKGROUND
+PAD_ZERO: int = H5T_PAD_ZERO
+PAD_ONE: int = H5T_PAD_ONE
+PAD_BACKGROUND: int = H5T_PAD_BACKGROUND
 
 if sys.byteorder == "little":    # Custom python addition
     ORDER_NATIVE = H5T_ORDER_LE
@@ -149,109 +153,109 @@ else:
     ORDER_NATIVE = H5T_ORDER_BE
 
 # For conversion
-BKG_NO = H5T_BKG_NO
-BKG_TEMP = H5T_BKG_TEMP
-BKG_YES = H5T_BKG_YES
+BKG_NO: int = H5T_BKG_NO
+BKG_TEMP: int = H5T_BKG_TEMP
+BKG_YES: int = H5T_BKG_YES
 
 # --- Built-in HDF5 datatypes -------------------------------------------------
 
 # IEEE floating-point
-IEEE_F32LE = lockid(H5T_IEEE_F32LE)
-IEEE_F32BE = lockid(H5T_IEEE_F32BE)
-IEEE_F64LE = lockid(H5T_IEEE_F64LE)
-IEEE_F64BE = lockid(H5T_IEEE_F64BE)
+IEEE_F32LE: TypeID = lockid(H5T_IEEE_F32LE)
+IEEE_F32BE: TypeID = lockid(H5T_IEEE_F32BE)
+IEEE_F64LE: TypeID = lockid(H5T_IEEE_F64LE)
+IEEE_F64BE: TypeID = lockid(H5T_IEEE_F64BE)
 
 ### {{if HDF5_VERSION < (1, 14, 4)}}
-IEEE_F16BE = IEEE_F32BE.copy()
+IEEE_F16BE: TypeID = IEEE_F32BE.copy()
 IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
 IEEE_F16BE.set_size(2)
 IEEE_F16BE.set_ebias(15)
 IEEE_F16BE.lock()
 
-IEEE_F16LE = IEEE_F16BE.copy()
+IEEE_F16LE: TypeID = IEEE_F16BE.copy()
 IEEE_F16LE.set_order(H5T_ORDER_LE)
 IEEE_F16LE.lock()
 ### {{else}}
-IEEE_F16BE = lockid(H5T_IEEE_F16BE)
-IEEE_F16LE = lockid(H5T_IEEE_F16LE)
+IEEE_F16BE: TypeID = lockid(H5T_IEEE_F16BE)
+IEEE_F16LE: TypeID = lockid(H5T_IEEE_F16LE)
 ### {{endif}}
 
 # Quad floats
-IEEE_F128BE = IEEE_F64BE.copy()
+IEEE_F128BE: TypeID = IEEE_F64BE.copy()
 IEEE_F128BE.set_size(16)
 IEEE_F128BE.set_precision(128)
 IEEE_F128BE.set_fields(127, 112, 15, 0, 112)
 IEEE_F128BE.set_ebias(16383)
 IEEE_F128BE.lock()
 
-IEEE_F128LE = IEEE_F128BE.copy()
+IEEE_F128LE: TypeID = IEEE_F128BE.copy()
 IEEE_F128LE.set_order(H5T_ORDER_LE)
 IEEE_F128LE.lock()
 
 ### {{if HDF5_VERSION >= (2, 0, 0)}}
-COMPLEX_IEEE_F16LE = lockid(H5T_COMPLEX_IEEE_F16LE)
-COMPLEX_IEEE_F16BE = lockid(H5T_COMPLEX_IEEE_F16BE)
-COMPLEX_IEEE_F32LE = lockid(H5T_COMPLEX_IEEE_F32LE)
-COMPLEX_IEEE_F32BE = lockid(H5T_COMPLEX_IEEE_F32BE)
-COMPLEX_IEEE_F64LE = lockid(H5T_COMPLEX_IEEE_F64LE)
-COMPLEX_IEEE_F64BE = lockid(H5T_COMPLEX_IEEE_F64BE)
+COMPLEX_IEEE_F16LE: TypeID = lockid(H5T_COMPLEX_IEEE_F16LE)
+COMPLEX_IEEE_F16BE: TypeID = lockid(H5T_COMPLEX_IEEE_F16BE)
+COMPLEX_IEEE_F32LE: TypeID = lockid(H5T_COMPLEX_IEEE_F32LE)
+COMPLEX_IEEE_F32BE: TypeID = lockid(H5T_COMPLEX_IEEE_F32BE)
+COMPLEX_IEEE_F64LE: TypeID = lockid(H5T_COMPLEX_IEEE_F64LE)
+COMPLEX_IEEE_F64BE: TypeID = lockid(H5T_COMPLEX_IEEE_F64BE)
 ### {{endif}}
 
 # Signed 2's complement integer types
-STD_I8LE  = lockid(H5T_STD_I8LE)
-STD_I16LE = lockid(H5T_STD_I16LE)
-STD_I32LE = lockid(H5T_STD_I32LE)
-STD_I64LE = lockid(H5T_STD_I64LE)
+STD_I8LE: TypeID  = lockid(H5T_STD_I8LE)
+STD_I16LE: TypeID = lockid(H5T_STD_I16LE)
+STD_I32LE: TypeID = lockid(H5T_STD_I32LE)
+STD_I64LE: TypeID = lockid(H5T_STD_I64LE)
 
-STD_I8BE  = lockid(H5T_STD_I8BE)
-STD_I16BE = lockid(H5T_STD_I16BE)
-STD_I32BE = lockid(H5T_STD_I32BE)
-STD_I64BE = lockid(H5T_STD_I64BE)
+STD_I8BE: TypeID  = lockid(H5T_STD_I8BE)
+STD_I16BE: TypeID = lockid(H5T_STD_I16BE)
+STD_I32BE: TypeID = lockid(H5T_STD_I32BE)
+STD_I64BE: TypeID = lockid(H5T_STD_I64BE)
 
 # Bitfields
-STD_B8LE = lockid(H5T_STD_B8LE)
-STD_B16LE = lockid(H5T_STD_B16LE)
-STD_B32LE = lockid(H5T_STD_B32LE)
-STD_B64LE = lockid(H5T_STD_B64LE)
+STD_B8LE: TypeID  = lockid(H5T_STD_B8LE)
+STD_B16LE: TypeID = lockid(H5T_STD_B16LE)
+STD_B32LE: TypeID = lockid(H5T_STD_B32LE)
+STD_B64LE: TypeID = lockid(H5T_STD_B64LE)
 
-STD_B8BE = lockid(H5T_STD_B8BE)
-STD_B16BE = lockid(H5T_STD_B16BE)
-STD_B32BE = lockid(H5T_STD_B32BE)
-STD_B64BE = lockid(H5T_STD_B64BE)
+STD_B8BE: TypeID  = lockid(H5T_STD_B8BE)
+STD_B16BE: TypeID = lockid(H5T_STD_B16BE)
+STD_B32BE: TypeID = lockid(H5T_STD_B32BE)
+STD_B64BE: TypeID = lockid(H5T_STD_B64BE)
 
 # Unsigned integers
-STD_U8LE  = lockid(H5T_STD_U8LE)
-STD_U16LE = lockid(H5T_STD_U16LE)
-STD_U32LE = lockid(H5T_STD_U32LE)
-STD_U64LE = lockid(H5T_STD_U64LE)
+STD_U8LE: TypeID  = lockid(H5T_STD_U8LE)
+STD_U16LE: TypeID = lockid(H5T_STD_U16LE)
+STD_U32LE: TypeID = lockid(H5T_STD_U32LE)
+STD_U64LE: TypeID = lockid(H5T_STD_U64LE)
 
-STD_U8BE  = lockid(H5T_STD_U8BE)
-STD_U16BE = lockid(H5T_STD_U16BE)
-STD_U32BE = lockid(H5T_STD_U32BE)
-STD_U64BE = lockid(H5T_STD_U64BE)
+STD_U8BE: TypeID  = lockid(H5T_STD_U8BE)
+STD_U16BE: TypeID = lockid(H5T_STD_U16BE)
+STD_U32BE: TypeID = lockid(H5T_STD_U32BE)
+STD_U64BE: TypeID = lockid(H5T_STD_U64BE)
 
 # Native types by bytesize
-NATIVE_B8 = lockid(H5T_NATIVE_B8)
-NATIVE_INT8 = lockid(H5T_NATIVE_INT8)
-NATIVE_UINT8 = lockid(H5T_NATIVE_UINT8)
-NATIVE_B16 = lockid(H5T_NATIVE_B16)
-NATIVE_INT16 = lockid(H5T_NATIVE_INT16)
-NATIVE_UINT16 = lockid(H5T_NATIVE_UINT16)
-NATIVE_B32 = lockid(H5T_NATIVE_B32)
-NATIVE_INT32 = lockid(H5T_NATIVE_INT32)
-NATIVE_UINT32 = lockid(H5T_NATIVE_UINT32)
-NATIVE_B64 = lockid(H5T_NATIVE_B64)
-NATIVE_INT64 = lockid(H5T_NATIVE_INT64)
-NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
-NATIVE_FLOAT = lockid(H5T_NATIVE_FLOAT)
-NATIVE_DOUBLE = lockid(H5T_NATIVE_DOUBLE)
-NATIVE_LDOUBLE = lockid(H5T_NATIVE_LDOUBLE)
+NATIVE_B8: TypeID = lockid(H5T_NATIVE_B8)
+NATIVE_INT8: TypeID = lockid(H5T_NATIVE_INT8)
+NATIVE_UINT8: TypeID = lockid(H5T_NATIVE_UINT8)
+NATIVE_B16: TypeID = lockid(H5T_NATIVE_B16)
+NATIVE_INT16: TypeID = lockid(H5T_NATIVE_INT16)
+NATIVE_UINT16: TypeID = lockid(H5T_NATIVE_UINT16)
+NATIVE_B32: TypeID = lockid(H5T_NATIVE_B32)
+NATIVE_INT32: TypeID = lockid(H5T_NATIVE_INT32)
+NATIVE_UINT32: TypeID = lockid(H5T_NATIVE_UINT32)
+NATIVE_B64: TypeID = lockid(H5T_NATIVE_B64)
+NATIVE_INT64: TypeID = lockid(H5T_NATIVE_INT64)
+NATIVE_UINT64: TypeID = lockid(H5T_NATIVE_UINT64)
+NATIVE_FLOAT: TypeID = lockid(H5T_NATIVE_FLOAT)
+NATIVE_DOUBLE: TypeID = lockid(H5T_NATIVE_DOUBLE)
+NATIVE_LDOUBLE: TypeID = lockid(H5T_NATIVE_LDOUBLE)
 
-LDOUBLE_LE = NATIVE_LDOUBLE.copy()
+LDOUBLE_LE: TypeID = NATIVE_LDOUBLE.copy()
 LDOUBLE_LE.set_order(H5T_ORDER_LE)
 LDOUBLE_LE.lock()
 
-LDOUBLE_BE = NATIVE_LDOUBLE.copy()
+LDOUBLE_BE: TypeID = NATIVE_LDOUBLE.copy()
 LDOUBLE_BE.set_order(H5T_ORDER_BE)
 LDOUBLE_BE.lock()
 
@@ -280,30 +284,30 @@ else:
 ### {{endif}}
 
 # Unix time types
-UNIX_D32LE = lockid(H5T_UNIX_D32LE)
-UNIX_D64LE = lockid(H5T_UNIX_D64LE)
-UNIX_D32BE = lockid(H5T_UNIX_D32BE)
-UNIX_D64BE = lockid(H5T_UNIX_D64BE)
+UNIX_D32LE: TypeID = lockid(H5T_UNIX_D32LE)
+UNIX_D64LE: TypeID = lockid(H5T_UNIX_D64LE)
+UNIX_D32BE: TypeID = lockid(H5T_UNIX_D32BE)
+UNIX_D64BE: TypeID = lockid(H5T_UNIX_D64BE)
 
 # Reference types
-STD_REF_OBJ = lockid(H5T_STD_REF_OBJ)
-STD_REF_DSETREG = lockid(H5T_STD_REF_DSETREG)
+STD_REF_OBJ: TypeID = lockid(H5T_STD_REF_OBJ)
+STD_REF_DSETREG: TypeID = lockid(H5T_STD_REF_DSETREG)
 
 # Null terminated (C) and Fortran string types
-C_S1 = lockid(H5T_C_S1)
-FORTRAN_S1 = lockid(H5T_FORTRAN_S1)
-VARIABLE = H5T_VARIABLE
+C_S1: TypeID = lockid(H5T_C_S1)
+FORTRAN_S1: TypeID = lockid(H5T_FORTRAN_S1)
+VARIABLE: int = H5T_VARIABLE
 
 # Character sets
-CSET_ASCII = H5T_CSET_ASCII
-CSET_UTF8 = H5T_CSET_UTF8
+CSET_ASCII: int = H5T_CSET_ASCII
+CSET_UTF8: int = H5T_CSET_UTF8
 
 # Custom Python object pointer type
 cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
 H5Tset_tag(H5PY_OBJ, H5PY_PYTHON_OPAQUE_TAG)
 H5Tlock(H5PY_OBJ)
 
-PYTHON_OBJECT = lockid(H5PY_OBJ)
+PYTHON_OBJECT: TypeID = lockid(H5PY_OBJ)
 
 # HDF5 datatype to represent Numpy (>=2) variable-length strings
 # Should never be directly stored in files.
@@ -311,7 +315,7 @@ cdef hid_t H5PY_NPYSTR = H5Tcreate(H5T_OPAQUE, 2 * sizeof(size_t))
 H5Tset_tag(H5PY_NPYSTR, H5PY_NUMPY_STRING_TAG)
 H5Tlock(H5PY_NPYSTR)
 
-NUMPY_VLEN_STRING = lockid(H5PY_NPYSTR)
+NUMPY_VLEN_STRING: TypeID = lockid(H5PY_NPYSTR)
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
@@ -380,7 +384,7 @@ cdef (int, int, int) _correct_float_info(ftype_, finfo):
 # === General datatype operations =============================================
 
 @with_phil
-def create(int classtype, size_t size):
+def create(int classtype, size_t size) -> TypeID:
     """(INT classtype, UINT size) => TypeID
 
     Create a new HDF5 type object.  Legal class values are
@@ -395,7 +399,7 @@ def create(int classtype, size_t size):
 
 
 @with_phil
-def open(ObjectID group not None, char* name, ObjectID tapl=None):
+def open(ObjectID group not None, char* name, ObjectID tapl=None) -> TypeID:
     """(ObjectID group, STRING name) => TypeID
 
     Open a named datatype from a file.
@@ -405,7 +409,7 @@ def open(ObjectID group not None, char* name, ObjectID tapl=None):
 
 
 @with_phil
-def array_create(TypeID base not None, object dims_tpl):
+def array_create(TypeID base not None, object dims_tpl) -> TypeArrayID:
     """(TypeID base, TUPLE dimensions) => TypeArrayID
 
     Create a new array datatype, using and HDF5 parent type and
@@ -427,7 +431,7 @@ def array_create(TypeID base not None, object dims_tpl):
 
 
 @with_phil
-def enum_create(TypeID base not None):
+def enum_create(TypeID base not None) -> TypeID:
     """(TypeID base) => TypeID
 
     Create a new enumerated type based on an (integer) parent type.
@@ -436,7 +440,7 @@ def enum_create(TypeID base not None):
 
 
 @with_phil
-def vlen_create(TypeID base not None):
+def vlen_create(TypeID base not None) -> TypeID:
     """(TypeID base) => TypeID
 
     Create a new variable-length datatype, using any HDF5 type as a base.
@@ -448,7 +452,7 @@ def vlen_create(TypeID base not None):
 
 
 @with_phil
-def decode(char* buf):
+def decode(char* buf) -> TypeID:
     """(STRING buf) => TypeID
 
     Deserialize an HDF5 type.  You can also do this with the native
@@ -468,7 +472,7 @@ cdef class TypeID(ObjectID):
         * Equality: Logical H5T comparison
     """
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         with phil:
             if self._hash is None:
                 try:
@@ -484,7 +488,7 @@ cdef class TypeID(ObjectID):
             return self._hash
 
 
-    def __richcmp__(self, object other, int how):
+    def __richcmp__(self, object other, int how) -> bint:
         cdef bint truthval = 0
         with phil:
             if how != 2 and how != 3:
@@ -497,7 +501,7 @@ cdef class TypeID(ObjectID):
             return not truthval
 
 
-    def __copy__(self):
+    def __copy__(self) -> ObjectID:
         cdef TypeID cpy
         with phil:
             cpy = ObjectID.__copy__(self)
@@ -505,7 +509,7 @@ cdef class TypeID(ObjectID):
 
 
     @property
-    def dtype(self):
+    def dtype(self) -> _DType:
         """ A Numpy-style dtype object representing this object.
         """
         with phil:
@@ -517,7 +521,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def commit(self, ObjectID group not None, char* name, ObjectID lcpl=None):
+    def commit(self, ObjectID group not None, char* name, ObjectID lcpl=None) -> None:
         """(ObjectID group, STRING name, PropID lcpl=None)
 
         Commit this (transient) datatype to a named datatype in a file.
@@ -528,7 +532,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def committed(self):
+    def committed(self) -> bint:
         """() => BOOL is_comitted
 
         Determine if a given type object is named (T) or transient (F).
@@ -537,7 +541,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def copy(self):
+    def copy(self) -> TypeID:
         """() => TypeID
 
         Create a copy of this type object.
@@ -546,7 +550,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def equal(self, TypeID typeid):
+    def equal(self, TypeID typeid) -> bint:
         """(TypeID typeid) => BOOL
 
         Logical comparison between datatypes.  Also called by
@@ -556,7 +560,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def lock(self):
+    def lock(self) -> None:
         """()
 
         Lock this datatype, which makes it immutable and indestructible.
@@ -567,7 +571,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def get_class(self):
+    def get_class(self) -> int:
         """() => INT classcode
 
         Determine the datatype's class code.
@@ -576,7 +580,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def set_size(self, size_t size):
+    def set_size(self, size_t size) -> None:
         """(UINT size)
 
         Set the total size of the datatype, in bytes.
@@ -585,7 +589,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def get_size(self):
+    def get_size(self) -> size_t:
         """ () => INT size
 
             Determine the total size of a datatype, in bytes.
@@ -594,7 +598,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def get_super(self):
+    def get_super(self) -> TypeID:
         """() => TypeID
 
         Determine the parent type of an array, enumeration or vlen datatype.
@@ -603,7 +607,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def detect_class(self, int classtype):
+    def detect_class(self, int classtype) -> bint:
         """(INT classtype) => BOOL class_is_present
 
         Determine if a member of the given class exists in a compound
@@ -613,7 +617,7 @@ cdef class TypeID(ObjectID):
 
 
     @with_phil
-    def encode(self):
+    def encode(self) -> bytes:
         """() => STRING
 
         Serialize an HDF5 type.  Bear in mind you can also use the
@@ -634,7 +638,7 @@ cdef class TypeID(ObjectID):
         return pystr
 
     @with_phil
-    def get_create_plist(self):
+    def get_create_plist(self) -> PropID:
         """ () => PropTCID
 
             Create and return a new copy of the datatype creation property list
@@ -643,12 +647,12 @@ cdef class TypeID(ObjectID):
         return propwrap(H5Tget_create_plist(self.id))
 
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple[type, tuple[int], bytes]:
         with phil:
             return (type(self), (-1,), self.encode())
 
 
-    def __setstate__(self, char* state):
+    def __setstate__(self, char* state) -> None:
         with phil:
             self.id = H5Tdecode(<unsigned char*>state)
 
@@ -663,7 +667,7 @@ cdef class TypeArrayID(TypeID):
 
 
     @with_phil
-    def get_array_ndims(self):
+    def get_array_ndims(self) -> int:
         """() => INT rank
 
         Get the rank of the given array datatype.
@@ -672,7 +676,7 @@ cdef class TypeArrayID(TypeID):
 
 
     @with_phil
-    def get_array_dims(self):
+    def get_array_dims(self) -> tuple:
         """() => TUPLE dimensions
 
         Get the dimensions of the given array datatype as
@@ -708,7 +712,7 @@ cdef class TypeOpaqueID(TypeID):
 
 
     @with_phil
-    def set_tag(self, char* tag):
+    def set_tag(self, char* tag) -> None:
         """(STRING tag)
 
         Set a string describing the contents of an opaque datatype.
@@ -718,7 +722,7 @@ cdef class TypeOpaqueID(TypeID):
 
 
     @with_phil
-    def get_tag(self):
+    def get_tag(self) -> bytes:
         """() => STRING tag
 
         Get the tag associated with an opaque datatype.
@@ -751,7 +755,7 @@ cdef class TypeStringID(TypeID):
 
 
     @with_phil
-    def is_variable_str(self):
+    def is_variable_str(self) -> bint:
         """() => BOOL is_variable
 
         Determine if the given string datatype is a variable-length string.
@@ -760,7 +764,7 @@ cdef class TypeStringID(TypeID):
 
 
     @with_phil
-    def get_cset(self):
+    def get_cset(self) -> int:
         """() => INT character_set
 
         Retrieve the character set used for a string.
@@ -769,7 +773,7 @@ cdef class TypeStringID(TypeID):
 
 
     @with_phil
-    def set_cset(self, int cset):
+    def set_cset(self, int cset) -> None:
         """(INT character_set)
 
         Set the character set used for a string.
@@ -778,7 +782,7 @@ cdef class TypeStringID(TypeID):
 
 
     @with_phil
-    def get_strpad(self):
+    def get_strpad(self) -> int:
         """() => INT padding_type
 
         Get the padding type.  Legal values are:
@@ -796,7 +800,7 @@ cdef class TypeStringID(TypeID):
 
 
     @with_phil
-    def set_strpad(self, int pad):
+    def set_strpad(self, int pad) -> None:
         """(INT pad)
 
         Set the padding type.  Legal values are:
@@ -857,7 +861,7 @@ cdef class TypeBitfieldID(TypeID):
     """
 
     @with_phil
-    def get_order(self):
+    def get_order(self) -> int:
         """() => INT order
 
         Obtain the byte order of the datatype; one of:
@@ -899,7 +903,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def get_order(self):
+    def get_order(self) -> int:
         """() => INT order
 
         Obtain the byte order of the datatype; one of:
@@ -911,7 +915,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def set_order(self, int order):
+    def set_order(self, int order) -> None:
         """(INT order)
 
         Set the byte order of the datatype; one of:
@@ -923,7 +927,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def get_precision(self):
+    def get_precision(self) -> int:
         """() => UINT precision
 
         Get the number of significant bits (excludes padding).
@@ -932,7 +936,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def set_precision(self, size_t precision):
+    def set_precision(self, size_t precision) -> None:
         """(UINT precision)
 
         Set the number of significant bits (excludes padding).
@@ -941,7 +945,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def get_offset(self):
+    def get_offset(self) -> int:
         """() => INT offset
 
         Get the offset of the first significant bit.
@@ -950,7 +954,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def set_offset(self, size_t offset):
+    def set_offset(self, size_t offset) -> None:
         """(UINT offset)
 
         Set the offset of the first significant bit.
@@ -959,7 +963,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def get_pad(self):
+    def get_pad(self) -> tuple[int, int]:
         """() => (INT lsb_pad_code, INT msb_pad_code)
 
         Determine the padding type.  Possible values are:
@@ -975,7 +979,7 @@ cdef class TypeAtomicID(TypeID):
 
 
     @with_phil
-    def set_pad(self, int lsb, int msb):
+    def set_pad(self, int lsb, int msb) -> None:
         """(INT lsb_pad_code, INT msb_pad_code)
 
         Set the padding type.  Possible values are:
@@ -995,7 +999,7 @@ cdef class TypeIntegerID(TypeAtomicID):
 
 
     @with_phil
-    def get_sign(self):
+    def get_sign(self) -> int:
         """() => INT sign
 
         Get the "signedness" of the datatype; one of:
@@ -1010,7 +1014,7 @@ cdef class TypeIntegerID(TypeAtomicID):
 
 
     @with_phil
-    def set_sign(self, int sign):
+    def set_sign(self, int sign) -> None:
         """(INT sign)
 
         Set the "signedness" of the datatype; one of:
@@ -1037,7 +1041,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
 
     @with_phil
-    def get_fields(self):
+    def get_fields(self) -> tuple[size_t, size_t, size_t, size_t, size_t]:
         """() => TUPLE field_info
 
         Get information about floating-point bit fields.  See the HDF5
@@ -1056,7 +1060,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
     @with_phil
     def set_fields(self, size_t spos, size_t epos, size_t esize,
-                          size_t mpos, size_t msize):
+                          size_t mpos, size_t msize) -> None:
         """(UINT spos, UINT epos, UINT esize, UINT mpos, UINT msize)
 
         Set floating-point bit fields.  Refer to the HDF5 docs for
@@ -1066,7 +1070,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
 
     @with_phil
-    def get_ebias(self):
+    def get_ebias(self) -> size_t:
         """() => UINT ebias
 
         Get the exponent bias.
@@ -1075,7 +1079,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
 
     @with_phil
-    def set_ebias(self, size_t ebias):
+    def set_ebias(self, size_t ebias) -> None:
         """(UINT ebias)
 
         Set the exponent bias.
@@ -1084,7 +1088,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
 
     @with_phil
-    def get_norm(self):
+    def get_norm(self) -> int:
         """() => INT normalization_code
 
         Get the normalization strategy.  Legal values are:
@@ -1097,7 +1101,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
 
     @with_phil
-    def set_norm(self, int norm):
+    def set_norm(self, int norm) -> None:
         """(INT normalization_code)
 
         Set the normalization strategy.  Legal values are:
@@ -1110,7 +1114,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
 
     @with_phil
-    def get_inpad(self):
+    def get_inpad(self) -> int:
         """() => INT pad_code
 
         Determine the internal padding strategy.  Legal values are:
@@ -1123,7 +1127,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
 
     @with_phil
-    def set_inpad(self, int pad_code):
+    def set_inpad(self, int pad_code) -> None:
         """(INT pad_code)
 
         Set the internal padding strategy.  Legal values are:
@@ -1185,7 +1189,7 @@ cdef class TypeCompositeID(TypeID):
 
 
     @with_phil
-    def get_nmembers(self):
+    def get_nmembers(self) -> int:
         """() => INT number_of_members
 
         Determine the number of members in a compound or enumerated type.
@@ -1194,7 +1198,7 @@ cdef class TypeCompositeID(TypeID):
 
 
     @with_phil
-    def get_member_name(self, int member):
+    def get_member_name(self, int member) -> bytes:
         """(INT member) => STRING name
 
         Determine the name of a member of a compound or enumerated type,
@@ -1217,7 +1221,7 @@ cdef class TypeCompositeID(TypeID):
 
 
     @with_phil
-    def get_member_index(self, char* name):
+    def get_member_index(self, char* name) -> int:
         """(STRING name) => INT index
 
         Determine the index of a member of a compound or enumerated datatype
@@ -1233,7 +1237,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 
     @with_phil
-    def get_member_class(self, int member):
+    def get_member_class(self, int member) -> int:
         """(INT member) => INT class
 
         Determine the datatype class of the member of a compound type,
@@ -1245,7 +1249,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 
     @with_phil
-    def get_member_offset(self, int member):
+    def get_member_offset(self, int member) -> int:
         """(INT member) => INT offset
 
         Determine the offset, in bytes, of the beginning of the specified
@@ -1257,7 +1261,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 
     @with_phil
-    def get_member_type(self, int member):
+    def get_member_type(self, int member) -> TypeID:
         """(INT member) => TypeID
 
         Create a copy of a member of a compound datatype, identified by its
@@ -1269,7 +1273,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 
     @with_phil
-    def insert(self, char* name, size_t offset, TypeID field not None):
+    def insert(self, char* name, size_t offset, TypeID field not None) -> None:
         """(STRING name, UINT offset, TypeID field)
 
         Add a named member datatype to a compound datatype.  The parameter
@@ -1280,7 +1284,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 
     @with_phil
-    def pack(self):
+    def pack(self) -> None:
         """()
 
         Recursively removes padding (introduced on account of e.g. compiler
@@ -1363,7 +1367,7 @@ cdef class TypeEnumID(TypeCompositeID):
 
 
     @with_phil
-    def enum_insert(self, char* name, long long value):
+    def enum_insert(self, char* name, long long value) -> None:
         """(STRING name, INT/LONG value)
 
         Define a new member of an enumerated type.  The value will be
@@ -1379,7 +1383,7 @@ cdef class TypeEnumID(TypeCompositeID):
 
 
     @with_phil
-    def enum_nameof(self, long long value):
+    def enum_nameof(self, long long value) -> bytes:
         """(LONG value) => STRING name
 
         Determine the name associated with the given value.  Due to a
@@ -1399,7 +1403,7 @@ cdef class TypeEnumID(TypeCompositeID):
 
 
     @with_phil
-    def enum_valueof(self, char* name):
+    def enum_valueof(self, char* name) -> long:
         """(STRING name) => LONG value
 
         Get the value associated with an enum name.
@@ -1412,7 +1416,7 @@ cdef class TypeEnumID(TypeCompositeID):
 
 
     @with_phil
-    def get_member_value(self, int idx):
+    def get_member_value(self, int idx) -> long:
         """(UINT index) => LONG value
 
         Determine the value for the member at the given zero-based index.
@@ -1468,7 +1472,7 @@ cdef class TypeEnumID(TypeCompositeID):
 # of NumPy dtype into an HDF5 type object.  The result is guaranteed to be
 # transient and unlocked.
 
-def _get_float_dtype_to_hdf5():
+def _get_float_dtype_to_hdf5() -> tuple[dict, dict, dict]:
     float_le = {}
     float_be = {}
     h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE, LDOUBLE_BE]
@@ -1857,7 +1861,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
             raise TypeError("No conversion path for dtype: %s" % repr(dt))
 
 
-def vlen_dtype(basetype):
+def vlen_dtype(basetype) -> np.dtype:
     """Make a numpy dtype for an HDF5 variable-length datatype
 
     For variable-length string dtypes, use :func:`string_dtype` instead.
@@ -1865,7 +1869,7 @@ def vlen_dtype(basetype):
     return np.dtype('O', metadata={'vlen': basetype})
 
 
-def string_dtype(encoding='utf-8', length=None):
+def string_dtype(encoding: Literal['utf-8', 'ascii'] = 'utf-8', length=None) -> np.dtype[np.bytes_] | np.dtype[np.object_]:
     """Make a numpy dtype for HDF5 strings
 
     encoding may be 'utf-8' or 'ascii'.
@@ -1905,7 +1909,7 @@ def string_dtype(encoding='utf-8', length=None):
         raise TypeError("length must be integer or None (got %r)" % length)
 
 
-def enum_dtype(values_dict, basetype=np.uint8):
+def enum_dtype(values_dict, basetype=np.uint8) -> np.dtype:
     """Create a NumPy representation of an HDF5 enumerated type
 
     *values_dict* maps string names to integer values. *basetype* is an
@@ -1918,7 +1922,7 @@ def enum_dtype(values_dict, basetype=np.uint8):
     return np.dtype(dt, metadata={'enum': values_dict})
 
 
-def opaque_dtype(np_dtype):
+def opaque_dtype(np_dtype) -> np.dtype:
     """Return an equivalent dtype tagged to be stored in an HDF5 opaque type.
 
     This makes it easy to store numpy data like datetimes for which there is
@@ -1938,11 +1942,11 @@ def opaque_dtype(np_dtype):
     return np.dtype(dt, metadata={'h5py_opaque': True})
 
 
-ref_dtype = np.dtype('O', metadata={'ref': Reference})
-regionref_dtype = np.dtype('O', metadata={'ref': RegionReference})
+ref_dtype: np.dtype = np.dtype('O', metadata={'ref': Reference})
+regionref_dtype: np.dtype = np.dtype('O', metadata={'ref': RegionReference})
 
 
-def complex_compat_dtype(complex_dtype, names=('r', 'i')):
+def complex_compat_dtype(complex_dtype, names=('r', 'i')) -> np.dtype:
     """Create a backward-compatible structured dtype for storing complex numbers
 
     HDF5 1.x does not have a native way to represent complex numbers, so we
@@ -1966,7 +1970,7 @@ def complex_compat_dtype(complex_dtype, names=('r', 'i')):
 
 
 @with_phil
-def special_dtype(**kwds):
+def special_dtype(**kwds) -> np.dtype:
     """ Create a new h5py "special" type.  Only one keyword may be given.
 
     Legal keywords are:
@@ -2009,7 +2013,7 @@ def special_dtype(**kwds):
     raise TypeError('Unknown special type "%s"' % name)
 
 
-def check_vlen_dtype(dt):
+def check_vlen_dtype(dt) -> object | None:
     """If the dtype represents an HDF5 vlen, returns the Python base class.
 
     Returns None if the dtype does not represent an HDF5 vlen.
@@ -2027,7 +2031,7 @@ def check_vlen_dtype(dt):
 string_info = namedtuple('string_info', ['encoding', 'length'])
 
 
-def check_string_dtype(dt):
+def check_string_dtype(dt) -> string_info | None:
     """If the dtype represents an HDF5 string, returns a string_info object.
 
     The returned string_info object holds the encoding and the length.
@@ -2048,7 +2052,7 @@ def check_string_dtype(dt):
         return None
 
 
-def check_enum_dtype(dt):
+def check_enum_dtype(dt) -> dict | None:
     """If the dtype represents an HDF5 enumerated type, returns the dictionary
     mapping string names to integer values.
 
@@ -2060,7 +2064,7 @@ def check_enum_dtype(dt):
         return None
 
 
-def check_opaque_dtype(dt):
+def check_opaque_dtype(dt) -> bool:
     """Return True if the dtype given is tagged to be stored as HDF5 opaque data
     """
     try:
@@ -2069,7 +2073,7 @@ def check_opaque_dtype(dt):
         return False
 
 
-def check_ref_dtype(dt):
+def check_ref_dtype(dt) -> Type[Reference] | Type[RegionReference] | None:
     """If the dtype represents an HDF5 reference type, returns the reference
     class (either Reference or RegionReference).
 
@@ -2081,7 +2085,7 @@ def check_ref_dtype(dt):
         return None
 
 
-def check_complex_dtype(dt, names=('r', 'i')):
+def check_complex_dtype(dt, names: tuple = ('r', 'i')):
     """If the dtype represents complex number, return an equivalent NumPy dtype.
 
     This recognises both real complex dtypes, and the compatible compound dtypes
@@ -2108,7 +2112,7 @@ def check_complex_dtype(dt, names=('r', 'i')):
 
 
 @with_phil
-def check_dtype(**kwds):
+def check_dtype(**kwds) -> object | None:
     """ Check a dtype for h5py special type "hint" information.  Only one
     keyword may be given.
 
@@ -2150,7 +2154,7 @@ def check_dtype(**kwds):
 
 @with_phil
 def convert(TypeID src not None, TypeID dst not None, size_t n,
-            cnp.ndarray buf not None, cnp.ndarray bkg=None, ObjectID dxpl=None):
+            cnp.ndarray buf not None, cnp.ndarray bkg=None, ObjectID dxpl=None) -> None:
     """ (TypeID src, TypeID dst, UINT n, NDARRAY buf, NDARRAY bkg=None,
     PropID dxpl=None)
 
@@ -2173,7 +2177,7 @@ def convert(TypeID src not None, TypeID dst not None, size_t n,
 
 
 @with_phil
-def find(TypeID src not None, TypeID dst not None):
+def find(TypeID src not None, TypeID dst not None) -> tuple[int] | None:
     """ (TypeID src, TypeID dst) => TUPLE or None
 
     Determine if a conversion path exists from src to dst.  Result is None
