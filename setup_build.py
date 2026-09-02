@@ -20,7 +20,7 @@ from setuptools import Extension
 from setuptools.command.build_ext import build_ext
 
 import api_gen
-from setup_configure import BuildConfig
+from setup_configure import BuildConfig, VersionTuple
 
 
 def localpath(*args):
@@ -101,9 +101,6 @@ if sys.platform.startswith('win'):
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
 
-def version_tuple(dunder_version: str) -> tuple[int, int, int]:
-    v = Version(dunder_version)
-    return (v.major, v.minor, v.micro)
 
 class h5py_build_ext(build_ext):
 
@@ -127,17 +124,17 @@ class h5py_build_ext(build_ext):
 
         settings = COMPILER_SETTINGS.copy()
 
-        settings['include_dirs'][:0] = config.hdf5_includedirs
-        settings['library_dirs'][:0] = config.hdf5_libdirs
-        settings['define_macros'].extend(config.hdf5_define_macros)
+        settings['include_dirs'][:0] = config.hdf5.settings.include_dirs
+        settings['library_dirs'][:0] = config.hdf5.settings.lib_dirs
+        settings['define_macros'].extend(config.hdf5.settings.define_macros)
 
-        if config.msmpi:
-            settings['include_dirs'].extend(config.msmpi_inc_dirs)
-            settings['library_dirs'].extend(config.msmpi_lib_dirs)
+        if config.msmpi.is_enabled:
+            settings['include_dirs'].extend(config.msmpi.settings.include_dirs)
+            settings['library_dirs'].extend(config.msmpi.settings.lib_dirs)
             settings['libraries'].append('msmpi')
 
         settings['include_dirs'] += [numpy.get_include()]
-        if config.mpi:
+        if config.flags.mpi:
             import mpi4py
             settings['include_dirs'] += [mpi4py.get_include()]
 
@@ -199,10 +196,10 @@ class h5py_build_ext(build_ext):
         config = BuildConfig.from_env()
         config.summarise()
 
-        if config.hdf5_version < (1, 10, 7) or config.hdf5_version == (1, 12, 0):
+        if config.hdf5.version < (1, 10, 7) or config.hdf5.version == (1, 12, 0):
             raise Exception(
                 f"This version of h5py requires HDF5 >= 1.10.7 and != 1.12.0 (got version "
-                f"{config.hdf5_version} from environment variable or library)"
+                f"{config.hdf5.version} from environment variable or library)"
             )
 
         # Refresh low-level defs if missing or stale
@@ -210,14 +207,14 @@ class h5py_build_ext(build_ext):
         api_gen.run()
 
         templ_config = {
-            "MPI": bool(config.mpi),
-            "ROS3": bool(config.ros3),
-            "HDF5_VERSION": config.hdf5_version,
-            "DIRECT_VFD": bool(config.direct_vfd),
+            "MPI": config.flags.mpi,
+            "ROS3": config.flags.ros3,
+            "HDF5_VERSION": tuple(config.hdf5.version),
+            "DIRECT_VFD": config.flags.direct_vfd,
             "VOL_MIN_HDF5_VERSION": (1, 11, 5),
             "COMPLEX256_SUPPORT": complex256_support,
             "NUMPY_BUILD_VERSION": numpy.__version__,
-            "NUMPY_BUILD_VERSION_TUPLE": version_tuple(numpy.__version__),
+            "NUMPY_BUILD_VERSION_TUPLE": tuple(VersionTuple.from_version_string(numpy.__version__)),
             "CYTHON_BUILD_VERSION": cython_version,
             "PLATFORM_SYSTEM": platform.system(),
             "OBJECTS_USE_LOCKING": True,
