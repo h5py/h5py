@@ -387,7 +387,7 @@ class Group(HLObject, MutableMappingHDF5):
 
         return self.create_dataset(name, **kwupdate)
 
-    def require_group(self, name):
+    def require_group(self, name, track_order=None):
         # TODO: support kwargs like require_dataset
         """Return a group, creating it if it doesn't exist.
 
@@ -396,7 +396,7 @@ class Group(HLObject, MutableMappingHDF5):
         """
         with phil:
             if name not in self:
-                return self.create_group(name)
+                return self.create_group(name, track_order=track_order)
             grp = self[name]
             if not isinstance(grp, Group):
                 raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
