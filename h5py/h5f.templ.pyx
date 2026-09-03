@@ -15,6 +15,8 @@
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
+from libc.stdint cimport uint8_t, uint32_t
+from libc.string cimport memcmp
 from ._objects cimport pdefault
 from .h5p cimport propwrap, PropFAID, PropFCID
 from .h5i cimport wrap_identifier
@@ -28,6 +30,126 @@ from . import _objects, h5o
 from ._objects import phil, with_phil
 
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
+
+
+### {{if HDF5_VERSION < (2, 0, 0)}}
+cdef inline uint32_t _lookup3_rot(uint32_t value, unsigned int shift) noexcept nogil:
+    return (value << shift) ^ (value >> (32 - shift))
+
+
+cdef uint32_t _lookup3_checksum(
+    const uint8_t *data, size_t length, uint32_t initval
+) noexcept nogil:
+    """Bob Jenkins' lookup3 checksum, as used for HDF5 metadata."""
+    cdef uint32_t a = <uint32_t>0xdeadbeef + <uint32_t>length + initval
+    cdef uint32_t b = a
+    cdef uint32_t c = a
+
+    while length > 12:
+        a += data[0]
+        a += (<uint32_t>data[1]) << 8
+        a += (<uint32_t>data[2]) << 16
+        a += (<uint32_t>data[3]) << 24
+        b += data[4]
+        b += (<uint32_t>data[5]) << 8
+        b += (<uint32_t>data[6]) << 16
+        b += (<uint32_t>data[7]) << 24
+        c += data[8]
+        c += (<uint32_t>data[9]) << 8
+        c += (<uint32_t>data[10]) << 16
+        c += (<uint32_t>data[11]) << 24
+
+        a -= c
+        a ^= _lookup3_rot(c, 4)
+        c += b
+        b -= a
+        b ^= _lookup3_rot(a, 6)
+        a += c
+        c -= b
+        c ^= _lookup3_rot(b, 8)
+        b += a
+        a -= c
+        a ^= _lookup3_rot(c, 16)
+        c += b
+        b -= a
+        b ^= _lookup3_rot(a, 19)
+        a += c
+        c -= b
+        c ^= _lookup3_rot(b, 4)
+        b += a
+
+        length -= 12
+        data += 12
+
+    if length == 0:
+        return c
+
+    if length >= 12:
+        c += (<uint32_t>data[11]) << 24
+    if length >= 11:
+        c += (<uint32_t>data[10]) << 16
+    if length >= 10:
+        c += (<uint32_t>data[9]) << 8
+    if length >= 9:
+        c += data[8]
+    if length >= 8:
+        b += (<uint32_t>data[7]) << 24
+    if length >= 7:
+        b += (<uint32_t>data[6]) << 16
+    if length >= 6:
+        b += (<uint32_t>data[5]) << 8
+    if length >= 5:
+        b += data[4]
+    if length >= 4:
+        a += (<uint32_t>data[3]) << 24
+    if length >= 3:
+        a += (<uint32_t>data[2]) << 16
+    if length >= 2:
+        a += (<uint32_t>data[1]) << 8
+    if length >= 1:
+        a += data[0]
+
+    c ^= b
+    c -= _lookup3_rot(b, 14)
+    a ^= c
+    a -= _lookup3_rot(c, 11)
+    b ^= a
+    b -= _lookup3_rot(a, 25)
+    c ^= b
+    c -= _lookup3_rot(b, 16)
+    a ^= c
+    a -= _lookup3_rot(c, 4)
+    b ^= a
+    b -= _lookup3_rot(a, 14)
+    c ^= b
+    c -= _lookup3_rot(b, 24)
+
+    return c
+
+
+cdef void _repair_file_image_checksum(char *image, ssize_t size) noexcept nogil:
+    """Repair the superblock checksum omitted by HDF5 before version 2.0."""
+    cdef uint8_t superblock_version
+    cdef size_t checksum_offset
+    cdef uint32_t checksum
+
+    if size < 16 or memcmp(image, "\x89HDF\r\n\x1a\n", 8) != 0:
+        return
+
+    superblock_version = <uint8_t>image[8]
+    if superblock_version < 2 or superblock_version > 3:
+        return
+
+    checksum_offset = 12 + (4 * <uint8_t>image[9])
+    if checksum_offset + 4 > <size_t>size:
+        return
+
+    checksum = _lookup3_checksum(<const uint8_t *>image, checksum_offset, 0)
+    image[checksum_offset] = <char>(checksum & 0xff)
+    image[checksum_offset + 1] = <char>((checksum >> 8) & 0xff)
+    image[checksum_offset + 2] = <char>((checksum >> 16) & 0xff)
+    image[checksum_offset + 3] = <char>((checksum >> 24) & 0xff)
+### {{endif}}
 
 # Initialization
 
@@ -451,11 +573,21 @@ cdef class FileID(GroupID):
         """
 
         cdef ssize_t size
+        cdef char *image_buf
 
         size = H5Fget_file_image(self.id, NULL, 0)
         image = PyBytes_FromStringAndSize(NULL, size)
+        image_buf = PyBytes_AsString(image)
 
-        H5Fget_file_image(self.id, PyBytes_AsString(image), size)
+        H5Fget_file_image(self.id, image_buf, size)
+
+        # HDF5 < 2.0 clears the file-open status flags in the returned image
+        # without updating the superblock checksum. This makes images using
+        # superblock v2 or v3 impossible to reopen. HDF5 2.0 fixed this in
+        # HDFGroup/hdf5#5489; mirror that repair for older supported versions.
+        ### {{if HDF5_VERSION < (2, 0, 0)}}
+        _repair_file_image_checksum(image_buf, size)
+        ### {{endif}}
 
         return image
 
