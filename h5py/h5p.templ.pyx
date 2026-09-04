@@ -20,12 +20,15 @@ from cpython.long cimport PyLong_AsVoidPtr
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
                     check_numpy_write, check_numpy_read
+from libc.string cimport memcpy, memset
 from numpy cimport ndarray, import_array
 from .h5t cimport TypeID, py_create
 from .h5s cimport SpaceID
 from .h5ac cimport CacheConfig
+from ._proxy cimport needs_bkg_buffer
 
 # Python level imports
+import numpy as np
 from ._objects import phil, with_phil
 
 ### {{if MPI}}
@@ -415,6 +418,27 @@ cdef class PropFCID(PropOCID):
         H5Pget_file_space_page_size(self.id, &fsp_size)
         return fsp_size
 
+cdef bint _fill_value_is_ours(TypeID ftype) except -1:
+    # After conversion, only variable-length data is heap-allocated and ours to
+    # release.  References convert to plain addresses with nothing behind them,
+    # but HDF5 classifies reference types as relocatable, so handing one to
+    # H5Dvlen_reclaim lets it walk bytes that were never an allocation.  Fixed
+    # strings are caught by the H5T_STRING test and reclaim harmlessly.
+    return (H5Tdetect_class(ftype.id, H5T_VLEN)
+            or H5Tdetect_class(ftype.id, H5T_STRING))
+
+
+cdef int _check_fill_buffer(ndarray value, size_t needed) except -1:
+    # check_numpy_read/check_numpy_write validate contiguity and writability,
+    # but never size, and the fill value is transferred as a fixed number of
+    # bytes at the start of the buffer.
+    if <size_t>value.nbytes < needed:
+        raise ValueError(
+            "Fill value buffer is %d bytes; datatype needs %d"
+            % (value.nbytes, needed))
+    return 0
+
+
 # Dataset creation
 cdef class PropDCID(PropOCID):
 
@@ -493,70 +517,115 @@ cdef class PropDCID(PropOCID):
 
 
     @with_phil
-    def set_fill_value(self, ndarray value not None):
-        """(NDARRAY value)
+    def set_fill_value(self, ndarray value not None, dtype=None):
+        """(NDARRAY value, DTYPE dtype=None)
 
         Set the dataset fill value.  The object provided should be an
         0-dimensional NumPy array; otherwise, the value will be read from
         the first element.
+
+        dtype is the NumPy datatype the value describes, defaulting to
+        value.dtype.  Pass it for array datatypes: NumPy collapses those into
+        the array's own shape, so they can never appear as value.dtype.
         """
-        from .h5t import check_string_dtype
-        cdef TypeID tid
-        cdef char * c_ptr
+        from .h5s import create as create_space, SCALAR
+        cdef TypeID ftype, mtype
+        cdef SpaceID sid
+        cdef void* buf = NULL
+        cdef void* bkg = NULL
+        cdef size_t fsize, msize, bufsize
+        cdef bint owned = 0
 
         check_numpy_read(value, -1)
+        dtype = value.dtype if dtype is None else np.dtype(dtype)
 
-        # check for strings
-        # create correct typeID and pointer to c_str
-        string_info = check_string_dtype(value.dtype)
-        if string_info is not None:
-            # if needed encode fill_value
-            fill_value = value.item()
-            if not isinstance(fill_value, bytes):
-                fill_value = fill_value.encode(string_info.encoding)
-            c_ptr = fill_value
-            tid = py_create(value.dtype, logical=1)
-            H5Pset_fill_value(self.id, tid.id, &c_ptr)
-            return
+        # The value is laid out for NumPy: variable-length and reference data
+        # appear as PyObject*, not as the hvl_t or heap ID the file needs.
+        # Convert with the same registered converters that dataset writes use,
+        # which recurse through compound members and array elements.
+        ftype = py_create(dtype, logical=1)
+        mtype = py_create(dtype, logical=0)
+        fsize = ftype.get_size()
+        msize = mtype.get_size()
+        bufsize = fsize if fsize > msize else msize
+        _check_fill_buffer(value, msize)
 
-        tid = py_create(value.dtype)
-        H5Pset_fill_value(self.id, tid.id, value.data)
+        buf = emalloc(bufsize)
+        try:
+            memcpy(buf, value.data, msize)
+            if needs_bkg_buffer(mtype.id, ftype.id):
+                bkg = emalloc(bufsize)
+                memset(bkg, 0, bufsize)
+            H5Tconvert(mtype.id, ftype.id, 1, buf, bkg, H5P_DEFAULT)
+            # The conversion allocated the variable-length data, and
+            # H5Pset_fill_value deep-copies it, so it is ours to release
+            # whether or not that call succeeds. Before this point the buffer
+            # still held the caller's PyObject*, which must never be freed as
+            # heap data.
+            owned = _fill_value_is_ours(ftype)
+            H5Pset_fill_value(self.id, ftype.id, buf)
+        finally:
+            if owned:
+                sid = create_space(SCALAR)
+                H5Dvlen_reclaim(ftype.id, sid.id, H5P_DEFAULT, buf)
+            efree(bkg)
+            efree(buf)
 
 
     @with_phil
-    def get_fill_value(self, ndarray value not None):
-        """(NDARRAY value)
+    def get_fill_value(self, ndarray value not None, dtype=None):
+        """(NDARRAY value, DTYPE dtype=None)
 
         Read the dataset fill value into a NumPy array.  It will be
         converted to match the array dtype.  If the array has nonzero
         rank, only the first element will contain the value.
+
+        dtype is the NumPy datatype the buffer describes, defaulting to
+        value.dtype.  Pass it for array datatypes: NumPy collapses those into
+        the array's own shape, so they can never appear as value.dtype.
         """
-        from .h5t import check_string_dtype
-        cdef TypeID tid
-        cdef char * c_ptr = NULL
+        from .h5s import create as create_space, SCALAR
+        cdef TypeID ftype, mtype
+        cdef SpaceID sid
+        cdef void* buf = NULL
+        cdef void* bkg = NULL
+        cdef size_t fsize, msize, bufsize
+        cdef bint owned = 0
 
         check_numpy_write(value, -1)
+        dtype = value.dtype if dtype is None else np.dtype(dtype)
 
-        # check for vlen strings
-        # create correct typeID and convert from c_str pointer to string
-        string_info = check_string_dtype(value.dtype)
-        if string_info is not None and string_info.length is None:
-            tid = py_create(value.dtype, logical=1)
-            ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
-            if c_ptr == NULL:
-                # If the pointer is NULL (either the value did not get changed,
-                # or maybe the 0 length string, it's unclear currently), if
-                # PyBytes_FromString is called on the pointer, we get a
-                # segfault. If we set the value to empty bytes, then we
-                # shouldn't segfault.
-                value[0] = b""
-                return
-            fill_value = c_ptr
-            value[0] = fill_value
-            return
+        ftype = py_create(dtype, logical=1)
+        mtype = py_create(dtype, logical=0)
+        fsize = ftype.get_size()
+        msize = mtype.get_size()
+        bufsize = fsize if fsize > msize else msize
+        _check_fill_buffer(value, msize)
 
-        tid = py_create(value.dtype)
-        H5Pget_fill_value(self.id, tid.id, value.data)
+        # The file-side value can be wider than the NumPy one, an hvl_t is
+        # twice the width of a PyObject*, so it cannot be read straight into
+        # the caller's buffer.
+        buf = emalloc(bufsize)
+        try:
+            memset(buf, 0, bufsize)
+            H5Pget_fill_value(self.id, ftype.id, buf)
+            # HDF5 allocated the variable-length data into the buffer and
+            # handed it to us.
+            owned = _fill_value_is_ours(ftype)
+            if needs_bkg_buffer(ftype.id, mtype.id):
+                bkg = emalloc(bufsize)
+                memset(bkg, 0, bufsize)
+            H5Tconvert(ftype.id, mtype.id, 1, buf, bkg, H5P_DEFAULT)
+            # The conversion attached that data to the objects it built, so
+            # from here it is theirs to free, not ours.
+            owned = 0
+            memcpy(value.data, buf, msize)
+        finally:
+            if owned:
+                sid = create_space(SCALAR)
+                H5Dvlen_reclaim(ftype.id, sid.id, H5P_DEFAULT, buf)
+            efree(bkg)
+            efree(buf)
 
     @with_phil
     def fill_value_defined(self):
