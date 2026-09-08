@@ -873,7 +873,9 @@ cdef int conv_ndarray2vlen(void* ipt,
         PyBuffer_Release(&view)
 
         if needs_bkg_buffer(intype.id, outtype.id):
-            # Zeroed for the same reason as in conv_vlen2ndarray above
+            # The background buffer holds the existing destination value, which
+            # a converter may release -- conv_regref2pyref decrefs it.  It has
+            # to be zeroed rather than left holding whatever was on the heap.
             back_buf = emalloc(H5Tget_size(outtype.id)*len)
             memset(back_buf, 0, H5Tget_size(outtype.id)*len)
 
