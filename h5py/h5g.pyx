@@ -353,6 +353,7 @@ cdef class GroupID(ObjectID):
         buf = NULL
 
         size = H5Gget_objname_by_idx(self.id, idx, NULL, 0)
+        assert size >= 0
 
         buf = <char*>emalloc(sizeof(char)*(size+1))
         try:
