@@ -12,8 +12,10 @@
 from cpython cimport PyErr_Occurred, PyErr_SetObject
 import re
 
+from typing import Type
 
-_minor_table = {
+
+_minor_table: dict[int, Type[Exception]] = {
     H5E_SEEKERROR:      OSError,    # Seek failed
     H5E_READERROR:      OSError,    # Read failed
     H5E_WRITEERROR:     OSError,    # Write failed
@@ -63,7 +65,7 @@ _minor_table = {
 # "Fudge" table to accommodate annoying inconsistencies in HDF5's use
 # of the minor error codes.  If a (major, minor) entry appears here,
 # it will override any entry in the minor error table.
-_exact_table = {
+_exact_table: dict[tuple[int, int], Type[Exception]] = {
     (H5E_CACHE, H5E_BADVALUE):      OSError,    # obj create w/o write intent
     (H5E_RESOURCE, H5E_CANTINIT):   OSError,    # obj create w/o write intent
     (H5E_INTERNAL, H5E_SYSERRSTR):  OSError,    # e.g. wrong file permissions
@@ -171,13 +173,13 @@ cdef void set_default_error_handler() noexcept nogil:
     """Set h5py's current default error handler"""
     H5Eset_auto(<hid_t>H5E_DEFAULT, _error_handler.func, _error_handler.data)
 
-def silence_errors():
+def silence_errors() -> None:
     """ Disable HDF5's automatic error printing in this thread """
     _error_handler.func = NULL
     _error_handler.data = NULL
     set_default_error_handler()
 
-def unsilence_errors():
+def unsilence_errors() -> None:
     """ Re-enable HDF5's automatic error printing in this thread """
     _error_handler.func = <H5E_auto_t> H5Eprint
     _error_handler.data = stderr

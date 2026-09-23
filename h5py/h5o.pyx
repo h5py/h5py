@@ -24,16 +24,16 @@ from ._objects import phil, with_phil
 
 # === Public constants ========================================================
 
-TYPE_GROUP = H5O_TYPE_GROUP
-TYPE_DATASET = H5O_TYPE_DATASET
-TYPE_NAMED_DATATYPE = H5O_TYPE_NAMED_DATATYPE
+TYPE_GROUP: int = H5O_TYPE_GROUP
+TYPE_DATASET: int = H5O_TYPE_DATASET
+TYPE_NAMED_DATATYPE: int = H5O_TYPE_NAMED_DATATYPE
 
-COPY_SHALLOW_HIERARCHY_FLAG = H5O_COPY_SHALLOW_HIERARCHY_FLAG
-COPY_EXPAND_SOFT_LINK_FLAG  = H5O_COPY_EXPAND_SOFT_LINK_FLAG
-COPY_EXPAND_EXT_LINK_FLAG   = H5O_COPY_EXPAND_EXT_LINK_FLAG
-COPY_EXPAND_REFERENCE_FLAG  = H5O_COPY_EXPAND_REFERENCE_FLAG
-COPY_WITHOUT_ATTR_FLAG      = H5O_COPY_WITHOUT_ATTR_FLAG
-COPY_PRESERVE_NULL_FLAG     = H5O_COPY_PRESERVE_NULL_FLAG
+COPY_SHALLOW_HIERARCHY_FLAG: int = H5O_COPY_SHALLOW_HIERARCHY_FLAG
+COPY_EXPAND_SOFT_LINK_FLAG: int  = H5O_COPY_EXPAND_SOFT_LINK_FLAG
+COPY_EXPAND_EXT_LINK_FLAG: int   = H5O_COPY_EXPAND_EXT_LINK_FLAG
+COPY_EXPAND_REFERENCE_FLAG: int  = H5O_COPY_EXPAND_REFERENCE_FLAG
+COPY_WITHOUT_ATTR_FLAG: int      = H5O_COPY_WITHOUT_ATTR_FLAG
+COPY_PRESERVE_NULL_FLAG: int     = H5O_COPY_PRESERVE_NULL_FLAG
 
 # === Giant H5O_info_t structure ==============================================
 
@@ -44,35 +44,35 @@ cdef class _ObjInfoBase:
 cdef class _OHdrMesg(_ObjInfoBase):
 
     @property
-    def present(self):
+    def present(self) -> long:
         return self.istr[0].hdr.mesg.present
 
     @property
-    def shared(self):
+    def shared(self) -> long:
         return self.istr[0].hdr.mesg.shared
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.present, self.shared))
 
 cdef class _OHdrSpace(_ObjInfoBase):
 
     @property
-    def total(self):
+    def total(self) -> long:
         return self.istr[0].hdr.space.total
 
     @property
-    def meta(self):
+    def meta(self) -> long:
         return self.istr[0].hdr.space.meta
 
     @property
-    def mesg(self):
+    def mesg(self) -> dict:
         return self.istr[0].hdr.space.mesg
 
     @property
-    def free(self):
+    def free(self) -> long:
         return self.istr[0].hdr.space.free
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.total, self.meta, self.mesg, self.free))
 
 cdef class _OHdr(_ObjInfoBase):
@@ -81,26 +81,26 @@ cdef class _OHdr(_ObjInfoBase):
     cdef public _OHdrMesg mesg
 
     @property
-    def version(self):
+    def version(self) -> int:
         return self.istr[0].hdr.version
 
     @property
-    def nmesgs(self):
+    def nmesgs(self) -> int:
         return self.istr[0].hdr.nmesgs
 
     @property
-    def nchunks(self):
+    def nchunks(self) -> int:
         return self.istr[0].hdr.nchunks
 
     @property
-    def flags(self):
+    def flags(self) -> int:
         return self.istr[0].hdr.flags
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.space = _OHdrSpace()
         self.mesg = _OHdrMesg()
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.version, self.nmesgs, self.nchunks, self.flags, self.space, self.mesg))
 
 cdef class _ObjMetaInfo:
@@ -108,14 +108,14 @@ cdef class _ObjMetaInfo:
     cdef H5_ih_info_t *istr
 
     @property
-    def index_size(self):
+    def index_size(self) -> long:
         return self.istr[0].index_size
 
     @property
-    def heap_size(self):
+    def heap_size(self) -> hsize_t:
         return self.istr[0].heap_size
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.index_size, self.heap_size))
 
 cdef class _OMetaSize(_ObjInfoBase):
@@ -123,52 +123,52 @@ cdef class _OMetaSize(_ObjInfoBase):
     cdef public _ObjMetaInfo obj
     cdef public _ObjMetaInfo attr
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.obj = _ObjMetaInfo()
         self.attr = _ObjMetaInfo()
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.obj, self.attr))
 
 cdef class _ObjInfo(_ObjInfoBase):
 
     @property
-    def fileno(self):
+    def fileno(self) -> long:
         return self.istr[0].fileno
 
     @property
-    def addr(self):
+    def addr(self) -> haddr_t:
         return self.istr[0].addr
 
     @property
-    def type(self):
+    def type(self) -> int:
         return <int>self.istr[0].type
 
     @property
-    def rc(self):
+    def rc(self) -> int:
         return self.istr[0].rc
 
     @property
-    def atime(self):
+    def atime(self) -> time_t:
         return self.istr[0].atime
 
     @property
-    def mtime(self):
+    def mtime(self) -> time_t:
         return self.istr[0].mtime
 
     @property
-    def ctime(self):
+    def ctime(self) -> time_t:
         return self.istr[0].ctime
 
     @property
-    def btime(self):
+    def btime(self) -> time_t:
         return self.istr[0].btime
 
     @property
-    def num_attrs(self):
+    def num_attrs(self) -> hsize_t:
         return self.istr[0].num_attrs
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.fileno, self.addr, self.type, self.rc, self.atime, self.mtime, self.ctime, self.btime, self.num_attrs))
 
 cdef class ObjInfo(_ObjInfo):
@@ -181,7 +181,7 @@ cdef class ObjInfo(_ObjInfo):
     cdef public _OHdr hdr
     cdef public _OMetaSize meta_size
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.hdr = _OHdr()
         self.meta_size = _OMetaSize()
 
@@ -193,7 +193,7 @@ cdef class ObjInfo(_ObjInfo):
         self.meta_size.obj.istr = &(self.istr[0].meta_size.obj)
         self.meta_size.attr.istr = &(self.istr[0].meta_size.attr)
 
-    def __copy__(self):
+    def __copy__(self) -> ObjInfo:
         cdef ObjInfo newcopy
         newcopy = ObjInfo()
         newcopy.infostruct = self.infostruct
@@ -203,7 +203,7 @@ cdef class ObjInfo(_ObjInfo):
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
         char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
-        PropID lapl=None):
+        PropID lapl=None) -> ObjInfo:
     """(ObjectID loc, STRING name=, INT index=, **kwds) => ObjInfo
 
     Get information describing an object in an HDF5 file.  Provide the object
@@ -236,7 +236,7 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
     return info
 
 @with_phil
-def exists_by_name(ObjectID loc not None, char *name, PropID lapl=None):
+def exists_by_name(ObjectID loc not None, char *name, PropID lapl=None) -> bint:
     """ (ObjectID loc, STRING name, PropID lapl=None) => BOOL exists
 
     Determines whether a link resolves to an actual object.
@@ -247,7 +247,7 @@ def exists_by_name(ObjectID loc not None, char *name, PropID lapl=None):
 # === General object operations ===============================================
 
 @with_phil
-def open(ObjectID loc not None, char* name, PropID lapl=None):
+def open(ObjectID loc not None, char* name, PropID lapl=None) -> ObjectID:
     """(ObjectID loc, STRING name, PropID lapl=None) => ObjectID
 
     Open a group, dataset, or named datatype attached to an existing group.
@@ -257,7 +257,7 @@ def open(ObjectID loc not None, char* name, PropID lapl=None):
 
 @with_phil
 def link(ObjectID obj not None, GroupID loc not None, char* name,
-    PropID lcpl=None, PropID lapl=None):
+    PropID lcpl=None, PropID lapl=None) -> None:
     """(ObjectID obj, GroupID loc, STRING name, PropID lcpl=None,
     PropID lapl=None)
 
@@ -269,7 +269,7 @@ def link(ObjectID obj not None, GroupID loc not None, char* name,
 
 @with_phil
 def copy(ObjectID src_loc not None, char* src_name, GroupID dst_loc not None,
-    char* dst_name, PropID copypl=None, PropID lcpl=None):
+    char* dst_name, PropID copypl=None, PropID lcpl=None) -> None:
     """(ObjectID src_loc, STRING src_name, GroupID dst_loc, STRING dst_name,
     PropID copypl=None, PropID lcpl=None)
 
@@ -285,7 +285,7 @@ def copy(ObjectID src_loc not None, char* src_name, GroupID dst_loc not None,
 
 @with_phil
 def set_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
-    PropID lapl=None):
+    PropID lapl=None) -> None:
     """(ObjectID loc, STRING comment, **kwds)
 
     Set the comment for any-file resident object.  Keywords:
@@ -301,7 +301,7 @@ def set_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
 
 @with_phil
 def get_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
-    PropID lapl=None):
+    PropID lapl=None) -> bytes:
     """(ObjectID loc, STRING comment, **kwds)
 
     Get the comment for any-file resident object.  Keywords:
@@ -334,7 +334,7 @@ cdef class _ObjectVisitor:
     cdef object retval
     cdef ObjInfo objinfo
 
-    def __init__(self, func):
+    def __init__(self, func) -> None:
         self.func = func
         self.retval = None
         self.objinfo = ObjInfo()
@@ -374,7 +374,7 @@ cdef herr_t cb_obj_simple(hid_t obj, const char* name, const H5O_info_t *info, v
 @with_phil
 def visit(ObjectID loc not None, object func, *,
           int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
-          char* obj_name=".", PropID lapl=None, bint info=0):
+          char* obj_name=".", PropID lapl=None, bint info=0) -> object:
     """(ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
 
     Iterate a function or callable object over all objects below the

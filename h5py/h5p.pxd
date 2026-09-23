@@ -82,4 +82,4 @@ cdef class PropGCID(PropOCID):
     pass
 
 cdef hid_t pdefault(PropID pid)
-cdef object propwrap(hid_t id_in)
+cdef PropID propwrap(hid_t id_in)

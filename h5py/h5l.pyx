@@ -22,36 +22,36 @@ from ._objects import phil, with_phil
 
 # === Public constants ========================================================
 
-TYPE_HARD = H5L_TYPE_HARD
-TYPE_SOFT = H5L_TYPE_SOFT
-TYPE_EXTERNAL = H5L_TYPE_EXTERNAL
+TYPE_HARD: int = H5L_TYPE_HARD
+TYPE_SOFT: int = H5L_TYPE_SOFT
+TYPE_EXTERNAL: int = H5L_TYPE_EXTERNAL
 
 cdef class LinkInfo:
 
     cdef H5L_info_t infostruct
 
     @property
-    def type(self):
+    def type(self) -> int:
         """ Integer type code for link (h5l.TYPE_*) """
         return <int>self.infostruct.type
 
     @property
-    def corder_valid(self):
+    def corder_valid(self) -> bint:
         """ Indicates if the creation order is valid """
         return <bint>self.infostruct.corder_valid
 
     @property
-    def corder(self):
+    def corder(self) -> int:
         """ Creation order """
         return self.infostruct.corder
 
     @property
-    def cset(self):
+    def cset(self) -> H5T_cset_t:
         """ Integer type code for character set (h5t.CSET_*) """
         return self.infostruct.cset
 
     @property
-    def u(self):
+    def u(self) -> hsize_t:
         """ Either the address of a hard link or the size of a soft/UD link """
         if self.infostruct.type == H5L_TYPE_HARD:
             return self.infostruct.u.address
@@ -66,7 +66,7 @@ cdef class _LinkVisitor:
     cdef object retval
     cdef LinkInfo info
 
-    def __init__(self, func):
+    def __init__(self, func) -> None:
         self.func = func
         self.retval = None
         self.info = LinkInfo()
@@ -112,22 +112,22 @@ cdef class LinkProxy:
         You will note that this class does *not* inherit from ObjectID.
     """
 
-    def __init__(self, hid_t id_):
+    def __init__(self, hid_t id_) -> None:
 
         # The identifier in question is the hid_t for the parent GroupID.
         # We "borrow" this reference.
         self.id = id_
 
-    def __richcmp__(self, object other, int how):
+    def __richcmp__(self, object other, int how) -> bint:
         return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         raise TypeError("Link proxies are unhashable; use the parent group instead.")
 
 
     @with_phil
     def create_hard(self, char* new_name, GroupID cur_loc not None,
-        char* cur_name, PropID lcpl=None, PropID lapl=None):
+        char* cur_name, PropID lcpl=None, PropID lapl=None) -> None:
         """ (STRING new_name, GroupID cur_loc, STRING cur_name,
         PropID lcpl=None, PropID lapl=None)
 
@@ -140,7 +140,7 @@ cdef class LinkProxy:
 
     @with_phil
     def create_soft(self, char* new_name, char* target,
-        PropID lcpl=None, PropID lapl=None):
+        PropID lcpl=None, PropID lapl=None) -> None:
         """(STRING new_name, STRING target, PropID lcpl=None, PropID lapl=None)
 
         Create a new soft link in this group, with the given string value.
@@ -152,7 +152,7 @@ cdef class LinkProxy:
 
     @with_phil
     def create_external(self, char* link_name, char* file_name, char* obj_name,
-        PropID lcpl=None, PropID lapl=None):
+        PropID lcpl=None, PropID lapl=None) -> None:
         """(STRING link_name, STRING file_name, STRING obj_name,
         PropLCID lcpl=None, PropLAID lapl=None)
 
@@ -163,7 +163,7 @@ cdef class LinkProxy:
 
 
     @with_phil
-    def get_val(self, char* name, PropID lapl=None):
+    def get_val(self, char* name, PropID lapl=None) -> bytes | tuple[bytes, bytes]:
         """(STRING name, PropLAID lapl=None) => STRING or TUPLE(file, obj)
 
         Get the string value of a soft link, or a 2-tuple representing
@@ -198,7 +198,7 @@ cdef class LinkProxy:
 
     @with_phil
     def move(self, char* src_name, GroupID dst_loc not None, char* dst_name,
-        PropID lcpl=None, PropID lapl=None):
+        PropID lcpl=None, PropID lapl=None) -> None:
         """ (STRING src_name, GroupID dst_loc, STRING dst_name)
 
         Move a link to a new location in the file.
@@ -208,7 +208,7 @@ cdef class LinkProxy:
 
 
     @with_phil
-    def exists(self, char* name, PropID lapl=None):
+    def exists(self, char* name, PropID lapl=None) -> bint:
         """ (STRING name, PropID lapl=None) => BOOL
 
             Check if a link of the specified name exists in this group.
@@ -217,7 +217,7 @@ cdef class LinkProxy:
 
 
     @with_phil
-    def get_info(self, char* name, int index=-1, *, PropID lapl=None):
+    def get_info(self, char* name, int index=-1, *, PropID lapl=None) -> LinkInfo:
         """(STRING name=, INT index=, **kwds) => LinkInfo instance
 
         Get information about a link, either by name or its index.
@@ -232,7 +232,7 @@ cdef class LinkProxy:
     @with_phil
     def visit(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
-              char* obj_name='.', PropID lapl=None, bint info=0):
+              char* obj_name='.', PropID lapl=None, bint info=0) -> object:
         """(CALLABLE func, **kwds) => <Return value from func>
 
         Iterate a function or callable object over all groups below this
@@ -278,7 +278,7 @@ cdef class LinkProxy:
     def iterate(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
               char* obj_name='.', PropID lapl=None, bint info=0,
-              hsize_t idx=0):
+              hsize_t idx=0) -> tuple[object, hsize_t]:
         """(CALLABLE func, **kwds) => <Return value from func>, <index to restart at>
 
         Iterate a function or callable object over all groups in this

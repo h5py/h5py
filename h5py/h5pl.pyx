@@ -17,42 +17,42 @@ from .utils cimport emalloc, efree
 
 # === C API ===================================================================
 
-cpdef append(const char* search_path):
+cpdef void append(const char* search_path):
     """(STRING search_path)
 
     Add a directory to the end of the plugin search path.
     """
     H5PLappend(search_path)
 
-cpdef prepend(const char* search_path):
+cpdef void prepend(const char* search_path):
     """(STRING search_path)
 
     Add a directory to the start of the plugin search path.
     """
     H5PLprepend(search_path)
 
-cpdef replace(const char* search_path, unsigned int index):
+cpdef void replace(const char* search_path, unsigned int index):
     """(STRING search_path, UINT index)
 
     Replace the directory at the given index in the plugin search path.
     """
     H5PLreplace(search_path, index)
 
-cpdef insert(const char* search_path, unsigned int index):
+cpdef void insert(const char* search_path, unsigned int index):
     """(STRING search_path, UINT index)
 
     Insert a directory at the given index in the plugin search path.
     """
     H5PLinsert(search_path, index)
 
-cpdef remove(unsigned int index):
+cpdef void remove(unsigned int index):
     """(UINT index)
 
     Remove the specified entry from the plugin search path.
     """
     H5PLremove(index)
 
-cpdef get(unsigned int index):
+cpdef object get(unsigned int index):
     """(UINT index) => STRING
 
     Get the directory path at the given index (starting from 0) in the
@@ -69,7 +69,7 @@ cpdef get(unsigned int index):
     finally:
         efree(buf)
 
-cpdef size():
+cpdef unsigned int size():
     """() => UINT
 
     Get the number of directories currently in the plugin search path.

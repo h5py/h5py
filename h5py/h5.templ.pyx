@@ -12,12 +12,12 @@ from .defs cimport *
 from ._objects import phil, with_phil
 from .h5py_warnings import H5pyDeprecationWarning
 
-ITER_INC    = H5_ITER_INC     # Increasing order
-ITER_DEC    = H5_ITER_DEC     # Decreasing order
-ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
+ITER_INC: int    = H5_ITER_INC     # Increasing order
+ITER_DEC: int    = H5_ITER_DEC     # Decreasing order
+ITER_NATIVE: int = H5_ITER_NATIVE  # No particular order, whatever is fastest
 
-INDEX_NAME      = H5_INDEX_NAME       # Index on names
-INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
+INDEX_NAME: int      = H5_INDEX_NAME       # Index on names
+INDEX_CRT_ORDER: int = H5_INDEX_CRT_ORDER  # Index on creation order
 
 HDF5_VERSION_COMPILED_AGAINST = {{HDF5_VERSION}}
 NUMPY_VERSION_COMPILED_AGAINST = {{repr(NUMPY_BUILD_VERSION)}}
@@ -26,16 +26,16 @@ CYTHON_VERSION_COMPILED_WITH = {{repr(CYTHON_BUILD_VERSION)}}
 
 class ByteStringContext:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._readbytes = False
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self._readbytes
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self._readbytes = True
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         self._readbytes = False
 
 
@@ -54,7 +54,7 @@ cdef class H5PYConfig:
             values.  Defaults to ('FALSE', 'TRUE') for values 0 and 1.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._r_name = b'r'
         self._i_name = b'i'
         self._f_name = b'FALSE'
@@ -69,12 +69,12 @@ cdef class H5PYConfig:
         ### {{endif}}
 
     @property
-    def has_native_complex(self):
+    def has_native_complex(self) -> bool:
         """Boolean indicating availability of native HDF5 complex number datatypes."""
         return self._native_complex
 
     @property
-    def complex_names(self):
+    def complex_names(self) -> tuple[str, str]:
         """ Settable 2-tuple controlling the field names used for storing
         complex numbers as an HDF5 compound.
 
@@ -82,14 +82,14 @@ cdef class H5PYConfig:
         """
         with phil:
             import sys
-            def handle_val(val):
+            def handle_val(val: bytes) -> str:
                 return val.decode('utf8')
             return (handle_val(self._r_name), handle_val(self._i_name))
 
     @complex_names.setter
-    def complex_names(self, val):
+    def complex_names(self, val: tuple[bytes | str, bytes | str]) -> None:
         with phil:
-            def handle_val(val):
+            def handle_val(val: bytes | str) -> bytes:
                 if isinstance(val, unicode):
                     return val.encode('utf8')
                 elif isinstance(val, bytes):
@@ -107,7 +107,7 @@ cdef class H5PYConfig:
             self._i_name = i
 
     @property
-    def bool_names(self):
+    def bool_names(self) -> tuple[bytes | str, bytes | str]:
         """ Settable 2-tuple controlling HDF5 ENUM names for boolean types.
 
         Format is (false_name, real_name), defaulting to ('FALSE', 'TRUE').
@@ -117,7 +117,7 @@ cdef class H5PYConfig:
             return (self._f_name, self._t_name)
 
     @bool_names.setter
-    def bool_names(self, val):
+    def bool_names(self, val: tuple[bytes | str, bytes | str]) -> None:
         with phil:
             try:
                 if len(val) != 2: raise TypeError()
@@ -129,7 +129,7 @@ cdef class H5PYConfig:
             self._t_name = t
 
     @property
-    def read_byte_strings(self):
+    def read_byte_strings(self) -> ByteStringContext:
         """ Returns a context manager which forces all strings to be returned
         as byte strings. """
         warn(
@@ -141,22 +141,22 @@ cdef class H5PYConfig:
             return self._bytestrings
 
     @property
-    def mpi(self):
+    def mpi(self) -> bool:
         """ Boolean indicating if Parallel HDF5 is available """
         return {{MPI}}
 
     @property
-    def ros3(self):
+    def ros3(self) -> bool:
         """ Boolean indicating if ROS3 VDS is available """
         return {{ROS3}}
 
     @property
-    def direct_vfd(self):
+    def direct_vfd(self) -> bool:
         """ Boolean indicating if DIRECT VFD is available """
         return {{DIRECT_VFD}}
 
     @property
-    def swmr_min_hdf5_version(self):
+    def swmr_min_hdf5_version(self) -> tuple[int, int, int]:
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
         warn(
             "h5py.get_config().swmr_min_hdf5_version is deprecated. "
@@ -166,7 +166,7 @@ cdef class H5PYConfig:
         return (1, 9, 178)
 
     @property
-    def vds_min_hdf5_version(self):
+    def vds_min_hdf5_version(self) -> tuple[int, int, int]:
         """Tuple indicating the minimum HDF5 version required for virtual dataset (VDS) features"""
         warn(
             "h5py.get_config().vds_min_hdf5_version is deprecated. "
@@ -176,17 +176,17 @@ cdef class H5PYConfig:
         return (1, 9, 233)
 
     @property
-    def track_order(self):
+    def track_order(self) -> bool:
         """ Default value for track_order argument of
         File.open()/Group.create_group()/Group.create_dataset() """
         return self._track_order
 
     @track_order.setter
-    def track_order(self, val):
+    def track_order(self, val: bool) -> None:
         self._track_order = val
 
     @property
-    def default_file_mode(self):
+    def default_file_mode(self) -> str:
         """Default mode for h5py.File()"""
         warn(
             "h5py.get_config().default_file_mode is deprecated. "
@@ -196,7 +196,7 @@ cdef class H5PYConfig:
         return 'r'
 
     @default_file_mode.setter
-    def default_file_mode(self, val):
+    def default_file_mode(self, val: str) -> None:
         if val == 'r':
             warn(
                 "Setting h5py.default_file_mode is deprecated. "
@@ -222,7 +222,7 @@ cpdef H5PYConfig get_config():
     return cfg
 
 @with_phil
-def get_libversion():
+def get_libversion() -> tuple[int, int, int]:
     """ () => TUPLE (major, minor, release)
 
         Retrieve the HDF5 library version as a 3-tuple.

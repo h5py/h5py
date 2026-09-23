@@ -23,6 +23,10 @@ from ._proxy cimport attr_rw
 cimport cython
 #Python level imports
 from ._objects import phil, with_phil
+import numpy as np
+from typing import TypeAlias
+
+_DType: TypeAlias = np.dtype[np.generic]
 
 # Initialization
 import_array()
@@ -150,7 +154,7 @@ def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
 
 
 @with_phil
-def get_num_attrs(ObjectID loc not None):
+def get_num_attrs(ObjectID loc not None) -> int:
     """(ObjectID loc) => INT
 
     Determine the number of attributes attached to an HDF5 object.
@@ -163,26 +167,26 @@ cdef class AttrInfo:
     cdef H5A_info_t info
 
     @property
-    def corder_valid(self):
+    def corder_valid(self) -> bint:
         """Indicates if the creation order is valid"""
         return <bint>self.info.corder_valid
 
     @property
-    def corder(self):
+    def corder(self) -> int:
         """Creation order"""
         return <int>self.info.corder
 
     @property
-    def cset(self):
+    def cset(self) -> int:
         """Character set of attribute name (integer typecode from h5t)"""
         return <int>self.info.cset
 
     @property
-    def data_size(self):
+    def data_size(self) -> hsize_t:
         """Size of raw data"""
         return self.info.data_size
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.corder_valid, self.corder, self.cset, self.data_size))
 
 
@@ -190,7 +194,7 @@ cdef class AttrInfo:
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
             char* obj_name='.', PropID lapl=None,
-            int index_type=H5_INDEX_NAME, int order=H5_ITER_INC):
+            int index_type=H5_INDEX_NAME, int order=H5_ITER_INC) -> AttrInfo:
     """(ObjectID loc, STRING name=, INT index=, **kwds) => AttrInfo
 
     Get information about an attribute, in one of two ways:
@@ -230,7 +234,7 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
 cdef class _AttrVisitor:
     cdef object func
     cdef object retval
-    def __init__(self, func):
+    def __init__(self, func) -> None:
         self.func = func
         self.retval = None
 
@@ -255,7 +259,7 @@ cdef herr_t cb_attr_simple(hid_t loc_id, const char* attr_name, const H5A_info_t
 
 @with_phil
 def iterate(ObjectID loc not None, object func, int index=0, *,
-    int index_type=H5_INDEX_NAME, int order=H5_ITER_INC, bint info=0):
+    int index_type=H5_INDEX_NAME, int order=H5_ITER_INC, bint info=0) -> object:
     """(ObjectID loc, CALLABLE func, INT index=0, **kwds) => <Return value from func>
 
     Iterate a callable (function, method or callable object) over the
@@ -316,13 +320,13 @@ cdef class AttrID(ObjectID):
     """
 
     @property
-    def name(self):
+    def name(self) -> bytes:
         """The attribute's name"""
         with phil:
             return self.get_name()
 
     @property
-    def shape(self):
+    def shape(self) -> tuple:
         """A Numpy-style shape tuple representing the attribute's dataspace"""
         cdef SpaceID space
         with phil:
@@ -330,7 +334,7 @@ cdef class AttrID(ObjectID):
             return space.get_simple_extent_dims()
 
     @property
-    def dtype(self):
+    def dtype(self) -> _DType:
         """A Numpy-stype dtype object representing the attribute's datatype"""
         cdef TypeID tid
         with phil:
@@ -339,7 +343,7 @@ cdef class AttrID(ObjectID):
 
 
     @with_phil
-    def read(self, ndarray arr not None, TypeID mtype=None):
+    def read(self, ndarray arr not None, TypeID mtype=None) -> None:
         """(NDARRAY arr, TypeID mtype=None)
 
         Read the attribute data into the given Numpy array.  Note that the
@@ -369,7 +373,7 @@ cdef class AttrID(ObjectID):
 
 
     @with_phil
-    def write(self, ndarray arr not None, TypeID mtype=None):
+    def write(self, ndarray arr not None, TypeID mtype=None) -> None:
         """(NDARRAY arr)
 
         Write the contents of a Numpy array to the attribute.  Note that
@@ -397,7 +401,7 @@ cdef class AttrID(ObjectID):
 
 
     @with_phil
-    def get_name(self):
+    def get_name(self) -> bytes:
         """() => STRING name
 
         Determine the name of this attribute.
@@ -419,7 +423,7 @@ cdef class AttrID(ObjectID):
 
 
     @with_phil
-    def get_space(self):
+    def get_space(self) -> SpaceID:
         """() => SpaceID
 
         Create and return a copy of the attribute's dataspace.
@@ -428,7 +432,7 @@ cdef class AttrID(ObjectID):
 
 
     @with_phil
-    def get_type(self):
+    def get_type(self) -> TypeID:
         """() => TypeID
 
         Create and return a copy of the attribute's datatype.
@@ -437,7 +441,7 @@ cdef class AttrID(ObjectID):
 
 
     @with_phil
-    def get_storage_size(self):
+    def get_storage_size(self) -> hsize_t:
         """() => INT
 
         Get the amount of storage required for this attribute.

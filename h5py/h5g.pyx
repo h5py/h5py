@@ -22,22 +22,24 @@ from .h5p cimport PropID, PropGCID, propwrap
 # Python level imports
 from ._objects import phil, with_phil
 
+from typing import Iterator, Callable
 
-_IS_WINDOWS = sys.platform.startswith("win")
+
+_IS_WINDOWS: bool = sys.platform.startswith("win")
 
 # === Public constants and data structures ====================================
 
 # Enumerated object types for groups "H5G_obj_t"
-UNKNOWN  = H5G_UNKNOWN
-LINK     = H5G_LINK
-GROUP    = H5G_GROUP
-DATASET  = H5G_DATASET
-TYPE = H5G_TYPE
+UNKNOWN: int  = H5G_UNKNOWN
+LINK: int     = H5G_LINK
+GROUP: int    = H5G_GROUP
+DATASET: int  = H5G_DATASET
+TYPE: int = H5G_TYPE
 
 # Enumerated link types "H5G_link_t"
-LINK_ERROR = H5G_LINK_ERROR
-LINK_HARD  = H5G_LINK_HARD
-LINK_SOFT  = H5G_LINK_SOFT
+LINK_ERROR: int = H5G_LINK_ERROR
+LINK_HARD: int  = H5G_LINK_HARD
+LINK_SOFT: int  = H5G_LINK_SOFT
 
 cdef class GroupStat:
     """Represents the H5G_stat_t structure containing group member info.
@@ -59,30 +61,30 @@ cdef class GroupStat:
     cdef H5G_stat_t infostruct
 
     @property
-    def fileno(self):
+    def fileno(self) -> tuple[int, int]:
         return (self.infostruct.fileno[0], self.infostruct.fileno[1])
 
     @property
-    def objno(self):
+    def objno(self) -> tuple[int, int]:
         return (self.infostruct.objno[0], self.infostruct.objno[1])
 
     @property
-    def nlink(self):
+    def nlink(self) -> int:
         return self.infostruct.nlink
 
     @property
-    def type(self):
+    def type(self) -> H5O_type_t:
         return self.infostruct.type
 
     @property
-    def mtime(self):
+    def mtime(self) -> long:
         return self.infostruct.mtime
 
     @property
-    def linklen(self):
+    def linklen(self) -> long:
         return self.infostruct.linklen
 
-    def _hash(self):
+    def _hash(self) -> int:
         return hash((self.fileno, self.objno, self.nlink, self.type, self.mtime, self.linklen))
 
 
@@ -100,7 +102,7 @@ cdef class GroupIter:
     cdef bint reversed
 
 
-    def __init__(self, GroupID grp not None, bint reversed=False):
+    def __init__(self, GroupID grp not None, bint reversed=False) -> None:
 
         self.idx = 0
         self.grp = grp
@@ -109,12 +111,11 @@ cdef class GroupIter:
         self.reversed = reversed
 
 
-    def __iter__(self):
-
+    def __iter__(self) -> Iterator:
         return self
 
 
-    def __next__(self):
+    def __next__(self) -> object:
 
         if self.idx == self.nobjs:
             self.grp = None
@@ -144,7 +145,7 @@ cdef class GroupIter:
 # === Basic group management ==================================================
 
 @with_phil
-def open(ObjectID loc not None, char* name):
+def open(ObjectID loc not None, char* name) -> GroupID:
     """(ObjectID loc, STRING name) => GroupID
 
     Open an existing HDF5 group, attached to some other group.
@@ -154,7 +155,7 @@ def open(ObjectID loc not None, char* name):
 
 @with_phil
 def create(ObjectID loc not None, object name, PropID lcpl=None,
-           PropID gcpl=None):
+           PropID gcpl=None) -> GroupID:
     """(ObjectID loc, STRING name or None, PropLCID lcpl=None,
         PropGCID gcpl=None)
     => GroupID
@@ -180,7 +181,7 @@ cdef class _GroupVisitor:
     cdef object func
     cdef object retval
 
-    def __init__(self, func):
+    def __init__(self, func: Callable) -> None:
         self.func = func
         self.retval = None
 
@@ -197,7 +198,7 @@ cdef herr_t cb_group_iter(hid_t gid, char *name, void* vis_in) except 2:
 
 @with_phil
 def iterate(GroupID loc not None, object func, int startidx=0, *,
-            char* obj_name='.'):
+            char* obj_name='.') -> object:
     """ (GroupID loc, CALLABLE func, UINT startidx=0, **kwds)
     => Return value from func
 
@@ -224,7 +225,7 @@ def iterate(GroupID loc not None, object func, int startidx=0, *,
 
 
 @with_phil
-def get_objinfo(ObjectID obj not None, object name=b'.', int follow_link=1):
+def get_objinfo(ObjectID obj not None, object name=b'.', int follow_link=1) -> GroupStat:
     """(ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
 
     Obtain information about a named object.  If "name" is provided,
@@ -272,7 +273,7 @@ cdef class GroupID(ObjectID):
         * Equality: True HDF5 identity unless anonymous
     """
 
-    def __init__(self, hid_t id_):
+    def __init__(self, hid_t id_) -> None:
         with phil:
             from . import h5l
             self.links = h5l.LinkProxy(id_)
@@ -280,7 +281,7 @@ cdef class GroupID(ObjectID):
 
     @with_phil
     def link(self, char* current_name, char* new_name,
-             int link_type=H5G_LINK_HARD, GroupID remote=None):
+             int link_type=H5G_LINK_HARD, GroupID remote=None) -> None:
         """(STRING current_name, STRING new_name, INT link_type=LINK_HARD,
         GroupID remote=None)
 
@@ -306,7 +307,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def unlink(self, char* name):
+    def unlink(self, char* name) -> None:
         """(STRING name)
 
         Remove a link to an object from this group.
@@ -315,7 +316,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def move(self, char* current_name, char* new_name, GroupID remote=None):
+    def move(self, char* current_name, char* new_name, GroupID remote=None) -> None:
         """(STRING current_name, STRING new_name, GroupID remote=None)
 
         Relink an object.  current_name identifies the object.
@@ -332,7 +333,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def get_num_objs(self):
+    def get_num_objs(self) -> hsize_t:
         """() => INT number_of_objects
 
         Get the number of objects directly attached to a given group.
@@ -343,7 +344,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def get_objname_by_idx(self, hsize_t idx):
+    def get_objname_by_idx(self, hsize_t idx) -> bytes:
         """(INT idx) => STRING
 
         Get the name of a group member given its zero-based index.
@@ -364,7 +365,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def get_objtype_by_idx(self, hsize_t idx):
+    def get_objtype_by_idx(self, hsize_t idx) -> int:
         """(INT idx) => INT object_type_code
 
         Get the type of an object attached to a group, given its zero-based
@@ -379,7 +380,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def get_linkval(self, char* name):
+    def get_linkval(self, char* name) -> bytes:
         """(STRING name) => STRING link_value
 
         Retrieve the value (target name) of a symbolic link.
@@ -409,7 +410,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def get_create_plist(self):
+    def get_create_plist(self) -> PropID:
         """() => PropGCID
 
         Retrieve a copy of the group creation property list used to
@@ -419,7 +420,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def set_comment(self, char* name, char* comment):
+    def set_comment(self, char* name, char* comment) -> None:
         """(STRING name, STRING comment)
 
         Set the comment on a group member.
@@ -428,7 +429,7 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
-    def get_comment(self, char* name):
+    def get_comment(self, char* name) -> bytes:
         """(STRING name) => STRING comment
 
         Retrieve the comment for a group member.
@@ -451,7 +452,7 @@ cdef class GroupID(ObjectID):
 
     # === Special methods =====================================================
 
-    def __contains__(self, name):
+    def __contains__(self, name) -> bool:
         """(STRING name)
 
         Determine if a group member of the given name is present
@@ -462,17 +463,17 @@ cdef class GroupID(ObjectID):
         with phil:
             return _path_valid(self, name)
 
-    def __iter__(self):
+    def __iter__(self) -> GroupIter:
         """ Return an iterator over the names of group members. """
         with phil:
             return GroupIter(self)
 
-    def __reversed__(self):
+    def __reversed__(self) -> GroupIter:
         """ Return an iterator over group member names in reverse order. """
         with phil:
             return GroupIter(self, reversed=True)
 
-    def __len__(self):
+    def __len__(self) -> hsize_t:
         """ Number of group members """
         cdef hsize_t size
         with phil:
@@ -481,7 +482,7 @@ cdef class GroupID(ObjectID):
 
 
 @with_phil
-def _path_valid(GroupID grp not None, object path not None, PropID lapl=None):
+def _path_valid(GroupID grp not None, object path not None, PropID lapl=None) -> bool:
     """ Determine if *path* points to an object in the file.
 
     If *path* represents an external or soft link, the link's validity is not

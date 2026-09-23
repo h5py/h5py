@@ -16,9 +16,10 @@ from .h5d cimport DatasetID
 from .utils cimport emalloc, efree
 
 from ._objects import phil, with_phil
+from typing import Callable
 
 @with_phil
-def set_scale(DatasetID dset not None, char* dimname=''):
+def set_scale(DatasetID dset not None, char* dimname='') -> None:
     """(DatasetID dset, STRING dimname)
 
     Convert dataset dset to a dimension scale, with optional name dimname.
@@ -26,7 +27,7 @@ def set_scale(DatasetID dset not None, char* dimname=''):
     H5DSset_scale(dset.id, dimname)
 
 @with_phil
-def is_scale(DatasetID dset not None):
+def is_scale(DatasetID dset not None) -> bint:
     """(DatasetID dset) => BOOL
 
     Determines whether dset is a dimension scale.
@@ -35,7 +36,7 @@ def is_scale(DatasetID dset not None):
 
 @with_phil
 def attach_scale(DatasetID dset not None, DatasetID dscale not None, unsigned
-                 int idx):
+                 int idx) -> None:
     """(DatasetID dset, DatasetID dscale, UINT idx)
 
     Attach Dimension Scale dscale to Dimension idx of Dataset dset.
@@ -44,7 +45,7 @@ def attach_scale(DatasetID dset not None, DatasetID dscale not None, unsigned
 
 @with_phil
 def is_attached(DatasetID dset not None, DatasetID dscale not None,
-                unsigned int idx):
+                unsigned int idx) -> bint:
     """(DatasetID dset, DatasetID dscale, UINT idx) => BOOL
 
     Report if Dimension Scale dscale is currently attached to Dimension
@@ -54,7 +55,7 @@ def is_attached(DatasetID dset not None, DatasetID dscale not None,
 
 @with_phil
 def detach_scale(DatasetID dset not None, DatasetID dscale not None,
-                 unsigned int idx):
+                 unsigned int idx) -> None:
     """(DatasetID dset, DatasetID dscale, UINT idx)
 
     Detach Dimension Scale dscale from the Dimension idx of Dataset dset.
@@ -62,7 +63,7 @@ def detach_scale(DatasetID dset not None, DatasetID dscale not None,
     H5DSdetach_scale(dset.id, dscale.id, idx)
 
 @with_phil
-def get_num_scales(DatasetID dset not None, unsigned int dim):
+def get_num_scales(DatasetID dset not None, unsigned int dim) -> int:
     """(DatasetID dset, UINT dim) => INT number_of_scales
 
     Determines how many Dimension Scales are attached to Dimension dim
@@ -71,7 +72,7 @@ def get_num_scales(DatasetID dset not None, unsigned int dim):
     return H5DSget_num_scales(dset.id, dim)
 
 @with_phil
-def set_label(DatasetID dset not None, unsigned int idx, char* label):
+def set_label(DatasetID dset not None, unsigned int idx, char* label) -> None:
     """(DatasetID dset, UINT idx, STRING label)
 
     Set label for the Dimension idx of Dataset dset to the value label.
@@ -79,7 +80,7 @@ def set_label(DatasetID dset not None, unsigned int idx, char* label):
     H5DSset_label(dset.id, idx, label)
 
 @with_phil
-def get_label(DatasetID dset not None, unsigned int idx):
+def get_label(DatasetID dset not None, unsigned int idx) -> bytes:
     """(DatasetID dset, UINT idx) => STRING name_of_label
 
     Read the label for Dimension idx of Dataset dset into buffer label.
@@ -100,7 +101,7 @@ def get_label(DatasetID dset not None, unsigned int idx):
         efree(label)
 
 @with_phil
-def get_scale_name(DatasetID dscale not None):
+def get_scale_name(DatasetID dscale not None) -> bytes:
     """(DatasetID dscale) => STRING name_of_scale
 
     Retrieves name of Dimension Scale dscale.
@@ -125,7 +126,7 @@ cdef class _DimensionScaleVisitor:
     cdef object func
     cdef object retval
 
-    def __init__(self, func):
+    def __init__(self, func: Callable) -> None:
         self.func = func
         self.retval = None
 
@@ -145,7 +146,7 @@ cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) 
 
 @with_phil
 def iterate(DatasetID dset not None, unsigned int dim, object func,
-            int startidx=0):
+            int startidx=0) -> object:
     """ (DatasetID loc, UINT dim, CALLABLE func, UINT startidx=0)
     => Return value from func
 

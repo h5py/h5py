@@ -19,17 +19,21 @@ from .utils cimport emalloc
 #Python level imports
 from ._objects import phil, with_phil
 
+import typing
+if typing.TYPE_CHECKING:
+    from .h5s import SpaceID
+
 
 # === Public constants and data structures ====================================
 
-OBJECT = H5R_OBJECT
-DATASET_REGION = H5R_DATASET_REGION
+OBJECT: int = H5R_OBJECT
+DATASET_REGION: int = H5R_DATASET_REGION
 
 
 # === Reference API ===========================================================
 
 @with_phil
-def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None):
+def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None) -> Reference:
     """(ObjectID loc, STRING name, INT ref_type, SpaceID space=None)
     => ReferenceObject ref
 
@@ -67,7 +71,7 @@ def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None)
 
 
 @with_phil
-def dereference(Reference ref not None, ObjectID id not None, PropID oapl=None):
+def dereference(Reference ref not None, ObjectID id not None, PropID oapl=None) -> ObjectID:
     """(Reference ref, ObjectID id) => ObjectID or None
 
     Open the object pointed to by the reference and return its
@@ -86,7 +90,7 @@ def dereference(Reference ref not None, ObjectID id not None, PropID oapl=None):
 
 
 @with_phil
-def get_region(RegionReference ref not None, ObjectID id not None):
+def get_region(RegionReference ref not None, ObjectID id not None) -> SpaceID:
     """(Reference ref, ObjectID id) => SpaceID or None
 
     Retrieve the dataspace selection pointed to by the reference.
@@ -105,7 +109,7 @@ def get_region(RegionReference ref not None, ObjectID id not None):
 
 
 @with_phil
-def get_obj_type(Reference ref not None, ObjectID id not None):
+def get_obj_type(Reference ref not None, ObjectID id not None) -> int | None:
     """(Reference ref, ObjectID id) => INT obj_code or None
 
     Determine what type of object the reference points to.  The
@@ -129,7 +133,7 @@ def get_obj_type(Reference ref not None, ObjectID id not None):
 
 
 @with_phil
-def get_name(Reference ref not None, ObjectID loc not None):
+def get_name(Reference ref not None, ObjectID loc not None) -> bytes | None:
     """(Reference ref, ObjectID loc) => STRING name
 
     Determine the name of the object pointed to by this reference.
@@ -167,17 +171,17 @@ cdef class Reference:
           cdef readonly size_t typesize
     """
 
-    def __cinit__(self, *args, **kwds):
+    def __cinit__(self, *args, **kwds) -> None:
         self.typecode = H5R_OBJECT
         self.typesize = sizeof(hobj_ref_t)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         cdef size_t i
         for i in range(self.typesize):
             if (<unsigned char*>&self.ref)[i] != 0: return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<HDF5 object reference%s>" % ("" if self else " (null)")
 
 cdef class RegionReference(Reference):
@@ -189,9 +193,9 @@ cdef class RegionReference(Reference):
         convenience.
     """
 
-    def __cinit__(self, *args, **kwds):
+    def __cinit__(self, *args, **kwds) -> None:
         self.typecode = H5R_DATASET_REGION
         self.typesize = sizeof(hdset_reg_ref_t)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<HDF5 region reference%s>" % ("" if self else " (null")
