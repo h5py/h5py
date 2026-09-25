@@ -138,11 +138,9 @@ class TestCreateShape(BaseDataset):
         self.assertEqual(dset2.shape, (2,))
 
     def test_no_dtype(self):
-        # From h5py 4.0, either dtype or data will be required
-        with pytest.warns(H5pyDeprecationWarning):
+        # From h5py 4.0, either dtype or data is required
+        with pytest.raises(TypeError):
             dset = self.f.create_dataset(make_name(), (5,))
-
-        assert dset.dtype == np.dtype('f4')
 
 class TestCreateData(BaseDataset):
 
