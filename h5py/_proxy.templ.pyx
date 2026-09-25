@@ -275,18 +275,25 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
 
     # Second pass: pick out the matching fields and pack them in the new type
     temptype = H5I_UNINIT
-    for idx in range(H5Tget_nmembers(dstype)):
-        member_name = H5Tget_member_name(dstype, idx)
-        try:
-            if member_name not in mtype_fields:
-                continue
-            temptype = H5Tget_member_type(dstype, idx)
-            H5Tinsert(newtype, member_name, offset, temptype)
-            offset += H5Tget_size(temptype)
+    try:
+        for idx in range(H5Tget_nmembers(dstype)):
+            member_name = H5Tget_member_name(dstype, idx)
+            try:
+                if member_name not in mtype_fields:
+                    continue
+                temptype = H5Tget_member_type(dstype, idx)
+                H5Tinsert(newtype, member_name, offset, temptype)
+                offset += H5Tget_size(temptype)
+                H5Tclose(temptype)
+                temptype = H5I_UNINIT
+            finally:
+                H5free_memory(member_name)
+                member_name = NULL
+    except:
+        if temptype > 0:
             H5Tclose(temptype)
-        finally:
-            H5free_memory(member_name)
-            member_name = NULL
+        H5Tclose(newtype)
+        raise
 
     return newtype
 
