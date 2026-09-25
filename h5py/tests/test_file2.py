@@ -223,6 +223,21 @@ class TestFileObj(TestCase):
         f.create_dataset('test', data=list(range(12)))
         self.assertRaises(Exception, list, f['test'])
 
+    def test_short_readinto(self):
+
+        class ShortReadBytesIO(io.BytesIO):
+            def readinto(self, b):
+                if len(b) == 0:
+                    return 0
+                return super().readinto(memoryview(b)[:-1])
+
+        source = io.BytesIO()
+        self.check_write(source)
+        fileobj = ShortReadBytesIO(source.getvalue())
+
+        with self.assertRaises(Exception):
+            h5py.File(fileobj, 'r')
+
     def test_exception_write(self):
 
         class BrokenBytesIO(io.BytesIO):
