@@ -146,6 +146,14 @@ links:
 When the link is accessed, the file "otherfile.hdf5" is opened, and object at
 "/path/to/resource" is returned.
 
+.. warning::
+
+    External links can open files named inside the HDF5 file.  Do not access
+    external links from untrusted files unless your application has first
+    inspected and approved the link target.  A malicious file can use absolute
+    paths or relative paths such as ``..`` to make HDF5 open files outside the
+    directory you expected.
+
 Since the object retrieved is in a different file, its ".file" and ".parent"
 properties will refer to objects in that file, *not* the file in which the
 link resides.
@@ -446,6 +454,12 @@ Reference
             it grow as needed. If only a name is given instead of an iterable
             of tuples, it is equivalent to
             ``[(name, 0, h5py.h5f.UNLIMITED)]``.
+            When opening untrusted files containing external datasets,
+            inspect ``Dataset.external`` before reading or writing dataset
+            data.  HDF5 will read from or write to the referenced external
+            file paths when dataset data is accessed. Reject unexpected
+            absolute paths, parent-directory components, or locations outside
+            an application-controlled directory.
 
         :keyword allow_unknown_filter: Do not check that the requested filter is
             available for use (T/F). This should only be set if you will
@@ -605,6 +619,9 @@ Link classes
 
     Like :class:`SoftLink`, only they specify a filename in addition to a
     path.  See :ref:`group_extlinks`.
+
+    External links are resolved by HDF5 when they are accessed.  Treat link
+    filenames in untrusted files as untrusted filesystem paths.
 
     :param filename:    Name of the file to which the link points
     :type filename:     String
