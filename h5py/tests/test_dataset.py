@@ -266,6 +266,28 @@ class TestReadDirectly:
         dset.read_direct(arr)
         np.testing.assert_array_equal(arr, np.arange(10, dtype="int64"))
 
+    @pytest.mark.parametrize('source_shape', [(1, 6), (4, 1), (4, 6)])
+    def test_multiblock_broadcast(self, writable_file, source_shape):
+        values = np.arange(product(source_shape)).reshape(source_shape)
+        dset = writable_file.create_dataset('x', data=values)
+        arr = np.full((20, 6), -1)
+        expected = arr.copy()
+        expected[[1, 2, 4, 5], :] = values
+        selection = h5py.MultiBlockSlice(start=1, stride=3, count=2, block=2)
+
+        dset.read_direct(arr, dest_sel=np.s_[selection, :])
+
+        np.testing.assert_array_equal(arr, expected)
+
+    def test_broadcast_no_dest_sel(self, writable_file):
+        values = np.arange(6).reshape(1, 6)
+        dset = writable_file.create_dataset('x', data=values)
+        arr = np.empty((4, 6), dtype=values.dtype)
+
+        dset.read_direct(arr)
+
+        np.testing.assert_array_equal(arr, np.broadcast_to(values, arr.shape))
+
     def test_empty(self, writable_file):
         empty_dset = writable_file.create_dataset(make_name(), dtype='int64')
         arr = np.ones((100,), 'int64')
@@ -322,6 +344,26 @@ class TestWriteDirectly:
         empty_dset = writable_file.create_dataset(make_name(), dtype='int64')
         with pytest.raises(TypeError):
             empty_dset.write_direct(np.ones((100,)), np.s_[0:10], np.s_[50:60])
+
+    @pytest.mark.parametrize('source_shape', [(1, 6), (4, 1), (4, 6)])
+    def test_multiblock_broadcast(self, writable_file, source_shape):
+        values = np.arange(product(source_shape)).reshape(source_shape)
+        dset = writable_file.create_dataset('x', (20, 6), dtype='i4', fillvalue=-1)
+        expected = np.full(dset.shape, -1, dtype='i4')
+        expected[[1, 2, 4, 5], :] = values
+        selection = h5py.MultiBlockSlice(start=1, stride=3, count=2, block=2)
+
+        dset.write_direct(values, dest_sel=np.s_[selection, :])
+
+        np.testing.assert_array_equal(dset[:], expected)
+
+    def test_broadcast_no_dest_sel(self, writable_file):
+        values = np.arange(6).reshape(1, 6)
+        dset = writable_file.create_dataset('x', (4, 6), dtype=values.dtype)
+
+        dset.write_direct(values)
+
+        np.testing.assert_array_equal(dset[:], np.broadcast_to(values, dset.shape))
 
     def test_wrong_shape(self, writable_file):
         dset = writable_file.create_dataset(make_name(), (100,), dtype='int64')
