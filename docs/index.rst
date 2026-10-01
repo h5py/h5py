@@ -46,6 +46,7 @@ High-level API reference
     high/attr
     high/dims
     high/lowlevel
+    exceptions
 
 
 Advanced topics
