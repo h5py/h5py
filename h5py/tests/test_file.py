@@ -693,6 +693,16 @@ class TestContextManager(TestCase):
             self.assertTrue(fid)
         self.assertTrue(not fid)
 
+    def test_context_manager_closes_on_exception(self):
+        """File objects close when an exception is raised in a with block."""
+        exception = RuntimeError("test exception")
+
+        with pytest.raises(RuntimeError, match="test exception"):
+            with File(self.mktemp(), 'w') as fid:
+                raise exception
+
+        self.assertFalse(fid.id.valid)
+
 
 @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
 class TestUnicode(TestCase):
