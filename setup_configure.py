@@ -15,6 +15,7 @@
     the currently installed HDF5 version.
 """
 
+from typing import NamedTuple
 import os
 import os.path as op
 import platform
@@ -23,6 +24,8 @@ import sys
 import json
 from pathlib import Path
 
+from dataclasses import dataclass, field, replace
+from enum import auto, Flag
 
 def load_stashed_config():
     """ Load settings dict from the pickle file """
@@ -41,87 +44,167 @@ def stash_config(dct):
     with open('h5config.json', 'w') as f:
         json.dump(dct, f)
 
+class VersionTuple(NamedTuple):
+    major: int
+    minor: int
+    micro: int
 
-def validate_version(s):
-    """Ensure that s contains an X.Y.Z format version string, or ValueError."""
-    # HDF5 tags can have a patch version, which we'll ignore for now.
-    m = re.match(r'(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$', s)
-    if m:
-        return tuple(int(x) for x in m.groups())
-    raise ValueError(f"HDF5 version string {s!r} not in X.Y.Z[.P] format")
+    @classmethod
+    def from_version_string(cls, s:str, /) -> "VersionTuple":
+        if (m := re.match(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)(?:\.\d+)?$', s)) is None:
+            raise ValueError(f"version string {s!r} not in X.Y.Z[.P] format")
+        return VersionTuple(
+            major=int(m.group("major")),
+            minor=int(m.group("minor")),
+            micro=int(m.group("micro")),
+        )
 
+    def as_version_string(self) -> str:
+        return f"{self.major}.{self.minor}.{self.micro}"
 
-def mpi_enabled():
+def mpi_enabled() -> bool:
     return os.environ.get('HDF5_MPI') == "ON"
 
 
-class BuildConfig:
-    def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros,
-                 hdf5_version, mpi, ros3, direct_vfd):
-        self.hdf5_includedirs = hdf5_includedirs
-        self.hdf5_libdirs = hdf5_libdirs
-        self.hdf5_define_macros = hdf5_define_macros
-        self.hdf5_version = hdf5_version
-        self.mpi = mpi
-        self.ros3 = ros3
-        self.direct_vfd = direct_vfd
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CompilerSettings:
+    include_dirs: list[str] = field(default_factory=list)
+    lib_dirs: list[str] = field(default_factory=list)
+    define_macros: list[str] = field(default_factory=list)
 
-        if self.mpi and os.environ.get('H5PY_MSMPI') == 'ON':
-            self.msmpi = True
-            self.msmpi_inc_dirs = os.environ.get('MSMPI_INC').split(';')
-            import platform
-            bitness, _ = platform.architecture()
-            if bitness == '64bit':
-                mpi_lib_envvar = 'MSMPI_LIB64'
-            else:
-                mpi_lib_envvar = 'MSMPI_LIB32'
-            self.msmpi_lib_dirs = os.environ.get(mpi_lib_envvar).split(';')
-        else:
-            self.msmpi = False
-            self.msmpi_inc_dirs = []
-            self.msmpi_lib_dirs = []
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class HDF5:
+    version: VersionTuple
+    settings: CompilerSettings
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MSMPI:
+    is_enabled: bool
+    settings: CompilerSettings = CompilerSettings()
 
     @classmethod
-    def from_env(cls):
-        mpi = mpi_enabled()
-        h5_inc, h5_lib, h5_macros = cls._find_hdf5_compiler_settings(mpi)
+    def from_env(cls) -> "MSMPI":
+        if os.environ.get('H5PY_MSMPI') != 'ON':
+            return cls(is_enabled=False)
 
-        h5_version_s = os.environ.get('HDF5_VERSION')
+        import platform
+        bitness, _ = platform.architecture()
+        if bitness == '64bit':
+            mpi_lib_envvar = 'MSMPI_LIB64'
+        else:
+            mpi_lib_envvar = 'MSMPI_LIB32'
+
+        missing_defs: list[str] = []
+        if (MSMPI_INC := os.environ.get("MSMPI_INC")) is None:
+            missing_defs.append("MSMPI_INC")
+        if (MSMPI_LIB := os.environ.get(mpi_lib_envvar)) is None:
+            missing_defs.append(mpi_lib_envvar)
+
+        if missing_defs:
+            raise AssertionError(
+                "Environment isn't properly configured. "
+                "The following environment variables need to be defined and are not: "
+                f"{', '.join(missing_defs)}"
+            )
+
+        # no-op conversions to force narrowing at type check time
+        MSMPI_INC = str(MSMPI_INC)
+        MSMPI_LIB = str(MSMPI_LIB)
+
+        return cls(
+            is_enabled=True,
+            settings=CompilerSettings(
+                include_dirs=MSMPI_INC.split(';'),
+                lib_dirs=MSMPI_LIB.split(';'),
+            )
+        )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LibFlags:
+    mpi: bool
+    ros3: bool
+    direct_vfd: bool
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PartialLibFlags:
+    # None represents an unknown state here
+    mpi: bool
+    ros3: bool | None
+    direct_vfd: bool | None
+
+    def is_complete(self) -> bool:
+        return self.ros3 is not None and self.direct_vfd is not None
+
+    def as_complete(self) -> LibFlags:
+        if not self.is_complete():
+            raise AssertionError
+        return LibFlags(
+            mpi=self.mpi,
+            ros3=bool(self.ros3),
+            direct_vfd=bool(self.direct_vfd),
+        )
+
+
+class BuildConfig:
+    def __init__(self, hdf5: HDF5, flags: LibFlags) -> None:
+        self.hdf5 = hdf5
+        self.flags = flags
+        if self.flags.mpi:
+            self.msmpi = MSMPI.from_env()
+        else:
+            self.msmpi = MSMPI(is_enabled=False)
+
+    @classmethod
+    def from_env(cls) -> "BuildConfig":
         h5py_ros3 = os.environ.get('H5PY_ROS3')
         h5py_direct_vfd = os.environ.get('H5PY_DIRECT_VFD')
+        flags = PartialLibFlags(
+            mpi=mpi_enabled(),
+            ros3=(h5py_ros3 == '1') if h5py_ros3 is not None else None,
+            direct_vfd=(h5py_direct_vfd == '1') if h5py_direct_vfd is not None else None,
+        )
+        hdf5_settings = cls._find_hdf5_compiler_settings(flags.mpi)
+        hdf5_version_t: VersionTuple | None
+        if (hdf5_version_s := os.environ.get('HDF5_VERSION')) is not None:
+            hdf5_version_t = VersionTuple.from_version_string(hdf5_version_s)
+        else:
+            hdf5_version_t = None
 
-        if h5_version_s and not mpi and h5py_ros3 and h5py_direct_vfd:
+        if (
+            hdf5_version_t is not None
+            and not flags.mpi
+            and flags.is_complete()
+        ):
             # if we know config, don't use wrapper, it may not be supported
             return cls(
-                h5_inc, h5_lib, h5_macros, validate_version(h5_version_s), mpi,
-                h5py_ros3 == '1', h5py_direct_vfd == '1')
+                hdf5=HDF5(version=hdf5_version_t, settings=hdf5_settings),
+                flags=flags.as_complete(),
+            )
 
-        h5_wrapper = HDF5LibWrapper(h5_lib)
-        if h5_version_s:
-            h5_version = validate_version(h5_version_s)
-        else:
-            h5_version = h5_wrapper.autodetect_version()
-            if mpi and not h5_wrapper.has_mpi_support():
-                raise RuntimeError("MPI support not detected")
+        hdf5_wrapper = HDF5LibWrapper(hdf5_settings.lib_dirs)
 
-        if h5py_ros3:
-            ros3 = h5py_ros3 == '1'
-        else:
-            ros3 = h5_wrapper.has_ros3_support()
+        if hdf5_version_t is None:
+            hdf5_version_t = hdf5_wrapper.autodetect_version()
 
-        if h5py_direct_vfd:
-            direct_vfd = h5py_direct_vfd == '1'
-        else:
-            direct_vfd = h5_wrapper.has_direct_vfd_support()
+        hdf5 = HDF5(version=hdf5_version_t, settings=hdf5_settings)
 
-        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3, direct_vfd)
+        if flags.mpi and not hdf5_wrapper.has_mpi_support():
+            raise RuntimeError("MPI support not detected")
+
+        if h5py_ros3 is None:
+            flags = replace(flags, ros3=hdf5_wrapper.has_ros3_support())
+
+        if h5py_direct_vfd is None:
+            flags = replace(flags, direct_vfd=hdf5_wrapper.has_direct_vfd_support())
+
+        return cls(hdf5=hdf5, flags=flags.as_complete())
 
     @staticmethod
-    def _find_hdf5_compiler_settings(mpi=False):
-        """Get compiler settings from environment or pkgconfig.
-
-        Returns (include_dirs, lib_dirs, define_macros)
-        """
+    def _find_hdf5_compiler_settings(mpi: bool = False) -> CompilerSettings:
+        """Get compiler settings from environment or pkgconfig."""
         hdf5 = os.environ.get('HDF5_DIR')
         hdf5_includedir = os.environ.get('HDF5_INCLUDEDIR')
         hdf5_libdir = os.environ.get('HDF5_LIBDIR')
@@ -144,7 +227,10 @@ class BuildConfig:
         if hdf5_includedir or hdf5_libdir:
             inc_dirs = [hdf5_includedir] if hdf5_includedir else []
             lib_dirs = [hdf5_libdir] if hdf5_libdir else []
-            return (inc_dirs, lib_dirs, [])
+            return CompilerSettings(
+                include_dirs=inc_dirs,
+                lib_dirs=lib_dirs,
+            )
 
         # Specified a prefix dir (e.g. '/usr/local')
         if hdf5:
@@ -159,7 +245,10 @@ class BuildConfig:
             lib_dirs = [str(p)]
             if sys.platform.startswith('win'):
                 lib_dirs.append(op.join(hdf5, 'bin'))
-            return (inc_dirs, lib_dirs, [])
+            return CompilerSettings(
+                include_dirs=inc_dirs,
+                lib_dirs=lib_dirs,
+            )
 
         # Specified a name to be looked up in pkgconfig
         if hdf5_pkgconfig_name:
@@ -169,7 +258,11 @@ class BuildConfig:
                     f"No pkgconfig information for {hdf5_pkgconfig_name}"
                 )
             pc = pkgconfig.parse(hdf5_pkgconfig_name)
-            return (pc['include_dirs'], pc['library_dirs'], pc['define_macros'])
+            return CompilerSettings(
+                include_dirs=pc['include_dirs'],
+                lib_dirs=pc['library_dirs'],
+                define_macros=pc['define_macros'],
+            )
 
         # Fallback: query pkgconfig for default hdf5 names
         import pkgconfig
@@ -188,51 +281,51 @@ class BuildConfig:
                 )
                 raise
 
-        return (
-            pc.get('include_dirs', []),
-            pc.get('library_dirs', []),
-            pc.get('define_macros', []),
+        return CompilerSettings(
+            include_dirs=pc.get('include_dirs', []),
+            lib_dirs=pc.get('library_dirs', []),
+            define_macros=pc.get('define_macros', []),
         )
 
     def as_dict(self):
         return {
-            'hdf5_includedirs': self.hdf5_includedirs,
-            'hdf5_libdirs': self.hdf5_libdirs,
-            'hdf5_define_macros': self.hdf5_define_macros,
-            'hdf5_version': list(self.hdf5_version),  # list() to match the JSON
-            'mpi': self.mpi,
-            'ros3': self.ros3,
-            'direct_vfd': self.direct_vfd,
-            'msmpi': self.msmpi,
-            'msmpi_inc_dirs': self.msmpi_inc_dirs,
-            'msmpi_lib_dirs': self.msmpi_lib_dirs,
+            'hdf5_includedirs': self.hdf5.settings.include_dirs,
+            'hdf5_libdirs': self.hdf5.settings.lib_dirs,
+            'hdf5_define_macros': self.hdf5.settings.define_macros,
+            'hdf5_version': list(self.hdf5.version),  # list() to match the JSON
+            'mpi': self.flags.mpi,
+            'ros3': self.flags.ros3,
+            'direct_vfd': self.flags.direct_vfd,
+            'msmpi': self.msmpi.is_enabled,
+            'msmpi_inc_dirs': self.msmpi.settings.include_dirs,
+            'msmpi_lib_dirs': self.msmpi.settings.lib_dirs,
         }
 
-    def changed(self):
+    def changed(self) -> bool:
         """Has the config changed since the last build?"""
         return self.as_dict() != load_stashed_config()
 
-    def record_built(self):
+    def record_built(self) -> None:
         """Record config after a successful build"""
         stash_config(self.as_dict())
 
-    def summarise(self):
+    def summarise(self) -> None:
         def fmt_dirs(l):
             return '\n'.join((['['] + [f'  {d!r}' for d in l] + [']'])) if l else '[]'
 
         print('*' * 80)
         print(' ' * 23 + "Summary of the h5py configuration")
         print('')
-        print("  HDF5 include dirs:", fmt_dirs(self.hdf5_includedirs))
-        print("  HDF5 library dirs:", fmt_dirs(self.hdf5_libdirs))
-        print("       HDF5 Version:", repr(self.hdf5_version))
-        print("        MPI Enabled:", self.mpi)
-        print("   ROS3 VFD Enabled:", self.ros3)
-        print(" DIRECT VFD Enabled:", self.direct_vfd)
+        print("  HDF5 include dirs:", fmt_dirs(self.hdf5.settings.include_dirs))
+        print("  HDF5 library dirs:", fmt_dirs(self.hdf5.settings.lib_dirs))
+        print("       HDF5 Version:", self.hdf5.version.as_version_string())
+        print("        MPI Enabled:", self.flags.mpi)
+        print("   ROS3 VFD Enabled:", self.flags.ros3)
+        print(" DIRECT VFD Enabled:", self.flags.direct_vfd)
         print("   Rebuild Required:", self.changed())
-        print("     MS-MPI Enabled:", self.msmpi)
-        print("MS-MPI include dirs:", self.msmpi_inc_dirs)
-        print("MS-MPI library dirs:", self.msmpi_lib_dirs)
+        print("     MS-MPI Enabled:", self.msmpi.is_enabled)
+        print("MS-MPI include dirs:", self.msmpi.settings.include_dirs)
+        print("MS-MPI library dirs:", self.msmpi.settings.lib_dirs)
         print('')
         print('*' * 80)
 
@@ -306,9 +399,9 @@ class HDF5LibWrapper:
 
         self._lib = lib
 
-    def autodetect_version(self):
+    def autodetect_version(self) -> VersionTuple:
         """
-        Detect the current version of HDF5, and return X.Y.Z version string.
+        Detect the current version of HDF5, and return a (X, Y, Z) version tuple.
 
         Raises an exception if anything goes wrong.
         """
@@ -317,15 +410,19 @@ class HDF5LibWrapper:
 
         major = ctypes.c_uint()
         minor = ctypes.c_uint()
-        release = ctypes.c_uint()
+        micro = ctypes.c_uint()
 
         try:
-            self._lib.H5get_libversion(byref(major), byref(minor), byref(release))
+            self._lib.H5get_libversion(byref(major), byref(minor), byref(micro))
         except Exception:
             print("error: Unable to find HDF5 version")
             raise
 
-        return int(major.value), int(minor.value), int(release.value)
+        return VersionTuple(
+            major=int(major.value),
+            minor=int(minor.value),
+            micro=int(micro.value),
+        )
 
     def load_function(self, func_name):
         try:
@@ -334,17 +431,17 @@ class HDF5LibWrapper:
             # No such function
             return None
 
-    def has_functions(self, *func_names):
+    def has_functions(self, *func_names) -> bool:
         for func_name in func_names:
             if self.load_function(func_name) is None:
                 return False
         return True
 
-    def has_mpi_support(self):
+    def has_mpi_support(self) -> bool:
         return self.has_functions("H5Pget_fapl_mpio", "H5Pset_fapl_mpio")
 
-    def has_ros3_support(self):
+    def has_ros3_support(self) -> bool:
         return self.has_functions("H5Pget_fapl_ros3", "H5Pset_fapl_ros3")
 
-    def has_direct_vfd_support(self):
+    def has_direct_vfd_support(self) -> bool:
         return self.has_functions("H5Pget_fapl_direct", "H5Pset_fapl_direct")
