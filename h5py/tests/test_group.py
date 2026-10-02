@@ -1627,13 +1627,14 @@ def test_is_external_soft_link_limit(writable_file):
     """Long chains of soft links are followed as far as HDF5 would go"""
     f = writable_file
     nlinks = h5py.h5p.create(h5py.h5p.LINK_ACCESS).get_nlinks()
-    f["link0"] = ExternalLink("other.h5", "/data")
+    prefix = make_name("chain{}")
+    f[f"{prefix}_link0"] = ExternalLink("other.h5", "/data")
     for i in range(1, nlinks + 2):
-        f[f"link{i}"] = SoftLink(f"link{i - 1}")
+        f[f"{prefix}_link{i}"] = SoftLink(f"{prefix}_link{i - 1}")
 
-    assert f.is_external(f"link{nlinks}") is True
+    assert f.is_external(f"{prefix}_link{nlinks}") is True
     with pytest.raises(RuntimeError):
-        f.is_external(f"link{nlinks + 1}")
+        f.is_external(f"{prefix}_link{nlinks + 1}")
 
 
 def test_is_external_vds_printf(writable_file):
@@ -1645,24 +1646,26 @@ def test_is_external_vds_printf(writable_file):
         (0,), (h5py.h5s.UNLIMITED,), stride=(10,), block=(10,))
     dcpl.set_virtual(
         vspace, b".", b"data_%b", h5py.h5s.create_simple((10,)))
+    name = make_name("vds_printf")
     h5py.h5d.create(
-        f.id, b"vds_printf", h5py.h5t.NATIVE_INT64,
+        f.id, name.encode(), h5py.h5t.NATIVE_INT64,
         h5py.h5s.create_simple((0,), (h5py.h5s.UNLIMITED,)), dcpl=dcpl,
     )
-    assert f.is_external("vds_printf") is True
+    assert f.is_external(name) is True
 
 
 def test_is_external_long_vds_chain(writable_file):
     """Long chains of same-file virtual datasets don't hit recursion limits"""
     f = writable_file
+    prefix = make_name("chain{}")
     n = sys.getrecursionlimit() + 10
     for i in range(n):
         layout = h5py.VirtualLayout((1,), dtype="i8")
-        layout[:] = h5py.VirtualSource(".", f"vds{i + 1}", (1,))
-        f.create_virtual_dataset(f"vds{i}", layout)
+        layout[:] = h5py.VirtualSource(".", f"{prefix}_vds{i + 1}", (1,))
+        f.create_virtual_dataset(f"{prefix}_vds{i}", layout)
     layout = h5py.VirtualLayout((1,), dtype="i8")
     layout[:] = h5py.VirtualSource("other.h5", "data", (1,))
-    f.create_virtual_dataset(f"vds{n}", layout)
+    f.create_virtual_dataset(f"{prefix}_vds{n}", layout)
 
-    assert f.is_external(f"vds{n - 1}") is True
-    assert f.is_external("vds0") is True
+    assert f.is_external(f"{prefix}_vds{n - 1}") is True
+    assert f.is_external(f"{prefix}_vds0") is True
