@@ -20,6 +20,7 @@
 import numpy as np
 import os
 import os.path
+import sys
 from collections.abc import MutableMapping
 from tempfile import mkdtemp
 
@@ -1474,3 +1475,197 @@ class TestMutableMapping(BaseGroup):
         Group.__delitem__
         Group.__iter__
         Group.__len__
+
+
+@pytest.fixture()
+def externals_file(tmp_path):
+    """A file with internal & external links, external storage and VDS"""
+    other_path = tmp_path / make_name("other{}.h5")
+    with File(other_path, "w") as other:
+        other["data"] = np.arange(10)
+        other.create_group("grp")["data"] = np.arange(10)
+
+    main_path = tmp_path / make_name("main{}.h5")
+    with File(main_path, "w") as f:
+        f["data"] = np.arange(10)
+        grp = f.create_group("grp")
+        grp["data"] = np.arange(10)
+        grp.create_group("sub")
+        grp["hard"] = f["data"]
+
+        # Soft links: absolute and relative, to internal & external targets
+        f["soft_abs"] = SoftLink("/grp/data")
+        grp["soft_rel"] = SoftLink("data")
+        grp["soft_grp"] = SoftLink("sub")
+        f["soft_chain"] = SoftLink("/grp/soft_rel")
+        f["soft_dangling"] = SoftLink("/no/such/object")
+
+        # External links
+        f["ext"] = ExternalLink(str(other_path), "/data")
+        f["ext_grp"] = ExternalLink(str(other_path), "/grp")
+        f["ext_missing"] = ExternalLink(str(tmp_path / "missing.h5"), "/data")
+        grp["soft_to_ext"] = SoftLink("/ext")
+        f["soft_to_ext_grp"] = SoftLink("ext_grp")
+
+        # Soft link cycles
+        f["cycle_a"] = SoftLink("/cycle_b")
+        f["cycle_b"] = SoftLink("/cycle_a")
+        f["cycle_self"] = SoftLink("cycle_self")
+
+        # Raw data stored in an external (non-HDF5) file
+        f.create_dataset(
+            "ext_storage", (10,), dtype="i8",
+            external=[(str(tmp_path / make_name("raw{}.bin")), 0, 80)],
+        )
+
+        # Virtual datasets
+        layout = h5py.VirtualLayout((10,), dtype="i8")
+        layout[:] = h5py.VirtualSource(f["data"])
+        f.create_virtual_dataset("vds_same", layout)
+
+        layout = h5py.VirtualLayout((10,), dtype="i8")
+        layout[:] = h5py.VirtualSource(str(other_path), "data", (10,))
+        f.create_virtual_dataset("vds_other", layout)
+
+        layout = h5py.VirtualLayout((20,), dtype="i8")
+        layout[:10] = h5py.VirtualSource(f["data"])
+        layout[10:] = h5py.VirtualSource(str(other_path), "data", (10,))
+        f.create_virtual_dataset("vds_mixed", layout)
+
+        for name, src in [
+            ("vds_soft_to_ext", "/grp/soft_to_ext"),  # Source via ext. link
+            ("vds_of_vds", "vds_other"),  # Source is a VDS using another file
+            ("vds_of_storage", "ext_storage"),  # Source has external storage
+            ("vds_missing_src", "no_such_dataset"),  # Read as fill value
+            ("vds_cycle_a", "vds_cycle_b"),  # VDS referring to each other
+            ("vds_cycle_b", "vds_cycle_a"),
+        ]:
+            layout = h5py.VirtualLayout((10,), dtype="i8")
+            layout[:] = h5py.VirtualSource(".", src, (10,))
+            f.create_virtual_dataset(name, layout)
+
+        # Named datatype
+        f["dtype"] = np.dtype("f4")
+
+    with File(main_path, "r") as f:
+        yield f
+
+
+@pytest.mark.parametrize("path, expected", [
+    ("/", False),
+    (".", False),
+    ("data", False),
+    ("/data", False),
+    ("grp", False),
+    ("grp/data", False),
+    ("grp/sub", False),
+    ("grp/hard", False),
+    ("//grp/./data", False),
+    ("dtype", False),
+    ("soft_abs", False),
+    ("grp/soft_rel", False),
+    ("grp/soft_grp", False),
+    ("soft_chain", False),
+    ("ext", True),
+    ("ext_grp", True),
+    ("ext_grp/data", True),
+    ("/ext_grp/data", True),
+    ("ext_missing", True),
+    ("ext_grp/no_such_object", True),
+    ("grp/soft_to_ext", True),
+    ("soft_to_ext_grp/data", True),
+    ("ext_storage", True),
+    ("vds_same", False),
+    ("vds_other", True),
+    ("vds_mixed", True),
+    ("vds_soft_to_ext", True),
+    ("vds_of_vds", True),
+    ("vds_of_storage", True),
+    ("vds_missing_src", False),
+    ("vds_cycle_a", False),
+])
+def test_is_external(externals_file, path, expected):
+    """Group.is_external() checks links, external storage and VDS sources"""
+    assert externals_file.is_external(path) is expected
+    assert externals_file.is_external(path.encode()) is expected
+
+
+def test_is_external_relative(externals_file):
+    """Relative paths are resolved from the group, absolute from the root"""
+    grp = externals_file["grp"]
+    assert grp.is_external("soft_to_ext") is True
+    assert grp.is_external("data") is False
+    assert grp.is_external("/ext") is True
+    assert grp.is_external("/data") is False
+    assert grp["sub"].is_external("/grp/soft_rel") is False
+
+    with pytest.raises(KeyError):
+        grp.is_external("ext")  # Only exists at the root
+
+
+@pytest.mark.parametrize("path", [
+    "missing", "grp/missing", "missing/data", "data/x", "soft_dangling",
+])
+def test_is_external_missing(externals_file, path):
+    """Missing paths raise KeyError, like normal access"""
+    with pytest.raises(KeyError):
+        externals_file[path]
+    with pytest.raises(KeyError):
+        externals_file.is_external(path)
+
+
+@pytest.mark.parametrize("path", ["cycle_a", "cycle_self", "cycle_a/data"])
+def test_is_external_soft_link_cycle(externals_file, path):
+    """A cycle of soft links raises an error instead of looping forever"""
+    with pytest.raises(RuntimeError, match="too many"):
+        externals_file[path]
+    with pytest.raises(RuntimeError, match="too many soft links"):
+        externals_file.is_external(path)
+
+
+def test_is_external_soft_link_limit(writable_file):
+    """Long chains of soft links are followed as far as HDF5 would go"""
+    f = writable_file
+    nlinks = h5py.h5p.create(h5py.h5p.LINK_ACCESS).get_nlinks()
+    prefix = make_name("chain{}")
+    f[f"{prefix}_link0"] = ExternalLink("other.h5", "/data")
+    for i in range(1, nlinks + 2):
+        f[f"{prefix}_link{i}"] = SoftLink(f"{prefix}_link{i - 1}")
+
+    assert f.is_external(f"{prefix}_link{nlinks}") is True
+    with pytest.raises(RuntimeError):
+        f.is_external(f"{prefix}_link{nlinks + 1}")
+
+
+def test_is_external_vds_printf(writable_file):
+    """Printf-style VDS source names could match anything, so are external"""
+    f = writable_file
+    dcpl = h5py.h5p.create(h5py.h5p.DATASET_CREATE)
+    vspace = h5py.h5s.create_simple((10,), (h5py.h5s.UNLIMITED,))
+    vspace.select_hyperslab(
+        (0,), (h5py.h5s.UNLIMITED,), stride=(10,), block=(10,))
+    dcpl.set_virtual(
+        vspace, b".", b"data_%b", h5py.h5s.create_simple((10,)))
+    name = make_name("vds_printf")
+    h5py.h5d.create(
+        f.id, name.encode(), h5py.h5t.NATIVE_INT64,
+        h5py.h5s.create_simple((0,), (h5py.h5s.UNLIMITED,)), dcpl=dcpl,
+    )
+    assert f.is_external(name) is True
+
+
+def test_is_external_long_vds_chain(writable_file):
+    """Long chains of same-file virtual datasets don't hit recursion limits"""
+    f = writable_file
+    prefix = make_name("chain{}")
+    n = sys.getrecursionlimit() + 10
+    for i in range(n):
+        layout = h5py.VirtualLayout((1,), dtype="i8")
+        layout[:] = h5py.VirtualSource(".", f"{prefix}_vds{i + 1}", (1,))
+        f.create_virtual_dataset(f"{prefix}_vds{i}", layout)
+    layout = h5py.VirtualLayout((1,), dtype="i8")
+    layout[:] = h5py.VirtualSource("other.h5", "data", (1,))
+    f.create_virtual_dataset(f"{prefix}_vds{n}", layout)
+
+    assert f.is_external(f"{prefix}_vds{n - 1}") is True
+    assert f.is_external(f"{prefix}_vds0") is True
