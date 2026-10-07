@@ -712,6 +712,13 @@ Reference
         type-appropriate default value.  Can't be changed after the dataset is
         created.
 
+        For a dataset with an array datatype, such as ``('f4', (3,))``, this is
+        an array of the base type.
+
+        .. versionchanged:: 3.17
+           Array datatypes (``H5T_ARRAY``) and datatypes with variable-length
+           or reference components are supported.
+
     .. attribute:: external
 
        If this dataset is stored in one or more external files, this is a list
