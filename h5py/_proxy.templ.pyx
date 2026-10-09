@@ -94,6 +94,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
     cdef hid_t rawdstype = -1
     cdef hid_t dspace = -1      # Dataset dataspace
     cdef hid_t cspace = -1      # Temporary contiguous dataspaces
+    cdef bint read_proxy = False
 
     cdef void* back_buf = NULL
     cdef void* conv_buf = NULL
@@ -114,8 +115,17 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 dstype = rawdstype
         else:
             dstype = H5Dget_type(dset)
+            # Do not read unused variable-length fields: their allocations
+            # would be discarded by conversion to the reduced memory type.
+            if (H5Tget_class(mtype) == H5T_COMPOUND
+                    and H5Tget_class(dstype) == H5T_COMPOUND
+                    and needs_proxy(dstype)):
+                rawdstype = dstype
+                read_proxy = True
+                dstype = make_reduced_type(mtype, rawdstype, read=True)
+                H5Tclose(rawdstype)
 
-        if not (needs_proxy(dstype) or needs_proxy(mtype)):
+        if not (read_proxy or needs_proxy(dstype) or needs_proxy(mtype)):
             if read:
                 H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
             else:
@@ -235,7 +245,7 @@ cdef herr_t dset_rw_vlen_strings(
     return 0
 
 
-cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
+cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype, bint read=False):
     # Go through dstype, pick out the fields which also appear in mtype, and
     # return a new compound type with the fields packed together
     # See also: issue 372
@@ -270,6 +280,11 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
         finally:
             H5free_memory(member_name)
             member_name = NULL
+
+    # An unmatched read leaves the caller's buffer unchanged. Preserve the
+    # original conversion path rather than constructing a zero-sized type.
+    if read and newtype_size == 0:
+        return H5Tcopy(dstype)
 
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
