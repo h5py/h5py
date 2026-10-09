@@ -1678,7 +1678,7 @@ class TestCompoundArrayField:
                           ('value', base_dtype, field_shape)])
         expected = np.zeros(dataset_shape, dtype=dtype)
         expected['sentinel'] = 101
-        ds = writable_file.create_dataset('compound', data=expected)
+        ds = writable_file.create_dataset(make_name('compound'), data=expected)
         values = np.arange(expected['value'].size).reshape(
             expected['value'].shape).astype(base_dtype)
 
@@ -1713,7 +1713,7 @@ class TestCompoundArrayField:
         dtype = np.dtype([('sentinel', 'i8'), ('value', 'f8', field_shape)])
         expected = np.zeros(dataset_shape, dtype=dtype)
         expected['sentinel'] = 202
-        ds = writable_file.create_dataset('compound', data=expected)
+        ds = writable_file.create_dataset(make_name('compound'), data=expected)
         values = np.arange(6, dtype='f8')
 
         ds['value'] = values
@@ -1729,7 +1729,7 @@ class TestCompoundArrayField:
         dtype = np.dtype([('sentinel', 'i8'), ('value', 'f8', (2, 3))])
         original = np.zeros(4, dtype=dtype)
         original['sentinel'] = 202
-        ds = writable_file.create_dataset('compound', data=original)
+        ds = writable_file.create_dataset(make_name('compound'), data=original)
         # Incompatible input must not mutate any part of the compound dataset.
         with pytest.raises((TypeError, ValueError)):
             ds['value', 0] = np.ones(shape)
@@ -1739,7 +1739,7 @@ class TestCompoundArrayField:
         """Keep the separate object-copy path for vlen array fields."""
         dtype = np.dtype([('sentinel', 'i8'),
                           ('value', h5py.string_dtype('utf-8'), (2, 3))])
-        ds = writable_file.create_dataset('compound', (2,), dtype=dtype)
+        ds = writable_file.create_dataset(make_name('compound'), (2,), dtype=dtype)
         ds['sentinel'] = [303, 404]
         values = np.array([[['a', 'bb', 'ccc'], ['d', 'ee', 'fff']],
                            [['g', 'hh', 'iii'], ['j', 'kk', 'lll']]], dtype=object)
