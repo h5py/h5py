@@ -1045,6 +1045,10 @@ class Dataset(HLObject):
                     tmp[names[0]] = val
                     val = tmp
                 else:
+                    if (dtype.subdtype is not None
+                            and val.shape[-len(dtype.shape):] == dtype.shape):
+                        # Combine field axes before viewing as a compound dtype.
+                        val = val.reshape(cast_shape + (product(dtype.shape),))
                     val = val.view(cast_dtype).reshape(cast_shape)
         elif (self.dtype.kind == 'S'
               and (h5t.check_string_dtype(self.dtype).encoding == 'utf-8')
