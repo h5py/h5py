@@ -103,7 +103,8 @@ def test_projection_preserves_selected_fields(tmp_path, kind, fields):
         np.testing.assert_array_equal(dataset.fields('time')[0:0], [])
         with pytest.raises(ValueError):
             dataset.fields('missing')
-        with pytest.raises(OSError):
+        # The error class for an invalid selection varies with HDF5 version.
+        with pytest.raises((ValueError, OSError), match='not within extent'):
             dataset.fields('time')[[5]]
 
 
