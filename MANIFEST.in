@@ -5,6 +5,7 @@ include LICENSE
 include MANIFEST.in
 include pylintrc
 include README.rst
+include CITATION
 include setup_build.py
 include setup_configure.py
 include tox.ini
