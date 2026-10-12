@@ -94,7 +94,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
     cdef hid_t rawdstype = -1
     cdef hid_t dspace = -1      # Dataset dataspace
     cdef hid_t cspace = -1      # Temporary contiguous dataspaces
-    cdef bint read_proxy = False
+    cdef bint direct_access = False
 
     cdef void* back_buf = NULL
     cdef void* conv_buf = NULL
@@ -106,26 +106,23 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
         # not present in the memory type.  Limit the type used for the dataset
         # to only those fields present in the memory type.  We can't use the
         # memory type directly because of course that triggers HDFFV-1063.
-        if (H5Tget_class(mtype) == H5T_COMPOUND) and (not read):
-            rawdstype = H5Dget_type(dset)
-            if H5Tget_class(rawdstype) == H5T_COMPOUND:
-                dstype = make_reduced_type(mtype, rawdstype)
-                H5Tclose(rawdstype)
-            else:
-                dstype = rawdstype
-        else:
-            dstype = H5Dget_type(dset)
-            # Do not read unused variable-length fields: their allocations
-            # would be discarded by conversion to the reduced memory type.
-            if (H5Tget_class(mtype) == H5T_COMPOUND
-                    and H5Tget_class(dstype) == H5T_COMPOUND
-                    and needs_proxy(dstype)):
+        dstype = H5Dget_type(dset)
+        if (H5Tget_class(mtype) == H5T_COMPOUND
+                and H5Tget_class(dstype) == H5T_COMPOUND):
+            if read:
+                # Cache before reduction: even a fixed-size projection must
+                # not directly read unused variable-length fields.
+                direct_access = not (needs_proxy(dstype) or needs_proxy(mtype))
+            if not read or not direct_access:
                 rawdstype = dstype
-                read_proxy = True
-                dstype = make_reduced_type(mtype, rawdstype, read=True)
+                dstype = make_reduced_type(mtype, rawdstype, read=read)
                 H5Tclose(rawdstype)
+            if not read:
+                direct_access = not (needs_proxy(dstype) or needs_proxy(mtype))
+        else:
+            direct_access = not (needs_proxy(dstype) or needs_proxy(mtype))
 
-        if not (read_proxy or needs_proxy(dstype) or needs_proxy(mtype)):
+        if direct_access:
             if read:
                 H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
             else:
