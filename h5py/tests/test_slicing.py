@@ -17,6 +17,7 @@
 """
 
 import numpy as np
+import pytest
 
 from .common import TestCase, make_name
 
@@ -419,3 +420,46 @@ class TestMultiBlockSlice(BaseSlicing):
 
         with self.assertRaises(ValueError):
             mbslice.indices(10)
+
+
+@pytest.mark.parametrize('rows', [6, 20])
+@pytest.mark.parametrize('chunks', [None, (2, 3)])
+@pytest.mark.parametrize('values', [
+    7,
+    np.arange(6),
+    np.arange(4).reshape(4, 1),
+    np.arange(24).reshape(4, 6),
+], ids=['scalar', 'row', 'column', 'full-shape'])
+def test_multiblock_broadcast(writable_file, rows, chunks, values):
+    dset = writable_file.create_dataset(
+        'x', (rows, 6), dtype='i4', fillvalue=-1, chunks=chunks
+    )
+    selection = MultiBlockSlice(start=1, stride=3, count=2, block=2)
+    expected = np.full(dset.shape, -1, dtype='i4')
+    expected[[1, 2, 4, 5], :] = values
+
+    dset[selection, :] = values
+
+    # Also check that broadcasting does not overwrite unselected rows.
+    np.testing.assert_array_equal(dset[:], expected)
+
+
+@pytest.mark.parametrize('values', [
+    7,
+    np.arange(6),
+    np.arange(4).reshape(4, 1),
+    np.arange(24).reshape(4, 6),
+], ids=['scalar', 'row', 'column', 'full-shape'])
+def test_multiblock_broadcast_multiple_axes(writable_file, values):
+    dset = writable_file.create_dataset('x', (6, 4, 8), dtype='i4', fillvalue=-1)
+    selection = (
+        MultiBlockSlice(start=1, stride=3, count=2, block=2),
+        3,
+        MultiBlockSlice(start=1, stride=4, count=2, block=3),
+    )
+    expected = np.full(dset.shape, -1, dtype='i4')
+    expected[:, 3, :][np.ix_([1, 2, 4, 5], [1, 2, 3, 5, 6, 7])] = values
+
+    dset[selection] = values
+
+    np.testing.assert_array_equal(dset[:], expected)
