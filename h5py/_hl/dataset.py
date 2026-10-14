@@ -189,7 +189,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
 
     have_cache_settings = any(
         value is not None for value in (rdcc_nbytes, rdcc_nslots, rdcc_w0))
-    if efile_prefix or virtual_prefix or have_cache_settings:
+    if efile_prefix is not None or virtual_prefix is not None or have_cache_settings:
         dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
 
     if efile_prefix is not None:
@@ -227,7 +227,7 @@ def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None,
 
     have_cache_settings = any(
         value is not None for value in (rdcc_nbytes, rdcc_nslots, rdcc_w0))
-    if efile_prefix or virtual_prefix or have_cache_settings:
+    if efile_prefix is not None or virtual_prefix is not None or have_cache_settings:
         dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
 
     if efile_prefix is not None:

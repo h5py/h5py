@@ -2224,6 +2224,29 @@ def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options):
         np.testing.assert_array_equal(ds[:], data)
 
 
+@pytest.mark.parametrize('method', ['create', 'require_new', 'require_existing'])
+@pytest.mark.parametrize('prefix_name', ['efile_prefix', 'virtual_prefix'])
+@pytest.mark.parametrize('prefix', ['', b'', None])
+def test_dset_empty_prefix(tmp_path, method, prefix_name, prefix):
+    path = tmp_path / 'prefix.h5'
+    if method == 'require_existing':
+        with h5py.File(path, 'w') as f:
+            f.create_dataset('data', shape=(4,), dtype='i4')
+
+    with h5py.File(path, 'a') as f:
+        options = {prefix_name: prefix}
+        if method == 'create':
+            ds = f.create_dataset('data', shape=(4,), dtype='i4', **options)
+        else:
+            ds = f.require_dataset('data', shape=(4,), dtype='i4', **options)
+
+        dapl = ds.id.get_access_plist()
+        assert getattr(dapl, 'get_' + prefix_name)() == b''
+        data = np.arange(4, dtype='i4')
+        ds[:] = data
+        np.testing.assert_array_equal(ds[:], data)
+
+
 class TestCommutative(BaseDataset):
     """
     Test the symmetry of operators, at least with the numpy types.
