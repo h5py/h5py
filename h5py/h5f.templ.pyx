@@ -15,8 +15,8 @@
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
-from ._objects cimport pdefault
-from .h5p cimport propwrap, PropFAID, PropFCID
+from ._objects cimport pdefault, ObjectID
+from .h5p cimport propwrap, PropFAID, PropFCID, PropID
 from .h5i cimport wrap_identifier
 from .h5ac cimport CacheConfig
 from .utils cimport emalloc, efree
@@ -29,58 +29,60 @@ from ._objects import phil, with_phil
 
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 
+from typing import Iterator
+
 # Initialization
 
 # === Public constants and data structures ====================================
 
-ACC_TRUNC   = H5F_ACC_TRUNC
-ACC_EXCL    = H5F_ACC_EXCL
-ACC_RDWR    = H5F_ACC_RDWR
-ACC_RDONLY  = H5F_ACC_RDONLY
-ACC_SWMR_WRITE = H5F_ACC_SWMR_WRITE
-ACC_SWMR_READ  = H5F_ACC_SWMR_READ
+ACC_TRUNC: int   = H5F_ACC_TRUNC
+ACC_EXCL: int    = H5F_ACC_EXCL
+ACC_RDWR: int    = H5F_ACC_RDWR
+ACC_RDONLY: int  = H5F_ACC_RDONLY
+ACC_SWMR_WRITE: int = H5F_ACC_SWMR_WRITE
+ACC_SWMR_READ: int  = H5F_ACC_SWMR_READ
 
 
-SCOPE_LOCAL     = H5F_SCOPE_LOCAL
-SCOPE_GLOBAL    = H5F_SCOPE_GLOBAL
+SCOPE_LOCAL: int     = H5F_SCOPE_LOCAL
+SCOPE_GLOBAL: int    = H5F_SCOPE_GLOBAL
 
-CLOSE_DEFAULT = H5F_CLOSE_DEFAULT
-CLOSE_WEAK  = H5F_CLOSE_WEAK
-CLOSE_SEMI  = H5F_CLOSE_SEMI
-CLOSE_STRONG = H5F_CLOSE_STRONG
+CLOSE_DEFAULT: int = H5F_CLOSE_DEFAULT
+CLOSE_WEAK: int  = H5F_CLOSE_WEAK
+CLOSE_SEMI: int  = H5F_CLOSE_SEMI
+CLOSE_STRONG: int = H5F_CLOSE_STRONG
 
-OBJ_FILE    = H5F_OBJ_FILE
-OBJ_DATASET = H5F_OBJ_DATASET
-OBJ_GROUP   = H5F_OBJ_GROUP
-OBJ_DATATYPE = H5F_OBJ_DATATYPE
-OBJ_ATTR    = H5F_OBJ_ATTR
-OBJ_ALL     = H5F_OBJ_ALL
-OBJ_LOCAL   = H5F_OBJ_LOCAL
-UNLIMITED   = H5F_UNLIMITED
+OBJ_FILE: int    = H5F_OBJ_FILE
+OBJ_DATASET: int = H5F_OBJ_DATASET
+OBJ_GROUP: int   = H5F_OBJ_GROUP
+OBJ_DATATYPE: int = H5F_OBJ_DATATYPE
+OBJ_ATTR: int    = H5F_OBJ_ATTR
+OBJ_ALL: int     = H5F_OBJ_ALL
+OBJ_LOCAL: int   = H5F_OBJ_LOCAL
+UNLIMITED: int   = H5F_UNLIMITED
 
-LIBVER_EARLIEST = H5F_LIBVER_EARLIEST
-LIBVER_LATEST = H5F_LIBVER_LATEST
-LIBVER_V18 = H5F_LIBVER_V18
-LIBVER_V110 = H5F_LIBVER_V110
+LIBVER_EARLIEST: int = H5F_LIBVER_EARLIEST
+LIBVER_LATEST: int = H5F_LIBVER_LATEST
+LIBVER_V18: int = H5F_LIBVER_V18
+LIBVER_V110: int = H5F_LIBVER_V110
 
 ### {{if HDF5_VERSION >= VOL_MIN_HDF5_VERSION}}
-LIBVER_V112 = H5F_LIBVER_V112
+LIBVER_V112: int = H5F_LIBVER_V112
 ### {{endif}}
 
 ### {{if HDF5_VERSION >= (1, 13, 0)}}
-LIBVER_V114 = H5F_LIBVER_V114
+LIBVER_V114: int = H5F_LIBVER_V114
 ### {{endif}}
 
 ### {{if HDF5_VERSION >= (2, 0, 0)}}
-LIBVER_V200 = H5F_LIBVER_V200
+LIBVER_V200: int = H5F_LIBVER_V200
 ### {{endif}}
 
-FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
+FILE_IMAGE_OPEN_RW: int = H5LT_FILE_IMAGE_OPEN_RW
 
-FSPACE_STRATEGY_FSM_AGGR = H5F_FSPACE_STRATEGY_FSM_AGGR
-FSPACE_STRATEGY_PAGE = H5F_FSPACE_STRATEGY_PAGE
-FSPACE_STRATEGY_AGGR = H5F_FSPACE_STRATEGY_AGGR
-FSPACE_STRATEGY_NONE = H5F_FSPACE_STRATEGY_NONE
+FSPACE_STRATEGY_FSM_AGGR: int = H5F_FSPACE_STRATEGY_FSM_AGGR
+FSPACE_STRATEGY_PAGE: int = H5F_FSPACE_STRATEGY_PAGE
+FSPACE_STRATEGY_AGGR: int = H5F_FSPACE_STRATEGY_AGGR
+FSPACE_STRATEGY_NONE: int = H5F_FSPACE_STRATEGY_NONE
 
 # Used in FileID.get_page_buffering_stats()
 PageBufStats = namedtuple('PageBufferStats', ['meta', 'raw'])
@@ -90,7 +92,7 @@ PageStats = namedtuple('PageStats', ['accesses', 'hits', 'misses', 'evictions', 
 # === File operations =========================================================
 
 @with_phil
-def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
+def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None) -> FileID:
     """(STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None) => FileID
 
     Open an existing HDF5 file.  Keyword "flags" may be:
@@ -108,7 +110,7 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
 
 @with_phil
 def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
-                                                PropFAID fapl=None):
+                                                PropFAID fapl=None) -> FileID:
     """(STRING name, INT flags=ACC_TRUNC, PropFCID fcpl=None,
     PropFAID fapl=None) => FileID
 
@@ -126,7 +128,7 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
     return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
 
 @with_phil
-def open_file_image(image, flags=0):
+def open_file_image(image, flags=0) -> FileID:
     """(STRING image, INT flags=0) => FileID
 
     Load a new HDF5 file into memory.  Keyword "flags" may be:
@@ -147,7 +149,7 @@ def open_file_image(image, flags=0):
 
 
 @with_phil
-def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
+def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL) -> None:
     """(ObjectID obj, INT scope=SCOPE_LOCAL)
 
     Tell the HDF5 library to flush file buffers to disk.  "obj" may
@@ -164,7 +166,7 @@ def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
 
 
 @with_phil
-def is_hdf5(char* name):
+def is_hdf5(char* name) -> bint:
     """(STRING name) => BOOL
 
     Determine if a given file is an HDF5 file.  Note this raises an
@@ -174,7 +176,7 @@ def is_hdf5(char* name):
 
 
 @with_phil
-def mount(ObjectID loc not None, char* name, FileID fid not None):
+def mount(ObjectID loc not None, char* name, FileID fid not None) -> None:
     """(ObjectID loc, STRING name, FileID fid)
 
     Mount an open file on the group "name" under group loc_id.  Note that
@@ -184,7 +186,7 @@ def mount(ObjectID loc not None, char* name, FileID fid not None):
 
 
 @with_phil
-def unmount(ObjectID loc not None, char* name):
+def unmount(ObjectID loc not None, char* name) -> None:
     """(ObjectID loc, STRING name)
 
     Unmount a file, mounted at "name" under group loc_id.
@@ -193,7 +195,7 @@ def unmount(ObjectID loc not None, char* name):
 
 
 @with_phil
-def get_name(ObjectID obj not None):
+def get_name(ObjectID obj not None) -> bytes:
     """(ObjectID obj) => STRING
 
     Determine the name of the file in which the specified object resides.
@@ -214,7 +216,7 @@ def get_name(ObjectID obj not None):
 
 
 @with_phil
-def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
+def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL) -> int:
     """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => INT
 
     Get the number of open objects.
@@ -243,7 +245,7 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
 
 @with_phil
-def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
+def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL) -> list[ObjectID]:
     """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST
 
     Get a list of identifier instances for open objects.
@@ -322,14 +324,14 @@ cdef class FileID(GroupID):
     """
 
     @property
-    def name(self):
+    def name(self) -> bytes:
         """ File name on disk (according to h5f.get_name()) """
         with phil:
             return get_name(self)
 
 
     @with_phil
-    def close(self):
+    def close(self) -> None:
         """()
 
         Terminate access through this identifier.  Note that depending on
@@ -341,7 +343,7 @@ cdef class FileID(GroupID):
         _objects.nonlocal_close()
 
     @with_phil
-    def _close_open_objects(self, int types):
+    def _close_open_objects(self, int types) -> None:
         # Used by File.close(). This avoids the get_obj_ids wrapper, which
         # creates Python objects and increments HDF5 ref counts while we're
         # trying to clean up. E.g. that can be problematic at Python shutdown.
@@ -361,7 +363,7 @@ cdef class FileID(GroupID):
             efree(obj_list)
 
     @with_phil
-    def reopen(self):
+    def reopen(self) -> FileID:
         """() => FileID
 
         Retrieve another identifier for a file (which must still be open).
@@ -372,7 +374,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_filesize(self):
+    def get_filesize(self) -> hsize_t:
         """() => LONG size
 
         Determine the total size (in bytes) of the HDF5 file,
@@ -384,7 +386,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_create_plist(self):
+    def get_create_plist(self) -> PropID:
         """() => PropFCID
 
         Retrieve a copy of the file creation property list used to
@@ -394,7 +396,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_access_plist(self):
+    def get_access_plist(self) -> PropID:
         """() => PropFAID
 
         Retrieve a copy of the file access property list which manages access
@@ -404,7 +406,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_freespace(self):
+    def get_freespace(self) -> hsize_t:
         """() => LONG freespace
 
         Determine the amount of free space in this file.  Note that this
@@ -414,7 +416,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_intent(self):
+    def get_intent(self) -> int:
         """ () => INT
 
         Determine the file's write intent, either of:
@@ -427,7 +429,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_vfd_handle(self, fapl=None):
+    def get_vfd_handle(self, fapl=None) -> int:
         """ (PropFAID) => INT
 
         Retrieve the file handle used by the virtual file driver.
@@ -444,7 +446,7 @@ cdef class FileID(GroupID):
         return handle[0]
 
     @with_phil
-    def get_file_image(self):
+    def get_file_image(self) -> bytes:
         """ () => BYTES
 
         Retrieves a copy of the image of an existing, open file.
@@ -461,7 +463,7 @@ cdef class FileID(GroupID):
 
     ### {{if MPI}}
     @with_phil
-    def set_mpi_atomicity(self, bint atomicity):
+    def set_mpi_atomicity(self, bint atomicity) -> None:
         """ (BOOL atomicity)
 
         For MPI-IO driver, set to atomic (True), which guarantees sequential
@@ -475,7 +477,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_mpi_atomicity(self):
+    def get_mpi_atomicity(self) -> bint:
         """ () => BOOL
 
         Return atomicity setting for MPI-IO driver.
@@ -490,7 +492,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_mdc_hit_rate(self):
+    def get_mdc_hit_rate(self) -> double:
         """() => DOUBLE
 
         Retrieve the cache hit rate
@@ -502,7 +504,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_mdc_size(self):
+    def get_mdc_size(self) -> tuple[size_t, size_t, size_t, int]:
         """() => (max_size, min_clean_size, cur_size, cur_num_entries) [SIZE_T, SIZE_T, SIZE_T, INT]
 
         Obtain current metadata cache size data for specified file.
@@ -520,7 +522,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def reset_mdc_hit_rate_stats(self):
+    def reset_mdc_hit_rate_stats(self) -> None:
         """no return
 
         rests the hit-rate statistics
@@ -530,7 +532,7 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_mdc_config(self):
+    def get_mdc_config(self) -> CacheConfig:
         """() => CacheConfig
         Returns an object that stores all the information about the meta-data cache
         configuration. This config is created for every file in-memory with the default
@@ -544,7 +546,7 @@ cdef class FileID(GroupID):
         return config
 
     @with_phil
-    def set_mdc_config(self, CacheConfig config not None):
+    def set_mdc_config(self, CacheConfig config not None) -> None:
         """(CacheConfig) => None
         Sets the meta-data cache configuration for a file. This config is created for every file
         in-memory with the default config values, it is not saved to the hdf5 file. Any change to
@@ -554,7 +556,7 @@ cdef class FileID(GroupID):
         H5Fset_mdc_config(self.id, &config.cache_config)
 
     @with_phil
-    def start_swmr_write(self):
+    def start_swmr_write(self) -> None:
         """ no return
 
         Enables SWMR writing mode for a file.
@@ -585,7 +587,7 @@ cdef class FileID(GroupID):
         H5Fstart_swmr_write(self.id)
 
     @with_phil
-    def reset_page_buffering_stats(self):
+    def reset_page_buffering_stats(self) -> None:
         """ ()
 
         Reset page buffer statistics for the file.
@@ -593,7 +595,7 @@ cdef class FileID(GroupID):
         H5Freset_page_buffering_stats(self.id)
 
     @with_phil
-    def get_page_buffering_stats(self):
+    def get_page_buffering_stats(self) -> PageBufStats:
         """ () -> NAMEDTUPLE PageBufStats(NAMEDTUPLE meta=PageStats, NAMEDTUPLE raw=PageStats)
 
         Retrieve page buffering statistics for the file as the number of
@@ -621,11 +623,11 @@ cdef class FileID(GroupID):
     # Redefine these methods to use the root group explicitly, because otherwise
     # the setting for link order tracking can be missed.
     @with_phil
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         """ Return an iterator over the names of group members. """
         return iter(h5o.open(self, b'/'))
 
     @with_phil
-    def __reversed__(self):
+    def __reversed__(self) -> reversed:
         """ Return an iterator over group member names in reverse order. """
         return reversed(h5o.open(self, b'/'))

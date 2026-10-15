@@ -101,7 +101,7 @@ cdef herr_t npystrings_pack_cb(
     return res
 
 
-def npystrings_pack(hid_t space, size_t contig, size_t noncontig, size_t descr):
+def npystrings_pack(hid_t space, size_t contig, size_t noncontig, size_t descr) -> None:
     """Convert a zero-terminated char**, which is the in-memory representation
     for a HDF5 variable-width string dataset, into a NpyString array
     (NumPy's native variable-width strings dtype).

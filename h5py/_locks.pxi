@@ -1,9 +1,9 @@
 cdef class BogoLock:
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         pass
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         pass
 
 ## {{{ http://code.activestate.com/recipes/577336/ (r3)
@@ -25,7 +25,7 @@ cdef class FastRLock:
     cdef int _pending_requests  # number of pending requests for real lock
     cdef bint _is_locked        # whether the real lock is acquired
 
-    def __cinit__(self):
+    def __cinit__(self) -> None:
         self._owner = -1
         self._count = 0
         self._is_locked = False
@@ -34,32 +34,32 @@ cdef class FastRLock:
         if self._real_lock is NULL:
             PyErr_NoMemory()
 
-    def __dealloc__(self):
+    def __dealloc__(self) -> None:
         if self._real_lock is not NULL:
             pythread.PyThread_free_lock(self._real_lock)
             self._real_lock = NULL
 
-    def acquire(self, bint blocking=True):
+    def acquire(self, bint blocking=True) -> bint:
         return lock_lock(self, pythread.PyThread_get_thread_ident(), blocking)
 
-    def release(self):
+    def release(self) -> None:
         if self._owner != pythread.PyThread_get_thread_ident():
             raise RuntimeError("cannot release un-acquired lock")
         unlock_lock(self)
 
     # compatibility with threading.RLock
 
-    def __enter__(self):
+    def __enter__(self) -> bint:
         # self.acquire()
         return lock_lock(self, pythread.PyThread_get_thread_ident(), True)
 
-    def __exit__(self, t, v, tb):
+    def __exit__(self, t, v, tb) -> None:
         # self.release()
         if self._owner != pythread.PyThread_get_thread_ident():
             raise RuntimeError("cannot release un-acquired lock")
         unlock_lock(self)
 
-    def _is_owned(self):
+    def _is_owned(self) -> bool:
         return self._owner == pythread.PyThread_get_thread_ident()
 
 

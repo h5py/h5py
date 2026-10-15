@@ -16,70 +16,70 @@
 
 # === Multi-file driver =======================================================
 
-MEM_DEFAULT = H5FD_MEM_DEFAULT
-MEM_SUPER = H5FD_MEM_SUPER
-MEM_BTREE = H5FD_MEM_BTREE
-MEM_DRAW = H5FD_MEM_DRAW
-MEM_GHEAP = H5FD_MEM_GHEAP
-MEM_LHEAP = H5FD_MEM_LHEAP
-MEM_OHDR = H5FD_MEM_OHDR
-MEM_NTYPES = H5FD_MEM_NTYPES
+MEM_DEFAULT: int = H5FD_MEM_DEFAULT
+MEM_SUPER: int = H5FD_MEM_SUPER
+MEM_BTREE: int = H5FD_MEM_BTREE
+MEM_DRAW: int = H5FD_MEM_DRAW
+MEM_GHEAP: int = H5FD_MEM_GHEAP
+MEM_LHEAP: int = H5FD_MEM_LHEAP
+MEM_OHDR: int = H5FD_MEM_OHDR
+MEM_NTYPES: int = H5FD_MEM_NTYPES
 
 # === MPI driver ==============================================================
 
-MPIO_INDEPENDENT = H5FD_MPIO_INDEPENDENT
-MPIO_COLLECTIVE = H5FD_MPIO_COLLECTIVE
+MPIO_INDEPENDENT: int = H5FD_MPIO_INDEPENDENT
+MPIO_COLLECTIVE: int = H5FD_MPIO_COLLECTIVE
 
 # === Driver types ============================================================
 
-CORE = H5FD_CORE
-FAMILY = H5FD_FAMILY
-LOG = H5FD_LOG
-MPIO = H5FD_MPIO
+CORE: int = H5FD_CORE
+FAMILY: int = H5FD_FAMILY
+LOG: int = H5FD_LOG
+MPIO: int = H5FD_MPIO
 MPIPOSIX = -1
-MULTI = H5FD_MULTI
-SEC2 = H5FD_SEC2
-DIRECT = H5FD_DIRECT
-STDIO = H5FD_STDIO
-ROS3D = H5FD_ROS3
+MULTI: int = H5FD_MULTI
+SEC2: int = H5FD_SEC2
+DIRECT: int = H5FD_DIRECT
+STDIO: int = H5FD_STDIO
+ROS3D: int = H5FD_ROS3
 ### {{if PLATFORM_SYSTEM == "Windows"}}
-WINDOWS = H5FD_WINDOWS
+WINDOWS: int = H5FD_WINDOWS
 ### {{else}}
 WINDOWS = -1
 ### {{endif}}
 
 # === Logging driver ==========================================================
 
-LOG_LOC_READ  = H5FD_LOG_LOC_READ   # 0x0001
-LOG_LOC_WRITE = H5FD_LOG_LOC_WRITE  # 0x0002
-LOG_LOC_SEEK  = H5FD_LOG_LOC_SEEK   # 0x0004
-LOG_LOC_IO    = H5FD_LOG_LOC_IO     # (H5FD_LOG_LOC_READ|H5FD_LOG_LOC_WRITE|H5FD_LOG_LOC_SEEK)
+LOG_LOC_READ: int  = H5FD_LOG_LOC_READ   # 0x0001
+LOG_LOC_WRITE: int = H5FD_LOG_LOC_WRITE  # 0x0002
+LOG_LOC_SEEK: int  = H5FD_LOG_LOC_SEEK   # 0x0004
+LOG_LOC_IO: int    = H5FD_LOG_LOC_IO     # (H5FD_LOG_LOC_READ|H5FD_LOG_LOC_WRITE|H5FD_LOG_LOC_SEEK)
 
 # Flags for tracking number of times each byte is read/written
-LOG_FILE_READ = H5FD_LOG_FILE_READ  # 0x0008
-LOG_FILE_WRITE= H5FD_LOG_FILE_WRITE # 0x0010
-LOG_FILE_IO   = H5FD_LOG_FILE_IO    # (H5FD_LOG_FILE_READ|H5FD_LOG_FILE_WRITE)
+LOG_FILE_READ: int = H5FD_LOG_FILE_READ  # 0x0008
+LOG_FILE_WRITE: int= H5FD_LOG_FILE_WRITE # 0x0010
+LOG_FILE_IO: int   = H5FD_LOG_FILE_IO    # (H5FD_LOG_FILE_READ|H5FD_LOG_FILE_WRITE)
 
 # Flag for tracking "flavor" (type) of information stored at each byte
-LOG_FLAVOR    = H5FD_LOG_FLAVOR     # 0x0020
+LOG_FLAVOR: int    = H5FD_LOG_FLAVOR     # 0x0020
 
 # Flags for tracking total number of reads/writes/seeks
-LOG_NUM_READ  = H5FD_LOG_NUM_READ   # 0x0040
-LOG_NUM_WRITE = H5FD_LOG_NUM_WRITE  # 0x0080
-LOG_NUM_SEEK  = H5FD_LOG_NUM_SEEK   # 0x0100
-LOG_NUM_IO    = H5FD_LOG_NUM_IO     # (H5FD_LOG_NUM_READ|H5FD_LOG_NUM_WRITE|H5FD_LOG_NUM_SEEK)
+LOG_NUM_READ: int  = H5FD_LOG_NUM_READ   # 0x0040
+LOG_NUM_WRITE: int = H5FD_LOG_NUM_WRITE  # 0x0080
+LOG_NUM_SEEK: int  = H5FD_LOG_NUM_SEEK   # 0x0100
+LOG_NUM_IO: int    = H5FD_LOG_NUM_IO     # (H5FD_LOG_NUM_READ|H5FD_LOG_NUM_WRITE|H5FD_LOG_NUM_SEEK)
 
 # Flags for tracking time spent in open/read/write/seek/close
-LOG_TIME_OPEN = H5FD_LOG_TIME_OPEN  # 0x0200        # Not implemented yet
-LOG_TIME_READ = H5FD_LOG_TIME_READ  # 0x0400        # Not implemented yet
-LOG_TIME_WRITE= H5FD_LOG_TIME_WRITE # 0x0800        # Partially implemented (need to track total time)
-LOG_TIME_SEEK = H5FD_LOG_TIME_SEEK  # 0x1000        # Partially implemented (need to track total time & track time for seeks during reading)
-LOG_TIME_CLOSE= H5FD_LOG_TIME_CLOSE # 0x2000        # Fully implemented
-LOG_TIME_IO   = H5FD_LOG_TIME_IO    # (H5FD_LOG_TIME_OPEN|H5FD_LOG_TIME_READ|H5FD_LOG_TIME_WRITE|H5FD_LOG_TIME_SEEK|H5FD_LOG_TIME_CLOSE)
+LOG_TIME_OPEN: int = H5FD_LOG_TIME_OPEN  # 0x0200        # Not implemented yet
+LOG_TIME_READ: int = H5FD_LOG_TIME_READ  # 0x0400        # Not implemented yet
+LOG_TIME_WRITE: int= H5FD_LOG_TIME_WRITE # 0x0800        # Partially implemented (need to track total time)
+LOG_TIME_SEEK: int = H5FD_LOG_TIME_SEEK  # 0x1000        # Partially implemented (need to track total time & track time for seeks during reading)
+LOG_TIME_CLOSE: int= H5FD_LOG_TIME_CLOSE # 0x2000        # Fully implemented
+LOG_TIME_IO: int   = H5FD_LOG_TIME_IO    # (H5FD_LOG_TIME_OPEN|H5FD_LOG_TIME_READ|H5FD_LOG_TIME_WRITE|H5FD_LOG_TIME_SEEK|H5FD_LOG_TIME_CLOSE)
 
 # Flag for tracking allocation of space in file
-LOG_ALLOC     = H5FD_LOG_ALLOC      # 0x4000
-LOG_ALL       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
+LOG_ALLOC: int     = H5FD_LOG_ALLOC      # 0x4000
+LOG_ALL: int       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
 
 
 # Implementation of 'fileobj' Virtual File Driver: HDF5 Virtual File
@@ -236,4 +236,4 @@ info.fl_map = [H5FD_MEM_SUPER,  # default
 info.version = H5FD_CLASS_VERSION
 ### {{endif}}
 
-fileobj_driver = H5FDregister(&info)
+fileobj_driver: hid_t = H5FDregister(&info)
