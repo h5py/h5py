@@ -57,6 +57,7 @@ class Line:
         mpi:        Bool indicating if MPI required
         ros3:       Bool indicating if ROS3 required
         direct_vfd: Bool indicating if DIRECT_VFD required
+        internal_threads: Bool indicating if INTERNAL_THREADS required
         version:    None or a minimum-version tuple
         code:       String with function return type
         fname:      String with function name
@@ -69,6 +70,7 @@ class Line:
         .mpi:       True
         .ros3:      False
         .direct_vfd: False
+        .internal_threads: False
         .version:   (1, 12, 2)
         .code:      "int"
         .fname:     "foo"
@@ -79,6 +81,7 @@ class Line:
     PATTERN = re.compile(r"""(?P<mpi>(MPI)[ ]+)?
                             (?P<ros3>(ROS3)[ ]+)?
                             (?P<direct_vfd>(DIRECT_VFD)[ ]+)?
+                            (?P<internal_threads>(INTERNAL_THREADS)[ ]+)?
                             (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
                             (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
                             ([ ]+)?
@@ -111,6 +114,7 @@ class Line:
         self.mpi = parts['mpi'] is not None
         self.ros3 = parts['ros3'] is not None
         self.direct_vfd = parts['direct_vfd'] is not None
+        self.internal_threads = parts['internal_threads'] is not None
         self.min_version = parts['min_version']
         if self.min_version is not None:
             self.min_version = tuple(int(x) for x in self.min_version.split('.'))
@@ -235,6 +239,7 @@ class LineProcessor:
             (self.line.mpi and not self.config.mpi)
             or (self.line.ros3 and not self.config.ros3)
             or (self.line.direct_vfd and not self.config.direct_vfd)
+            or (self.line.internal_threads and not self.config.internal_threads)
             or (self.line.min_version is not None and self.config.hdf5_version < self.line.min_version)
             or (self.line.max_version is not None and self.config.hdf5_version > self.line.max_version)
         ):

@@ -24,6 +24,7 @@
 #   MPI     If present, function requires an MPI-aware build of hdf5
 #   ROS3    If present, function requires a ROS3 enabled build of hdf5
 #   DIRECT_VFD If present, function requires an DIRECT VFD enabled build of hdf5
+#   INTERNAL_THREADS If present, function requires an hdf5 built with internal I/O threads
 #   ERROR   Explicit error checks are needed (HDF5 does not use error stack)
 #   X.Y.Z   Minimum version of HDF5 required for this function
 #
@@ -40,6 +41,7 @@ hdf5:
   herr_t    H5get_libversion(unsigned *majnum, unsigned *minnum, unsigned *relnum)
   herr_t    H5check_version(unsigned majnum, unsigned minnum, unsigned relnum )
   herr_t    H5free_memory(void *mem)
+  INTERNAL_THREADS herr_t H5TSset_internal_threads(unsigned num_threads)
 
   # === H5A - Attributes API ==================================================
 
@@ -379,6 +381,9 @@ hdf5:
 
   MPI herr_t H5Pset_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode )
   MPI herr_t H5Pget_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t* xfer_mode )
+
+  INTERNAL_THREADS herr_t H5Pset_io_threads(hid_t plist_id, hbool_t io_threads_enabled)
+  INTERNAL_THREADS herr_t H5Pget_io_threads(hid_t plist_id, hbool_t *io_threads_enabled)
 
   # Other properties
   herr_t    H5Pset_sieve_buf_size(hid_t fapl_id, size_t size)

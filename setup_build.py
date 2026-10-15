@@ -214,6 +214,7 @@ class h5py_build_ext(build_ext):
             "ROS3": bool(config.ros3),
             "HDF5_VERSION": config.hdf5_version,
             "DIRECT_VFD": bool(config.direct_vfd),
+            "INTERNAL_THREADS": bool(config.internal_threads),
             "VOL_MIN_HDF5_VERSION": (1, 11, 5),
             "COMPLEX256_SUPPORT": complex256_support,
             "NUMPY_BUILD_VERSION": numpy.__version__,
