@@ -58,6 +58,7 @@ cdef class TypeCompositeID(TypeID):
 
 cdef class TypeEnumID(TypeCompositeID):
 
+    cdef int _check_base_width(self) except -1
     cdef int enum_convert(self, long long *buf, int reverse) except -1
 
 cdef class TypeCompoundID(TypeCompositeID):
