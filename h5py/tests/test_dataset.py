@@ -1668,6 +1668,86 @@ class TestCompound(BaseDataset):
         self.assertArrayEqual(out, data, check_alignment=False)
 
 
+class TestCompoundArrayField:
+    @pytest.mark.parametrize('field_shape', [(6,), (2, 3), (1, 2, 3)])
+    @pytest.mark.parametrize('dataset_shape', [(4,), (2, 2), ()])
+    @pytest.mark.parametrize('base_dtype', ['f8', '>i4', 'S3'])
+    def test_assign(self, writable_file, field_shape, dataset_shape, base_dtype):
+        """Array dimensions belong to a field, not the dataset dataspace."""
+        dtype = np.dtype([('sentinel', 'i8'),
+                          ('value', base_dtype, field_shape)])
+        expected = np.zeros(dataset_shape, dtype=dtype)
+        expected['sentinel'] = 101
+        ds = writable_file.create_dataset(make_name('compound'), data=expected)
+        values = np.arange(expected['value'].size).reshape(
+            expected['value'].shape).astype(base_dtype)
+
+        ds['value'] = values
+        expected['value'] = values
+        np.testing.assert_array_equal(ds[()], expected)
+
+        # Reading a field and writing it back must also work (issue 2317).
+        ds['value'] = ds['value']
+        np.testing.assert_array_equal(ds[()], expected)
+        if dataset_shape:
+            # Include a non-contiguous source and a partial dataset selection.
+            replacement = np.flip(values[0], axis=-1)
+            ds['value', 0] = replacement
+            expected['value'][0] = replacement
+            np.testing.assert_array_equal(ds[()], expected)
+            ds['value', 1:] = values[1:]
+            expected['value'][1:] = values[1:]
+            np.testing.assert_array_equal(ds[()], expected)
+
+        # Broadcast a whole field over records, without changing other fields.
+        field = np.arange(np.prod(field_shape)).reshape(field_shape).astype(
+            base_dtype)
+        ds['value'] = field
+        expected['value'] = field
+        np.testing.assert_array_equal(ds[()], expected)
+
+    @pytest.mark.parametrize('field_shape', [(2, 3), (1, 2, 3)])
+    @pytest.mark.parametrize('dataset_shape', [(), (4,), (2, 2)])
+    def test_assign_flat(self, writable_file, field_shape, dataset_shape):
+        """Keep accepting flat values that fit an entire array-valued field."""
+        dtype = np.dtype([('sentinel', 'i8'), ('value', 'f8', field_shape)])
+        expected = np.zeros(dataset_shape, dtype=dtype)
+        expected['sentinel'] = 202
+        ds = writable_file.create_dataset(make_name('compound'), data=expected)
+        values = np.arange(6, dtype='f8')
+
+        ds['value'] = values
+        expected['value'] = values.reshape(field_shape)
+        np.testing.assert_array_equal(ds[()], expected)
+        if dataset_shape:
+            ds['value', 0] = values + 10
+            expected['value'][0] = (values + 10).reshape(field_shape)
+            np.testing.assert_array_equal(ds[()], expected)
+
+    @pytest.mark.parametrize('shape', [(3, 2), (2, 6), (1, 3), (2, 3, 1)])
+    def test_incompatible_shape(self, writable_file, shape):
+        dtype = np.dtype([('sentinel', 'i8'), ('value', 'f8', (2, 3))])
+        original = np.zeros(4, dtype=dtype)
+        original['sentinel'] = 202
+        ds = writable_file.create_dataset(make_name('compound'), data=original)
+        # Incompatible input must not mutate any part of the compound dataset.
+        with pytest.raises((TypeError, ValueError)):
+            ds['value', 0] = np.ones(shape)
+        np.testing.assert_array_equal(ds[()], original)
+
+    def test_assign_object_field(self, writable_file):
+        """Keep the separate object-copy path for vlen array fields."""
+        dtype = np.dtype([('sentinel', 'i8'),
+                          ('value', h5py.string_dtype('utf-8'), (2, 3))])
+        ds = writable_file.create_dataset(make_name('compound'), (2,), dtype=dtype)
+        ds['sentinel'] = [303, 404]
+        values = np.array([[['a', 'bb', 'ccc'], ['d', 'ee', 'fff']],
+                           [['g', 'hh', 'iii'], ['j', 'kk', 'lll']]], dtype=object)
+        ds['value'] = values
+        np.testing.assert_array_equal(ds['value'], values.astype('S'))
+        np.testing.assert_array_equal(ds['sentinel'], [303, 404])
+
+
 class TestSubarray(BaseDataset):
     def test_write_list(self):
         ds = self.f.create_dataset(make_name(), (1,), dtype="3int8")
