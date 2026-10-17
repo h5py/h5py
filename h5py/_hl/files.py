@@ -510,6 +510,12 @@ class File(Group):
 
         Additional keywords
             Passed on to the selected file driver.
+
+        Raises ValueError if the mode is not one of "r", "r+", "w", "w-", "x"
+        or "a", or if the driver name is not registered. Raises
+        FileNotFoundError if the mode is "r" or "r+" and the file does not
+        exist. Raises FileExistsError if the mode is "x" or "w-" and the file
+        already exists.
         """
         # Automatically select the ros3 driver if it's an S3 URL.
         # As the other drivers currently do not support HTTP(S), the ros3 driver is
