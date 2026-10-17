@@ -2184,6 +2184,69 @@ def test_dset_chunk_cache():
         assert ds_chunk_cache == (709, 3 * 1024 * 1024, 0.67)
 
 
+@pytest.mark.parametrize('method', ['create', 'require_new', 'require_existing'])
+@pytest.mark.parametrize('cache_options', [
+    pytest.param({'rdcc_w0': 0}, id='zero_preemption'),
+    pytest.param({'rdcc_nbytes': 0}, id='zero_bytes'),
+    pytest.param({'rdcc_nslots': 0}, id='zero_slots'),
+    pytest.param({'rdcc_w0': 0.25}, id='positive_preemption'),
+    pytest.param({'rdcc_nbytes': 2048, 'rdcc_w0': 0}, id='mixed_values'),
+    pytest.param({'rdcc_nbytes': None, 'rdcc_nslots': None,
+                  'rdcc_w0': None}, id='explicit_none'),
+    pytest.param({}, id='defaults'),
+])
+def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options):
+    path = tmp_path / 'cache.h5'
+    shape = (10, 20)
+    if method == 'require_existing':
+        with h5py.File(path, 'w') as f:
+            f.create_dataset('data', shape=shape, chunks=(5, 4), dtype='i4')
+
+    with h5py.File(path, 'a', rdcc_nbytes=1048576,
+                   rdcc_nslots=521, rdcc_w0=0.75) as f:
+        if method == 'create':
+            ds = f.create_dataset('data', shape=shape, chunks=(5, 4),
+                                  dtype='i4', **cache_options)
+        else:
+            ds = f.require_dataset('data', shape=shape, chunks=(5, 4),
+                                   dtype='i4', **cache_options)
+
+        cache = ds.id.get_access_plist().get_chunk_cache()
+        supplied_options = {k: v for k, v in cache_options.items() if v is not None}
+        if not supplied_options:
+            assert cache == f.id.get_access_plist().get_cache()[1:]
+        for index, option in enumerate(('rdcc_nslots', 'rdcc_nbytes', 'rdcc_w0')):
+            if option in supplied_options:
+                assert cache[index] == supplied_options[option]
+
+        data = np.arange(200, dtype='i4').reshape(shape)
+        ds[:] = data
+        np.testing.assert_array_equal(ds[:], data)
+
+
+@pytest.mark.parametrize('method', ['create', 'require_new', 'require_existing'])
+@pytest.mark.parametrize('prefix_name', ['efile_prefix', 'virtual_prefix'])
+@pytest.mark.parametrize('prefix', ['', b'', None])
+def test_dset_empty_prefix(tmp_path, method, prefix_name, prefix):
+    path = tmp_path / 'prefix.h5'
+    if method == 'require_existing':
+        with h5py.File(path, 'w') as f:
+            f.create_dataset('data', shape=(4,), dtype='i4')
+
+    with h5py.File(path, 'a') as f:
+        options = {prefix_name: prefix}
+        if method == 'create':
+            ds = f.create_dataset('data', shape=(4,), dtype='i4', **options)
+        else:
+            ds = f.require_dataset('data', shape=(4,), dtype='i4', **options)
+
+        dapl = ds.id.get_access_plist()
+        assert getattr(dapl, 'get_' + prefix_name)() == b''
+        data = np.arange(4, dtype='i4')
+        ds[:] = data
+        np.testing.assert_array_equal(ds[:], data)
+
+
 class TestCommutative(BaseDataset):
     """
     Test the symmetry of operators, at least with the numpy types.
