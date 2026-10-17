@@ -463,6 +463,37 @@ class VDSUnlimitedTestCase(ut.TestCase):
             source_dset[10:, 1] = np.zeros((10,), dtype=int)
             np.testing.assert_array_equal(comp3, virtual_dset)
 
+    @pytest.mark.thread_unsafe(reason="Grows a shared VDS source file")
+    def test_readonly_vds_tracks_source_growth(self):
+        vds_path = osp.join(self.tmpdir, make_name("resize_vds{}.h5"))
+        layout = h5.VirtualLayout((10, 1), int, maxshape=(None, 1))
+        layout_source = h5.VirtualSource(
+            self.path, "source", shape=(10, 2), maxshape=(None, 2)
+        )
+        layout[:h5.UNLIMITED, 0] = layout_source[:h5.UNLIMITED, 1]
+
+        with h5.File(vds_path, "w") as f:
+            f.create_virtual_dataset("virtual", layout)
+
+        with h5.File(self.path, "a") as f, h5.File(vds_path, "r") as fv:
+            source_dset = f["source"]
+            virtual_dset = fv["virtual"]
+            np.testing.assert_array_equal(
+                virtual_dset[:], np.arange(1, 20, 2).reshape(10, 1)
+            )
+            assert virtual_dset.shape == (10, 1)
+            assert virtual_dset.size == 10
+
+            source_dset.resize(20, axis=0)
+            source_dset[10:, 1] = np.arange(10) + 100
+            f.flush()
+
+            assert virtual_dset.shape == (20, 1)
+            assert virtual_dset.size == 20
+            np.testing.assert_array_equal(
+                virtual_dset[10:, 0], np.arange(10) + 100
+            )
+
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
