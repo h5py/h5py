@@ -786,6 +786,7 @@ cdef herr_t ndarray2vlen(hid_t src_id,
         int i
         PyObject **pdata = <PyObject **> buf_i
         PyObject *pdata_elem
+        cnp.dtype elem_dtype
         char* buf = <char*>buf_i
 
     if command == H5T_CONV_INIT:
@@ -813,7 +814,10 @@ cdef herr_t ndarray2vlen(hid_t src_id,
 
         # need to pass element dtype to converter
         pdata_elem = pdata[0]
-        supertype = py_create((<cnp.ndarray> pdata_elem).dtype)
+        if not isinstance(<object> pdata_elem, cnp.ndarray):
+            raise TypeError("Can't convert non-array object to vlen data")
+        elem_dtype = (<cnp.ndarray> pdata_elem).dtype
+        supertype = py_create(elem_dtype)
         outtype = typewrap(H5Tget_super(dst_id))
 
         if buf_stride == 0:
@@ -828,18 +832,18 @@ cdef herr_t ndarray2vlen(hid_t src_id,
             if src_size >= dst_size:
                 for i in range(nl):
                     conv_ndarray2vlen(buf + (i*src_size), buf + (i*dst_size),
-                                      supertype, outtype)
+                                      elem_dtype, supertype, outtype)
             else:
                 for i in range(nl-1, -1, -1):
                     conv_ndarray2vlen(buf + (i*src_size), buf + (i*dst_size),
-                                      supertype, outtype)
+                                      elem_dtype, supertype, outtype)
         else:
             # With explicit strides, we assume that the library knows the
             # alignment better than us.  Therefore we use the given stride
             # offsets exclusively.
             for i in range(nl):
                 conv_ndarray2vlen(buf + (i*buf_stride), buf + (i*buf_stride),
-                                  supertype, outtype)
+                                  elem_dtype, supertype, outtype)
 
     else:
         return -2   # Unrecognized command.  Note this is NOT an exception.
@@ -849,6 +853,7 @@ cdef herr_t ndarray2vlen(hid_t src_id,
 
 cdef int conv_ndarray2vlen(void* ipt,
                            void* opt,
+                           cnp.dtype elem_dtype,
                            TypeID intype,
                            TypeID outtype) except -1:
     cdef:
@@ -862,7 +867,13 @@ cdef int conv_ndarray2vlen(void* ipt,
         void* back_buf = NULL
     try:
         buf_obj0 = buf_obj[0]
+        if not isinstance(<object> buf_obj0, cnp.ndarray):
+            raise TypeError("Can't convert non-array object to vlen data")
         ndarray = <cnp.ndarray> buf_obj0
+        # The buffer below is sized for a 1D array of elem_dtype; anything
+        # else would be copied past its end.
+        if ndarray.ndim != 1 or ndarray.dtype != elem_dtype:
+            raise TypeError("vlen elements must be 1D arrays of the same dtype")
         len = ndarray.shape[0]
         nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(intype.id))
 

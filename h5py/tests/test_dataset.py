@@ -1928,6 +1928,26 @@ class TestVlen(BaseDataset):
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
 
+    def test_reject_mismatched_elements(self):
+        # Elements that don't match the 1D array the converter allocates for
+        # used to be copied past the end of that buffer.
+        dt = h5py.vlen_dtype('int8')
+        ds = self.f.create_dataset(make_name(), (2,), dtype=dt)
+        data = np.empty(2, dtype=object)
+        data[0] = np.zeros(2, dtype='int8')
+
+        data[1] = np.ones((3, 4096), dtype='int8')
+        with self.assertRaises(TypeError):
+            ds[:] = data
+
+        data[1] = np.ones(4096, dtype='float64')
+        with self.assertRaises(TypeError):
+            ds.id.write(h5py.h5s.ALL, h5py.h5s.ALL, data)
+
+        data[1] = [1, 2, 3]
+        with self.assertRaises(TypeError):
+            ds.id.write(h5py.h5s.ALL, h5py.h5s.ALL, data)
+
     def _help_float_testing(self, np_dt):
         """
         Helper for testing various vlen numpy data types.
