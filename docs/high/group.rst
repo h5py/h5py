@@ -420,7 +420,9 @@ Reference
         :keyword fletcher32: Enable Fletcher32 checksum (T/**F**).  See :ref:`dataset_fletcher32`.
 
         :keyword fillvalue: This value will be used when reading
-                            uninitialized parts of the dataset.
+                            uninitialized parts of the dataset.  For an array
+                            datatype it is broadcast to the shape of one
+                            element, so both a scalar and a sequence work.
 
         :keyword fill_time: Control when to write the fill value. One of the
             following choices: `alloc`, write fill value before writing
