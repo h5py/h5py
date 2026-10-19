@@ -666,10 +666,13 @@ values (defined in module <a class="reference internal" href="h5d.html#module-h5
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_fill_value">
-<span class="sig-name descname"><span class="pre">get_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.get_fill_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DTYPE</span> <span class="pre">dtype=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.get_fill_value" title="Link to this definition">¶</a></dt>
 <dd><p>Read the dataset fill value into a NumPy array.  It will be
 converted to match the array dtype.  If the array has nonzero
 rank, only the first element will contain the value.</p>
+<p>dtype is the NumPy datatype the buffer describes, defaulting to
+value.dtype.  Pass it for array datatypes: NumPy collapses those into
+the array’s own shape, so they can never appear as value.dtype.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -800,10 +803,13 @@ values (defined in module <a class="reference internal" href="h5d.html#module-h5
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_fill_value">
-<span class="sig-name descname"><span class="pre">set_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fill_value" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DTYPE</span> <span class="pre">dtype=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fill_value" title="Link to this definition">¶</a></dt>
 <dd><p>Set the dataset fill value.  The object provided should be an
 0-dimensional NumPy array; otherwise, the value will be read from
 the first element.</p>
+<p>dtype is the NumPy datatype the value describes, defaulting to
+value.dtype.  Pass it for array datatypes: NumPy collapses those into
+the array’s own shape, so they can never appear as value.dtype.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1474,7 +1480,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Oct 16, 2026.
+      Last updated on Oct 19, 2026.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
