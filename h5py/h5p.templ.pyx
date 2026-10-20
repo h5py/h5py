@@ -20,7 +20,7 @@ from cpython.long cimport PyLong_AsVoidPtr
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
                     check_numpy_write, check_numpy_read
-from libc.string cimport memcpy, memset
+from libc.string cimport memcpy, memset, strlen
 from numpy cimport ndarray, import_array
 from .h5t cimport TypeID, py_create
 from .h5s cimport SpaceID
@@ -1041,6 +1041,20 @@ cdef class PropDCID(PropOCID):
         """
         return SpaceID(H5Pget_virtual_srcspace(self.id, index))
 
+### {{if ROS3}}
+cdef int _copy_ros3_string(char* dest, size_t dest_size, const char* value,
+                           str name) except -1:
+    # The ROS3 config holds these as fixed-size char arrays.  A plain Cython
+    # assignment from char* copies exactly sizeof(dest) bytes, which reads
+    # past short inputs and leaves long ones without a terminating NUL.
+    cdef size_t length = strlen(value)
+    if length >= dest_size:
+        raise ValueError("%s must be at most %d bytes long"
+                         % (name, dest_size - 1))
+    memcpy(dest, value, length + 1)
+    return 0
+### {{endif}}
+
 # File access
 cdef class PropFAID(PropInstanceID):
 
@@ -1168,9 +1182,12 @@ cdef class PropFAID(PropInstanceID):
             config.authenticate = <hbool_t>1
         else:
             config.authenticate = <hbool_t>0
-        config.aws_region = aws_region
-        config.secret_id = secret_id
-        config.secret_key = secret_key
+        _copy_ros3_string(config.aws_region, sizeof(config.aws_region),
+                          aws_region, "aws_region")
+        _copy_ros3_string(config.secret_id, sizeof(config.secret_id),
+                          secret_id, "secret_id")
+        _copy_ros3_string(config.secret_key, sizeof(config.secret_key),
+                          secret_key, "secret_key")
         H5Pset_fapl_ros3(self.id, &config)
 
 

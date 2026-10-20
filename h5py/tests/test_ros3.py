@@ -98,6 +98,33 @@ def test_ros3_s3_fails(exc, match_exc):
         h5py.File('foo://wrong/scheme', 'r', driver='ros3')
 
 
+def test_ros3_credentials_roundtrip():
+    """Set and get ROS3 region and credentials"""
+    fapl = h5p.create(h5p.FILE_ACCESS)
+    fapl.set_fapl_ros3(b'us-east-2', b'a' * 128, b'b' * 128)
+    config = fapl.get_fapl_ros3()
+    assert config['aws_region'] == b'us-east-2'
+    assert config['secret_id'] == b'a' * 128
+    assert config['secret_key'] == b'b' * 128
+
+
+@pytest.mark.parametrize(
+    "kwds",
+    [
+        {"aws_region": b"r" * 33},
+        {"secret_id": b"i" * 129},
+        {"secret_key": b"k" * 129},
+    ],
+)
+def test_ros3_credentials_too_long(kwds):
+    """Overlong ROS3 settings are rejected instead of losing their terminator"""
+    fapl = h5p.create(h5p.FILE_ACCESS)
+    args = {"aws_region": b"us-east-2", "secret_id": b"id", "secret_key": b"key"}
+    args.update(kwds)
+    with pytest.raises(ValueError, match=next(iter(kwds))):
+        fapl.set_fapl_ros3(**args)
+
+
 @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 14, 2),
                     reason='AWS S3 access token support in HDF5 >= 1.14.2')
 def test_ros3_temp_token():
