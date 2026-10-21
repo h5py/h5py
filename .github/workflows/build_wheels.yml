@@ -121,7 +121,7 @@ jobs:
 
       # Also build a future-compatible abi3 wheel
       # this comes first to avoid inter-job pollution which then fails abi3audit
-      - uses: pypa/cibuildwheel@b3395e271a35f73dad77f21802abe9b986dfe299 # v4.3.1
+      - uses: pypa/cibuildwheel@f11181315571b24e4a3c67f1a828532793f2df55 # v4.3.2
         if: github.event_name == 'schedule' ||
             (
               (
@@ -140,7 +140,7 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ''
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@b3395e271a35f73dad77f21802abe9b986dfe299 # v4.3.1
+      - uses: pypa/cibuildwheel@f11181315571b24e4a3c67f1a828532793f2df55 # v4.3.2
         env:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ''
 
@@ -178,7 +178,7 @@ jobs:
       - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}"
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@b3395e271a35f73dad77f21802abe9b986dfe299 # v4.3.1
+      - uses: pypa/cibuildwheel@f11181315571b24e4a3c67f1a828532793f2df55 # v4.3.2
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: "cp311-*"
@@ -233,5 +233,5 @@ jobs:
 
       # If it's a tag, publish to PyPI
       - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         if: github.repository_owner == 'h5py' && github.event_name == 'push' && github.ref_type == 'tag'
