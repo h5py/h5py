@@ -93,7 +93,7 @@ jobs:
       - name: Cache built HDF5 (Windows)
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cmake_toolset || '0' }}-${{ hashFiles('ci/cibw_before_all_windows.sh', 'ci/get_hdf5_win.py') }}
+          key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('.github/workflows/build_wheels.yml', 'ci/cibw_before_all_windows.sh', 'ci/get_hdf5_win.py') }}
           path: cache/hdf5
         # When preparing to upload a release, always build HDF5 to avoid potential
         # cache-poisoning attacks.
