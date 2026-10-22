@@ -72,6 +72,9 @@ jobs:
             arch: AMD64
           - os: windows-11-arm
             arch: ARM64
+            # MSVC 19.51 crashes while compiling HDF5 2.2.0 on ARM64.
+            cmake_generator: Visual Studio 18 2026
+            cmake_toolset: v143,version=14.44
           - os: macos-14
             arch: arm64
           - os: macos-15-intel
@@ -90,7 +93,7 @@ jobs:
       - name: Cache built HDF5 (Windows)
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}-0-${{ hashFiles('ci/cibw_before_all_windows.sh', 'ci/get_hdf5_win.py') }}
+          key: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cmake_toolset || '0' }}-${{ hashFiles('ci/cibw_before_all_windows.sh', 'ci/get_hdf5_win.py') }}
           path: cache/hdf5
         # When preparing to upload a release, always build HDF5 to avoid potential
         # cache-poisoning attacks.
@@ -102,6 +105,8 @@ jobs:
       - run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
         env:
           ARCH: ${{ matrix.arch }}
+          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
+          CMAKE_GENERATOR_TOOLSET: ${{ matrix.cmake_toolset }}
         if: runner.os == 'Windows'
 
       # macOS HDF5
