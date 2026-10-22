@@ -1,14 +1,21 @@
-name: Probe ARM64 MSVC 14.50
+name: Probe ARM64 MSVC
 
 on:
   workflow_dispatch:
+    inputs:
+      toolset:
+        type: choice
+        default: '14.50'
+        options:
+          - '14.50'
+          - '14.51-initial'
 
 permissions:
   contents: read
 
 jobs:
   build_hdf5:
-    name: HDF5 2.2.0 with MSVC 14.50
+    name: HDF5 2.2.0 with MSVC ${{ inputs.toolset }}
     runs-on: windows-11-arm
     timeout-minutes: 30
     steps:
@@ -19,6 +26,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install MSVC 14.50 ARM64 toolset
+        if: inputs.toolset == '14.50'
         shell: pwsh
         run: |
           $installerDir = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
@@ -43,9 +51,41 @@ jobs:
           if (-not (Get-ChildItem $toolsets -Directory -Filter '14.50.*')) {
             throw 'MSVC 14.50 was not installed'
           }
+      - name: Install initial stable MSVC 14.51 ARM64 toolset
+        if: inputs.toolset == '14.51-initial'
+        shell: pwsh
+        run: |
+          $vs = Join-Path $env:RUNNER_TEMP 'vs-18.6.0'
+          $bootstrapper = Join-Path $env:RUNNER_TEMP 'vs_BuildTools_18.6.0.exe'
+          # Fixed VS 18.6.0 release from Microsoft's release history, May 12, 2026.
+          $url = 'https://download.visualstudio.microsoft.com/download/pr/c40d2503-2e56-4f54-96c2-d886056cfedb/44f811a46b7556514b4fadc906ccc9685f96b63eeb8a36333425b3b315999c22/vs_BuildTools.exe'
+          Invoke-WebRequest $url -OutFile $bootstrapper
+          $signature = Get-AuthenticodeSignature $bootstrapper
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notlike '*Microsoft Corporation*') {
+            throw 'The archived Visual Studio bootstrapper has an invalid Microsoft signature'
+          }
+          $arguments = @(
+            '--installPath', "`"$vs`"",
+            '--add', 'Microsoft.VisualStudio.Component.VC.Tools.ARM64',
+            '--quiet', '--wait', '--norestart', '--nocache'
+          )
+          $process = Start-Process $bootstrapper -ArgumentList $arguments -Wait -PassThru
+          Write-Output "Visual Studio Installer exit code: $($process.ExitCode)"
+          if ($process.ExitCode -notin 0, 3010) {
+            throw "Installing initial MSVC 14.51 failed: $($process.ExitCode)"
+          }
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $instances = & $vswhere -all -products '*' -format json | ConvertFrom-Json
+          $instance = $instances | Where-Object { $_.installationPath -eq $vs }
+          if ($instance.installationVersion -ne '18.6.11806.211') {
+            throw "Expected VS 18.6.11806.211, got '$($instance.installationVersion)'"
+          }
+          Get-ChildItem (Join-Path $vs 'VC\Tools\MSVC') -Directory | Select-Object -ExpandProperty Name
+          "MSVC_PROBE_INSTANCE=$vs" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
       - name: Build zlib and HDF5 from source
         run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
         env:
           ARCH: ARM64
           CMAKE_GENERATOR: Visual Studio 18 2026
-          CMAKE_GENERATOR_TOOLSET: v145,version=14.50
+          CMAKE_GENERATOR_INSTANCE: ${{ env.MSVC_PROBE_INSTANCE }}
+          CMAKE_GENERATOR_TOOLSET: ${{ inputs.toolset == '14.50' && 'v145,version=14.50' || 'v145,version=14.51' }}
