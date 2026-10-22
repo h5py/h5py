@@ -1,0 +1,51 @@
+name: Probe ARM64 MSVC 14.50
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build_hdf5:
+    name: HDF5 2.2.0 with MSVC 14.50
+    runs-on: windows-11-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install MSVC 14.50 ARM64 toolset
+        shell: pwsh
+        run: |
+          $installerDir = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
+          $vs = & "$installerDir\vswhere.exe" -latest -products '*' -property installationPath
+          if (-not $vs) {
+            throw 'Visual Studio installation not found'
+          }
+          $toolsets = Join-Path $vs 'VC\Tools\MSVC'
+          if (-not (Get-ChildItem $toolsets -Directory -Filter '14.50.*')) {
+            $arguments = @(
+              'modify', '--installPath', "`"$vs`"",
+              '--add', 'Microsoft.VisualStudio.Component.VC.14.50.18.0.ARM64',
+              '--quiet', '--norestart'
+            )
+            $process = Start-Process "$installerDir\setup.exe" -ArgumentList $arguments -Wait -PassThru
+            Write-Output "Visual Studio Installer exit code: $($process.ExitCode)"
+            if ($process.ExitCode -notin 0, 3010) {
+              throw "Installing MSVC 14.50 failed: $($process.ExitCode)"
+            }
+          }
+          Get-ChildItem $toolsets -Directory | Select-Object -ExpandProperty Name
+          if (-not (Get-ChildItem $toolsets -Directory -Filter '14.50.*')) {
+            throw 'MSVC 14.50 was not installed'
+          }
+      - name: Build zlib and HDF5 from source
+        run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
+        env:
+          ARCH: ARM64
+          CMAKE_GENERATOR: Visual Studio 18 2026
+          CMAKE_GENERATOR_TOOLSET: v145,version=14.50
