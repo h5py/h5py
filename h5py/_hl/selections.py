@@ -302,9 +302,25 @@ class SimpleSelection(Selection):
             yield self._id
         else:
             sid = self._id.copy()
-            sid.select_hyperslab((0,)*rank, tshape, step)
+            block = (1,)*rank
+            if sid.get_select_type() == h5s.SEL_HYPERSLABS:
+                start, step, count, block = sid.get_regular_hyperslab()
+
+            # Keep the original blocks on axes supplied by the source, and
+            # select one element at a time on axes which are broadcast.
+            tcount = tuple(c if t > 1 else 1 for c, t in zip(count, tshape, strict=True))
+            tblock = tuple(b if t > 1 else 1 for b, t in zip(block, tshape, strict=True))
+            sid.select_hyperslab((0,)*rank, tcount, step, tblock)
             for idx in range(nchunks):
-                offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start, strict=True))
+                # Convert logical selection coordinates to dataset coordinates,
+                # accounting for both gaps between blocks and elements within.
+                offset = tuple(
+                    (i*t // b)*s + (i*t % b) + a
+                    for i, t, b, s, a in zip(
+                        np.unravel_index(idx, chunks), tshape, block, step, start,
+                        strict=True,
+                    )
+                )
                 sid.offset_simple(offset)
                 yield sid
 
