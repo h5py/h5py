@@ -323,22 +323,33 @@ class SimpleSelection(Selection):
 
         The tile is at most max_nbytes, or one chunk if that is bigger.
 
-        Returns None if the source doesn't need repeating, if the selection
-        isn't a plain hyperslab (e.g. MultiBlockSlice) or if no tile bigger
-        than the source fits. Otherwise returns (tile_shape, blocks), where
-        blocks yields (count, fspace) pairs: count is the shape of the
-        tile's leading corner to write, and fspace is the matching file
-        dataspace. The same fspace object is reused between iterations.
+        Returns None if the source doesn't need repeating, or if the
+        selection must be split but either isn't a plain hyperslab (e.g. it
+        uses MultiBlockSlice) or no tile bigger than the source fits.
+        Otherwise returns (tile_shape, blocks), where blocks yields
+        (count, fspace) pairs: count is the shape of the tile's leading
+        corner to write, and fspace is the matching file dataspace. The same
+        fspace object is reused between iterations.
         """
         if self.shape == ():
             return None
 
-        start, count, step, scalar = self._sel
+        start, count, step, _ = self._sel
         rank = len(count)
         src_shape = self.expand_shape(source_shape)
 
         if any(n == 0 for n in count) or product(src_shape) == product(count):
             return None
+
+        if chunks is None:
+            # Contiguous layout: treat the whole dataset as one chunk
+            chunks = self.shape
+        else:
+            max_nbytes = max(max_nbytes, itemsize * product(chunks))
+
+        # Small enough to write in one go
+        if itemsize * product(count) <= max_nbytes:
+            return count, iter([(count, self._id)])
 
         # Only selections made of slices & integers can be split up using
         # start, count & step alone.
@@ -349,12 +360,6 @@ class SimpleSelection(Selection):
                 return None
         elif sel_type != h5s.SEL_ALL:
             return None
-
-        if chunks is None:
-            # Contiguous layout: treat the whole dataset as one chunk
-            chunks = self.shape
-        else:
-            max_nbytes = max(max_nbytes, itemsize * product(chunks))
 
         # Most selected points in one chunk, along each axis
         per_chunk = tuple(min(n, -(-c // s)) for n, c, s in zip(count, chunks, step, strict=True))
@@ -375,7 +380,8 @@ class SimpleSelection(Selection):
                     tile[d] = max(per_chunk[d], fit - fit % per_chunk[d])
                     break
         else:
-            # Even one chunk is too big: shrink, starting from the first axis
+            # The source is big enough that even this is too much: shrink
+            # the tile, starting from the first axis
             for d in bcast_axes:
                 fit = max_nbytes // (itemsize * product(tile) // tile[d])
                 tile[d] = max(1, min(tile[d], fit))

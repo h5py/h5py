@@ -574,3 +574,15 @@ def test_broadcast_tiles_not_used():
     assert _tile_blocks((10, 10), np.s_[mbs, :], (), 1, (2, 2)) == (None, None)
     # No buffer bigger than the source fits
     assert _tile_blocks((10, 10), np.s_[...], (10,), 8, (1, 1)) == (None, None)
+
+
+@pytest.mark.parametrize("value", [7.0, np.arange(4.0)])
+def test_broadcast_write_multiblock(writable_file, value):
+    # A selection which fits in the buffer is written in one go
+    dset = writable_file.create_dataset(make_name(), data=np.zeros((10, 4)), chunks=(2, 2))
+    mbs = MultiBlockSlice(start=1, stride=3, count=3, block=2)
+    dset[mbs, :] = value
+
+    expected = np.zeros((10, 4))
+    expected[[1, 2, 4, 5, 7, 8], :] = value
+    np.testing.assert_array_equal(dset[()], expected)
