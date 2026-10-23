@@ -2195,7 +2195,7 @@ def test_dset_chunk_cache():
                   'rdcc_w0': None}, id='explicit_none'),
     pytest.param({}, id='defaults'),
 ])
-def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options):
+def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options, request):
     path = tmp_path / 'cache.h5'
     shape = (10, 20)
     if method == 'require_existing':
@@ -2222,6 +2222,31 @@ def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options):
         data = np.arange(200, dtype='i4').reshape(shape)
         ds[:] = data
         np.testing.assert_array_equal(ds[:], data)
+
+        # HDF5 normalizes both sizes to zero when the cache is disabled.
+        if (cache_options.get('rdcc_nbytes') == 0
+                or cache_options.get('rdcc_nslots') == 0):
+            return
+
+        # Keep the explicit-option and data checks above outside this xfail.
+        # https://github.com/h5py/h5py/pull/2986#issuecomment-6351674253
+        file_cache = f.id.get_access_plist().get_cache()[1:]
+        library_cache = h5py.h5p.create(h5py.h5p.DATASET_ACCESS).get_chunk_cache()
+        if supplied_options and any(
+            option not in supplied_options
+            and file_cache[index] != library_cache[index]
+            for index, option in enumerate(('rdcc_nslots', 'rdcc_nbytes', 'rdcc_w0'))
+        ):
+            request.applymarker(pytest.mark.xfail(
+                reason='Unspecified chunk cache options use HDF5 defaults',
+                strict=True,
+                raises=AssertionError,
+            ))
+        for index, option in enumerate(('rdcc_nslots', 'rdcc_nbytes', 'rdcc_w0')):
+            if option in supplied_options:
+                assert cache[index] == supplied_options[option]
+            else:
+                assert cache[index] == file_cache[index]
 
 
 @pytest.mark.parametrize('method', ['create', 'require_new', 'require_existing'])
