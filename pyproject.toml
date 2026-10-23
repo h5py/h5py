@@ -160,7 +160,8 @@ environment-pass = [
 ]
 
 [tool.cibuildwheel.linux.environment]
-CFLAGS = "-g1"
+# setuptools uses CFLAGS in place of the flags that Python was built with
+CFLAGS = "-g1 -O2 -DNDEBUG -fno-strict-overflow"
 
 [tool.cibuildwheel.macos]
 # https://cibuildwheel.pypa.io/en/stable/faq/#macos-passing-dyld_library_path-to-delocate
