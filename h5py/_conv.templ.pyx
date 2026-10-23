@@ -815,7 +815,9 @@ cdef herr_t ndarray2vlen(hid_t src_id,
         # need to pass element dtype to converter
         pdata_elem = pdata[0]
         if not isinstance(<object> pdata_elem, cnp.ndarray):
-            raise TypeError("Can't convert non-array object to vlen data")
+            raise TypeError(
+                f"vlen element must be a 1D array, got {type(<object> pdata_elem).__name__}"
+            )
         elem_dtype = (<cnp.ndarray> pdata_elem).dtype
         supertype = py_create(elem_dtype)
         outtype = typewrap(H5Tget_super(dst_id))
@@ -868,12 +870,18 @@ cdef int conv_ndarray2vlen(void* ipt,
     try:
         buf_obj0 = buf_obj[0]
         if not isinstance(<object> buf_obj0, cnp.ndarray):
-            raise TypeError("Can't convert non-array object to vlen data")
+            raise TypeError(
+                f"vlen element must be a 1D array of dtype {elem_dtype}, "
+                f"got {type(<object> buf_obj0).__name__}"
+            )
         ndarray = <cnp.ndarray> buf_obj0
         # The buffer below is sized for a 1D array of elem_dtype; anything
         # else would be copied past its end.
         if ndarray.ndim != 1 or ndarray.dtype != elem_dtype:
-            raise TypeError("vlen elements must be 1D arrays of the same dtype")
+            raise TypeError(
+                f"vlen element must be a 1D array of dtype {elem_dtype}, "
+                f"got {ndarray.ndim}D {ndarray.dtype}"
+            )
         len = ndarray.shape[0]
         nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(intype.id))
 

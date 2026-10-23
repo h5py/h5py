@@ -1937,16 +1937,20 @@ class TestVlen(BaseDataset):
         data[0] = np.zeros(2, dtype='int8')
 
         data[1] = np.ones((3, 4096), dtype='int8')
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "dtype int8, got 2D int8"):
             ds[:] = data
 
-        data[1] = np.ones(4096, dtype='float64')
-        with self.assertRaises(TypeError):
-            ds.id.write(h5py.h5s.ALL, h5py.h5s.ALL, data)
-
-        data[1] = [1, 2, 3]
-        with self.assertRaises(TypeError):
-            ds.id.write(h5py.h5s.ALL, h5py.h5s.ALL, data)
+        cases = [
+            (np.ones(4096, dtype='float64'), "dtype int8, got 1D float64"),
+            (np.array(5, dtype='int8'), "dtype int8, got 0D int8"),
+            ([1, 2, 3], "dtype int8, got list"),
+            # What np.empty(n, dtype=object) holds before assignment
+            (None, "dtype int8, got NoneType"),
+        ]
+        for elem, msg in cases:
+            data[1] = elem
+            with self.assertRaisesRegex(TypeError, msg):
+                ds.id.write(h5py.h5s.ALL, h5py.h5s.ALL, data)
 
     def _help_float_testing(self, np_dt):
         """
