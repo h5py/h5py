@@ -195,7 +195,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
 
-    if any([efile_prefix, virtual_prefix, rdcc_nbytes, rdcc_nslots, rdcc_w0]):
+    have_cache_settings = any(
+        value is not None for value in (rdcc_nbytes, rdcc_nslots, rdcc_w0))
+    if efile_prefix is not None or virtual_prefix is not None or have_cache_settings:
         dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
 
     if efile_prefix is not None:
@@ -204,7 +206,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     if virtual_prefix is not None:
         dapl.set_virtual_prefix(virtual_prefix)
 
-    if rdcc_nbytes or rdcc_nslots or rdcc_w0:
+    if have_cache_settings:
         cache_settings = list(dapl.get_chunk_cache())
         if rdcc_nslots is not None:
             cache_settings[0] = rdcc_nslots
@@ -231,7 +233,9 @@ def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None,
               rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, **kwds):
     """ Return an existing low-level dataset identifier """
 
-    if any([efile_prefix, virtual_prefix, rdcc_nbytes, rdcc_nslots, rdcc_w0]):
+    have_cache_settings = any(
+        value is not None for value in (rdcc_nbytes, rdcc_nslots, rdcc_w0))
+    if efile_prefix is not None or virtual_prefix is not None or have_cache_settings:
         dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
 
     if efile_prefix is not None:
@@ -240,7 +244,7 @@ def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None,
     if virtual_prefix is not None:
         dapl.set_virtual_prefix(virtual_prefix)
 
-    if rdcc_nbytes or rdcc_nslots or rdcc_w0:
+    if have_cache_settings:
         cache_settings = list(dapl.get_chunk_cache())
         if rdcc_nslots is not None:
             cache_settings[0] = rdcc_nslots
