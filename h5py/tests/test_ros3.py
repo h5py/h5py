@@ -100,6 +100,8 @@ def test_ros3_s3_fails(exc, match_exc):
 
 def test_ros3_credentials_roundtrip():
     """Set and get ROS3 region and credentials"""
+    # Not a regression test: the old fixed-size copy also round-trips these,
+    # since bytes objects are NUL-terminated and readback stops at the NUL.
     fapl = h5p.create(h5p.FILE_ACCESS)
     fapl.set_fapl_ros3(b'us-east-2', b'a' * 128, b'b' * 128)
     config = fapl.get_fapl_ros3()

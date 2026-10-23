@@ -1175,8 +1175,12 @@ cdef class PropFAID(PropInstanceID):
         """(STRING aws_region, STRING secret_id, STRING secret_key)
 
         Set up the ros3 driver.
+
+        aws_region may be at most 32 bytes long, and secret_id and secret_key
+        at most 128 bytes each. ValueError is raised if a value is longer.
         """
         cdef H5FD_ros3_fapl_t config
+        memset(&config, 0, sizeof(config))
         config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
         if len(aws_region) and len(secret_id) and len(secret_key):
             config.authenticate = <hbool_t>1
