@@ -34,6 +34,10 @@ from .vds import VDSmap, vds_support
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
 
+# Size limit for the temporary buffer used when a value is repeated to fill
+# a bigger selection (e.g. dset[...] = 0). It may be raised to one chunk.
+_BROADCAST_BUFFER_NBYTES = 16 * 1024 * 1024
+
 _ALLOC_TIME_OPTIONS = {
     "default": h5d.ALLOC_TIME_DEFAULT,
     "early": h5d.ALLOC_TIME_EARLY,
@@ -1111,7 +1115,32 @@ class Dataset(HLObject):
         # Perform the dataspace selection
         selection = sel.select(self.shape, args, dataset=self)
 
-        # Broadcast scalars if necessary.
+        # If the value has to be repeated to fill the selection, write it
+        # through a buffer of whole chunks rather than one copy of the value
+        # at a time, which needs far fewer HDF5 calls (issue #1067).
+        # Arrays of Python objects (e.g. variable-length data) are left to
+        # the code below.
+        if (isinstance(selection, sel.SimpleSelection)
+                and self.dtype.subdtype is None
+                and not val.dtype.hasobject
+                and val.dtype.kind != 'T'):
+            plan = selection.broadcast_tiles(
+                mshape, val.dtype.itemsize, _BROADCAST_BUFFER_NBYTES, self.chunks
+            )
+            if plan is not None:
+                tile_shape, blocks = plan
+                buf = numpy.empty(tile_shape, dtype=val.dtype)
+                buf[...] = val.reshape(selection.expand_shape(mshape))
+                mspace = h5s.create_simple(tile_shape)
+                for count, fspace in blocks:
+                    if count == tile_shape:
+                        mspace.select_all()
+                    else:
+                        mspace.select_hyperslab((0,) * len(count), count)
+                    self.id.write(mspace, fspace, buf, mtype, dxpl=self._dxpl)
+                return
+
+        # Broadcast scalars if necessary (when not handled above).
         # In order to avoid slow broadcasting filling the destination by
         # the scalar value, we create an intermediate array of the same
         # size as the destination buffer provided that size is reasonable.

@@ -11,6 +11,8 @@
     High-level access to HDF5 dataspace selections
 """
 
+import itertools
+
 import numpy as np
 
 from .base import product
@@ -307,6 +309,126 @@ class SimpleSelection(Selection):
                 offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start, strict=True))
                 sid.offset_simple(offset)
                 yield sid
+
+    def broadcast_tiles(self, source_shape, itemsize, max_nbytes, chunks=None):
+        """Plan a broadcast write through a buffer bigger than the source.
+
+        broadcast() writes a small source, such as a scalar or one row, one
+        source-sized block at a time, so filling a large selection takes one
+        HDF5 call per block, which is very slow (issue #1067). This instead
+        picks a larger tile shape, which the caller fills by broadcasting
+        the source, and splits the selection into blocks no larger than the
+        tile. Along the broadcast axes, block edges follow the dataset's
+        chunk boundaries, so each chunk is covered by a single write.
+
+        The tile is at most max_nbytes, or one chunk if that is bigger.
+
+        Returns None if the source doesn't need repeating, if the selection
+        isn't a plain hyperslab (e.g. MultiBlockSlice) or if no tile bigger
+        than the source fits. Otherwise returns (tile_shape, blocks), where
+        blocks yields (count, fspace) pairs: count is the shape of the
+        tile's leading corner to write, and fspace is the matching file
+        dataspace. The same fspace object is reused between iterations.
+        """
+        if self.shape == ():
+            return None
+
+        start, count, step, scalar = self._sel
+        rank = len(count)
+        src_shape = self.expand_shape(source_shape)
+
+        if any(n == 0 for n in count) or product(src_shape) == product(count):
+            return None
+
+        # Only selections made of slices & integers can be split up using
+        # start, count & step alone.
+        sel_type = self._id.get_select_type()
+        if sel_type == h5s.SEL_HYPERSLABS:
+            if not (self._id.is_regular_hyperslab() and
+                    self._id.get_regular_hyperslab() == (start, step, count, (1,) * rank)):
+                return None
+        elif sel_type != h5s.SEL_ALL:
+            return None
+
+        if chunks is None:
+            # Contiguous layout: treat the whole dataset as one chunk
+            chunks = self.shape
+        else:
+            max_nbytes = max(max_nbytes, itemsize * product(chunks))
+
+        # Most selected points in one chunk, along each axis
+        per_chunk = tuple(min(n, -(-c // s)) for n, c, s in zip(count, chunks, step, strict=True))
+        bcast_axes = [d for d in range(rank) if src_shape[d] == 1 and count[d] > 1]
+
+        # Start from one chunk along each broadcast axis
+        tile = list(count)
+        for d in bcast_axes:
+            tile[d] = per_chunk[d]
+
+        if itemsize * product(tile) <= max_nbytes:
+            # Grow the tile by whole chunks, starting from the last axis
+            for d in reversed(bcast_axes):
+                fit = max_nbytes // (itemsize * product(tile) // tile[d])
+                if fit >= count[d]:
+                    tile[d] = count[d]
+                else:
+                    tile[d] = max(per_chunk[d], fit - fit % per_chunk[d])
+                    break
+        else:
+            # Even one chunk is too big: shrink, starting from the first axis
+            for d in bcast_axes:
+                fit = max_nbytes // (itemsize * product(tile) // tile[d])
+                tile[d] = max(1, min(tile[d], fit))
+                if itemsize * product(tile) <= max_nbytes:
+                    break
+            if product(tile) == product(src_shape):
+                return None
+
+        tile = tuple(tile)
+        axis_blocks = [
+            self._tile_axis(start[d], count[d], step[d], chunks[d], per_chunk[d], tile[d])
+            for d in range(rank)
+        ]
+
+        def blocks():
+            sid = self._id.copy()
+            for parts in itertools.product(*axis_blocks):
+                offset = tuple(s + i * st for s, (i, _), st in zip(start, parts, step, strict=True))
+                block_count = tuple(n for _, n in parts)
+                sid.select_hyperslab(offset, block_count, step)
+                yield block_count, sid
+
+        return tile, blocks()
+
+    @staticmethod
+    def _tile_axis(start, count, step, chunk, per_chunk, length):
+        """Split the points selected along one axis into (first, n) blocks.
+
+        Points are numbered 0 ... count-1 within the selection, and each
+        block has at most `length` of them. Blocks are made of whole chunks
+        if length >= per_chunk; otherwise each chunk is split into blocks.
+        """
+        if length >= count:
+            return [(0, count)]
+
+        # First selected point in each chunk the selection touches. Chunks
+        # with no selected points (if step > chunk) give repeated values.
+        first_chunk = start // chunk
+        last_chunk = (start + (count - 1) * step) // chunk
+        edges = sorted({max(0, -(-(k * chunk - start) // step))
+                        for k in range(first_chunk, last_chunk + 1)})
+        edges.append(count)
+
+        if length >= per_chunk:
+            group = length // per_chunk
+            edges = edges[:-1:group] + [count]
+            spans = zip(edges[:-1], edges[1:])
+        else:
+            spans = ((a, min(a + length, hi))
+                     for lo, hi in zip(edges[:-1], edges[1:])
+                     for a in range(lo, hi, length))
+
+        return [(a, b - a) for a, b in spans]
 
 
 class FancySelection(Selection):

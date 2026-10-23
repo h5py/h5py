@@ -17,11 +17,13 @@
 """
 
 import numpy as np
+import pytest
 
 from .common import TestCase, make_name
 
 import h5py
 from h5py import File, MultiBlockSlice
+from h5py._hl import dataset as dataset_mod
 
 class BaseSlicing(TestCase):
 
@@ -419,3 +421,156 @@ class TestMultiBlockSlice(BaseSlicing):
 
         with self.assertRaises(ValueError):
             mbslice.indices(10)
+
+
+# Broadcasting a small value over a big selection writes through a buffer of
+# whole chunks (issue #1067). A tiny buffer limit makes these small datasets
+# use several blocks, including partial ones at the edges.
+BROADCAST_CASES = [
+    # shape, chunks, selection, value shape (None: Python scalar)
+    ((10, 11), (3, 4), np.s_[...], None),
+    ((10, 11), (3, 4), np.s_[...], (11,)),
+    ((10, 11), (3, 4), np.s_[...], (10, 1)),
+    ((10, 11), (3, 4), np.s_[...], (1, 1, 11)),
+    ((10, 11), (3, 4), np.s_[1:9, 2:10], None),
+    ((10, 11), (3, 4), np.s_[1:9, 2:10], (8,)),
+    ((10, 11), (3, 4), np.s_[::3, 1::2], None),
+    ((10, 11), (2, 2), np.s_[1::5, ::3], (4,)),
+    ((10, 11), (3, 4), np.s_[4, 1:], None),
+    ((10, 11), (3, 4), np.s_[2:7, 5], None),
+    ((10, 11), (10, 11), np.s_[...], None),
+    ((10, 11), (1, 11), np.s_[...], (11,)),
+    ((9, 8, 7), (2, 3, 4), np.s_[...], None),
+    ((9, 8, 7), (2, 3, 4), np.s_[1:, :, 2:7], (5,)),
+    ((9, 8, 7), (2, 3, 4), np.s_[1:, :, 2:7], (8, 1)),
+    ((9, 8, 7), (2, 3, 4), np.s_[1:, 3, 2:7], (1, 5)),
+    ((9, 8, 7), (4, 8, 1), np.s_[::2, 1:7, ::3], None),
+    ((9, 8, 7), None, np.s_[...], None),
+    ((9, 8, 7), None, np.s_[1:8, 2:, 1:6], (5,)),
+    ((40,), (7,), np.s_[3:38], None),
+    ((40,), None, np.s_[::3], None),
+]
+
+
+@pytest.mark.thread_unsafe(reason="monkey-patch")
+@pytest.mark.parametrize("max_nbytes", [1, 100, 2**24])
+@pytest.mark.parametrize("shape, chunks, selection, value_shape", BROADCAST_CASES)
+def test_broadcast_write(writable_file, monkeypatch, max_nbytes,
+                         shape, chunks, selection, value_shape):
+    monkeypatch.setattr(dataset_mod, "_BROADCAST_BUFFER_NBYTES", max_nbytes)
+    initial = np.arange(np.prod(shape), dtype='f8').reshape(shape)
+    dset = writable_file.create_dataset(make_name(), data=initial, chunks=chunks)
+
+    if value_shape is None:
+        value = -1.5
+    else:
+        value = -np.arange(1, np.prod(value_shape) + 1).reshape(value_shape)
+    dset[selection] = value
+
+    expected = initial.copy()
+    expected[selection] = value
+    np.testing.assert_array_equal(dset[()], expected)
+
+
+@pytest.mark.thread_unsafe(reason="monkey-patch")
+def test_broadcast_write_converts_like_full_array(writable_file, monkeypatch):
+    # Type conversion is left to HDF5, as when writing a full array
+    monkeypatch.setattr(dataset_mod, "_BROADCAST_BUFFER_NBYTES", 1)
+    value = np.array([0.4, 2.6, -3.7, 1e3], dtype='f4')
+    dset = writable_file.create_dataset(make_name(), (12, 4), dtype='i2', chunks=(5, 3))
+    ref = writable_file.create_dataset(make_name("ref"), (12, 4), dtype='i2', chunks=(5, 3))
+
+    dset[1:] = value
+    ref[1:] = np.broadcast_to(value, (11, 4)).copy()
+    np.testing.assert_array_equal(dset[()], ref[()])
+
+
+@pytest.mark.thread_unsafe(reason="monkey-patch")
+@pytest.mark.parametrize("dtype, value", [
+    (np.dtype('S5'), b'abc'),
+    (np.dtype([('a', 'i4'), ('b', 'f8')]), np.array((3, 2.5), dtype=[('a', 'i4'), ('b', 'f8')])),
+    (h5py.string_dtype(), 'variable'),
+    (h5py.vlen_dtype('i4'), np.array([1, 2, 3], dtype='i4')),
+])
+def test_broadcast_write_other_dtypes(writable_file, monkeypatch, dtype, value):
+    monkeypatch.setattr(dataset_mod, "_BROADCAST_BUFFER_NBYTES", 1)
+    dset = writable_file.create_dataset(make_name(), (7, 6), dtype=dtype, chunks=(2, 4))
+    dset[1:, 2:] = value
+
+    if dtype.kind == 'O':
+        # Variable-length data is written by the general broadcasting code
+        cells = list(dset.asstr()[1:, 2:].ravel()) if isinstance(value, str) \
+            else [x.tolist() for x in dset[1:, 2:].ravel()]
+        expected = value if isinstance(value, str) else value.tolist()
+        assert cells == [expected] * 24
+    else:
+        expected = np.zeros((7, 6), dtype=dtype)
+        expected[1:, 2:] = value
+        np.testing.assert_array_equal(dset[()], expected)
+
+
+@pytest.mark.thread_unsafe(reason="monkey-patch")
+def test_broadcast_write_compound_field(writable_file, monkeypatch):
+    monkeypatch.setattr(dataset_mod, "_BROADCAST_BUFFER_NBYTES", 1)
+    dt = np.dtype([('a', 'i4'), ('b', 'f8')])
+    dset = writable_file.create_dataset(make_name(), (9, 5), dtype=dt, chunks=(2, 2))
+    dset['b'] = 1.5
+    dset[2:, 'a'] = np.arange(5)
+
+    out = dset[()]
+    np.testing.assert_array_equal(out['b'], np.full((9, 5), 1.5))
+    expected_a = np.zeros((9, 5), dtype='i4')
+    expected_a[2:] = np.arange(5)
+    np.testing.assert_array_equal(out['a'], expected_a)
+
+
+def _tile_blocks(shape, selection, source_shape, max_nbytes, chunks, itemsize=8):
+    sel = h5py._hl.selections.select(shape, selection)
+    plan = sel.broadcast_tiles(source_shape, itemsize, max_nbytes, chunks)
+    if plan is None:
+        return None, None
+    tile, blocks = plan
+    out = []
+    for count, fspace in blocks:
+        assert all(c <= t for c, t in zip(count, tile))
+        start, _ = fspace.get_select_bounds()
+        out.append((start, count, fspace.get_select_npoints()))
+    assert sum(n for _, _, n in out) == sel.nselect
+    return tile, out
+
+
+def test_broadcast_tiles_follow_chunks():
+    # Scalar over (100, 100) with (10, 10) chunks: the tile is one chunk
+    # high and grows along the last axis within the limit.
+    tile, blocks = _tile_blocks((100, 100), np.s_[...], (), 1600, (10, 10))
+    assert tile == (10, 20)
+    assert len(blocks) == 50
+    assert all(s[0] % 10 == 0 and s[1] % 10 == 0 for s, _, _ in blocks)
+
+    # With room for everything, the whole selection is one write
+    tile, blocks = _tile_blocks((100, 100), np.s_[...], (100,), 2**20, (10, 10))
+    assert tile == (100, 100)
+    assert len(blocks) == 1
+
+    # Unaligned selection: blocks after the first start on chunk boundaries
+    tile, blocks = _tile_blocks((100, 100), np.s_[3:97, 5:95], (), 800, (10, 10))
+    assert tile == (10, 10)
+    starts0 = sorted({s[0] for s, _, _ in blocks})
+    starts1 = sorted({s[1] for s, _, _ in blocks})
+    assert starts0 == [3] + list(range(10, 97, 10))
+    assert starts1 == [5] + list(range(10, 95, 10))
+
+    # Contiguous dataset: whole rows, as many as fit
+    tile, blocks = _tile_blocks((100, 100), np.s_[...], (), 8000, None)
+    assert tile == (10, 100)
+    assert len(blocks) == 10
+
+
+def test_broadcast_tiles_not_used():
+    # Nothing to repeat
+    assert _tile_blocks((10, 10), np.s_[...], (10, 10), 1, (2, 2)) == (None, None)
+    # MultiBlockSlice selections
+    mbs = MultiBlockSlice(start=1, stride=3, count=3, block=2)
+    assert _tile_blocks((10, 10), np.s_[mbs, :], (), 1, (2, 2)) == (None, None)
+    # No buffer bigger than the source fits
+    assert _tile_blocks((10, 10), np.s_[...], (10,), 8, (1, 1)) == (None, None)
