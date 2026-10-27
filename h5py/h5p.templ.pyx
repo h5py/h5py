@@ -786,7 +786,13 @@ cdef class PropDCID(PropOCID):
 
         filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags,
                                          &nelements, cd_values, 256, name, NULL)
-        assert nelements <= 256, f"H5Pget_filter returned {nelements=}"
+        # HDF5 sets nelements to the filter's full client-data-value count,
+        # which may be larger than the 256-element buffer we passed; it only
+        # wrote min(nelements, 256) values.  Clamp before reading so we never
+        # run off the end of cd_values (a stack buffer over-read; the assert
+        # that used to guard this is removed by Python's -O flag).
+        if nelements > 256:
+            nelements = 256
 
         name[256] = c'\0'  # in case it's > 256 chars
         vlist = []
@@ -838,7 +844,13 @@ cdef class PropDCID(PropOCID):
 
         H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
                             &flags, &nelements, cd_values, 256, name, NULL)
-        assert nelements <= 256, f"H5Pget_filter_by_id returned {nelements=}"
+        # HDF5 sets nelements to the filter's full client-data-value count,
+        # which may be larger than the 256-element buffer we passed; it only
+        # wrote min(nelements, 256) values.  Clamp before reading so we never
+        # run off the end of cd_values (a stack buffer over-read; the assert
+        # that used to guard this is removed by Python's -O flag).
+        if nelements > 256:
+            nelements = 256
 
         name[256] = c'\0'  # In case HDF5 doesn't terminate it properly
 
