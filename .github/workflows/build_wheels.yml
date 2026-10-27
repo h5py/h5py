@@ -121,7 +121,7 @@ jobs:
 
       # Also build a future-compatible abi3 wheel
       # this comes first to avoid inter-job pollution which then fails abi3audit
-      - uses: pypa/cibuildwheel@b9e566a2b284570af229f6c2a33673410d0389a3 # v4.3.4
+      - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
         if: github.event_name == 'schedule' ||
             (
               (
@@ -140,7 +140,7 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ''
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@b9e566a2b284570af229f6c2a33673410d0389a3 # v4.3.4
+      - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
         env:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ''
 
@@ -178,7 +178,7 @@ jobs:
       - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}"
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@b9e566a2b284570af229f6c2a33673410d0389a3 # v4.3.4
+      - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: "cp311-*"
