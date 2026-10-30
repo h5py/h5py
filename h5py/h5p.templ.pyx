@@ -2150,3 +2150,29 @@ cdef class PropDXID(PropInstanceID):
         H5Pget_dxpl_mpio(self.id, &mode)
         return <int>mode
     ### {{endif}}
+
+    ### {{if INTERNAL_THREADS}}
+    @with_phil
+    def set_io_threads(self, bint io_threads_enabled):
+        """ (BOOL io_threads_enabled)
+
+        Set whether HDF5 may use internal threads for I/O performed with this
+        transfer property list.  Defaults to True.
+
+        Permitting threads does not start them.  This is an opt-out for a
+        single operation, because threading stays off until
+        h5.set_internal_threads() is called with a non-zero count.
+        """
+        H5Pset_io_threads(self.id, <hbool_t>io_threads_enabled)
+
+    @with_phil
+    def get_io_threads(self):
+        """ () => BOOL
+
+        Determine whether HDF5 may use internal threads for I/O performed
+        with this transfer property list.
+        """
+        cdef hbool_t io_threads_enabled
+        H5Pget_io_threads(self.id, &io_threads_enabled)
+        return <bint>io_threads_enabled
+    ### {{endif}}
