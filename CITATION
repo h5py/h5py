@@ -1,0 +1,7 @@
+@Book{collette_python_hdf5_2014,
+        keywords = {python, hdf5},
+        year = {2013},
+        publisher = {O'Reilly},
+        title = {Python and HDF5},
+        author = {Andrew Collette}
+}
