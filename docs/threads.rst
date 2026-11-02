@@ -23,6 +23,11 @@ work across multiple threads (e.g. read/write to a file and process the data),
 multiple calls to the h5py API will not run in parallel - not even if they operate
 on different datasets or different files.
 
+This includes HDF5's filters, so more threads do not decompress chunks faster.
+``examples/threaded_chunk_read.py`` shows a way around this for gzip: read the raw
+chunks with :meth:`~h5py.h5d.DatasetID.read_direct_chunk`, then decompress them in
+a thread pool.
+
 .. _free_threading:
 
 free-threading
