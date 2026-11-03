@@ -94,6 +94,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
     cdef hid_t rawdstype = -1
     cdef hid_t dspace = -1      # Dataset dataspace
     cdef hid_t cspace = -1      # Temporary contiguous dataspaces
+    cdef bint direct_access = False
 
     cdef void* back_buf = NULL
     cdef void* conv_buf = NULL
@@ -105,17 +106,23 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
         # not present in the memory type.  Limit the type used for the dataset
         # to only those fields present in the memory type.  We can't use the
         # memory type directly because of course that triggers HDFFV-1063.
-        if (H5Tget_class(mtype) == H5T_COMPOUND) and (not read):
-            rawdstype = H5Dget_type(dset)
-            if H5Tget_class(rawdstype) == H5T_COMPOUND:
-                dstype = make_reduced_type(mtype, rawdstype)
+        dstype = H5Dget_type(dset)
+        if (H5Tget_class(mtype) == H5T_COMPOUND
+                and H5Tget_class(dstype) == H5T_COMPOUND):
+            if read:
+                # Cache before reduction: even a fixed-size projection must
+                # not directly read unused variable-length fields.
+                direct_access = not (needs_proxy(dstype) or needs_proxy(mtype))
+            if not read or not direct_access:
+                rawdstype = dstype
+                dstype = make_reduced_type(mtype, rawdstype, read=read)
                 H5Tclose(rawdstype)
-            else:
-                dstype = rawdstype
+            if not read:
+                direct_access = not (needs_proxy(dstype) or needs_proxy(mtype))
         else:
-            dstype = H5Dget_type(dset)
+            direct_access = not (needs_proxy(dstype) or needs_proxy(mtype))
 
-        if not (needs_proxy(dstype) or needs_proxy(mtype)):
+        if direct_access:
             if read:
                 H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
             else:
@@ -235,7 +242,7 @@ cdef herr_t dset_rw_vlen_strings(
     return 0
 
 
-cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
+cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype, bint read=False):
     # Go through dstype, pick out the fields which also appear in mtype, and
     # return a new compound type with the fields packed together
     # See also: issue 372
@@ -270,6 +277,11 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
         finally:
             H5free_memory(member_name)
             member_name = NULL
+
+    # An unmatched read leaves the caller's buffer unchanged. Preserve the
+    # original conversion path rather than constructing a zero-sized type.
+    if read and newtype_size == 0:
+        return H5Tcopy(dstype)
 
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
