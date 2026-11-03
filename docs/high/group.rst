@@ -150,6 +150,10 @@ Since the object retrieved is in a different file, its ".file" and ".parent"
 properties will refer to objects in that file, *not* the file in which the
 link resides.
 
+To check whether accessing a path would follow an external link (or use other
+files in another way) without opening anything outside the file, use
+:meth:`Group.is_external`.
+
 .. note::
 
     Currently, you can't access an external link if the file it points to is
@@ -268,6 +272,47 @@ Reference
                            Set to True only when elink_mode = 'r' and
                            current file is not opened in SWMR write mode.
                            By default, use current file SWMR mode.
+
+    .. method:: is_external(name)
+
+        Check if accessing ``name`` would use anything outside this file.
+
+        Returns True if resolving the path ``name`` (absolute, or relative to
+        this group) needs an :ref:`external link <group_extlinks>`, or if it
+        refers to a dataset whose data is stored outside this file:
+
+        - a dataset with external storage (raw data in other, non-HDF5
+          files; see the ``external`` keyword of :meth:`create_dataset`), or
+        - a :ref:`virtual dataset <vds>` with any source in another file.
+          Sources in the same file (file name ``'.'``) are checked in the
+          same way, so a virtual dataset mapping a local dataset that itself
+          uses another file also counts as external.
+
+        Returns False if the object and its data are all within this file.
+
+        This only inspects links and dataset properties stored in this file;
+        it never opens other files.  Soft links are followed, but external
+        links are not, so their target need not exist.  User-defined link
+        types are treated like external links, since they may refer to other
+        files.  Same-file virtual dataset sources with printf-style dataset
+        names (using ``%b``) are also treated as external, as the datasets
+        they match can't be checked in advance.
+
+        This is useful as a check before accessing objects in files from an
+        untrusted source::
+
+            >>> if f.is_external('path/to/data'):
+            ...     raise ValueError("refusing to follow external references")
+            >>> data = f['path/to/data'][()]
+
+        :param name:    Path to check. May be a relative or absolute path.
+        :raises KeyError: If the path doesn't exist, including a dangling
+                          soft link.
+        :raises RuntimeError: If resolving the path needs more soft links than
+                              HDF5 allows (16 by default), e.g. because of a
+                              cycle of soft links.
+
+        .. versionadded:: 3.17
 
     .. method:: visit(callable)
 
