@@ -1,0 +1,22 @@
+What's new in h5py 3.17
+=======================
+
+New features
+------------
+
+
+Breaking Changes and Deprecations
+---------------------------------
+
+
+Bug fixes
+---------
+
+
+Exposing HDF5 functions
+-----------------------
+
+
+Building h5py
+-------------
+
