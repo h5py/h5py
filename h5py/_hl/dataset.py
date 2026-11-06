@@ -47,6 +47,54 @@ _FILL_TIME_OPTIONS = {
 }
 
 
+def _make_dapl(dapl, efile_prefix, virtual_prefix,
+               rdcc_nslots, rdcc_nbytes, rdcc_w0):
+    """Build the dataset access property list for a create or open call.
+
+    Returns dapl unchanged when none of the settings were asked for.
+    """
+    have_cache_settings = any(
+        value is not None for value in (rdcc_nslots, rdcc_nbytes, rdcc_w0))
+    if not (have_cache_settings
+            or efile_prefix is not None or virtual_prefix is not None):
+        return dapl
+
+    if dapl is None:
+        # Our own dapl, so nothing has been set on it, and the chunk cache
+        # parameters are unset. Reading them back instead would quietly set
+        # them: H5Pget_chunk_cache() cannot report a parameter as unset, and for
+        # one that has never been set it hands back a value from the library's
+        # default file access property list, which has no connection to the file
+        # being used. Writing that value back makes it look chosen, and the
+        # library then never falls back to the file's own cache settings when
+        # the dataset is opened.
+        dapl = h5p.create(h5p.DATASET_ACCESS)
+        cache_settings = (rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    else:
+        # The caller's dapl may already carry cache settings that are meant to
+        # take effect, and nothing tells those apart from parameters never
+        # touched, so whatever is on the dapl stands for anything not named
+        # here. Work on a copy, otherwise one dapl reused across several
+        # calls picks up the settings of each of them in turn.
+        dapl = dapl.copy()
+        settings = list(dapl.get_chunk_cache())
+        for index, value in enumerate((rdcc_nslots, rdcc_nbytes, rdcc_w0)):
+            if value is not None:
+                settings[index] = value
+        cache_settings = tuple(settings)
+
+    if efile_prefix is not None:
+        dapl.set_efile_prefix(efile_prefix)
+
+    if virtual_prefix is not None:
+        dapl.set_virtual_prefix(virtual_prefix)
+
+    if have_cache_settings:
+        dapl.set_chunk_cache(*cache_settings)
+
+    return dapl
+
+
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
@@ -195,26 +243,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
 
-    have_cache_settings = any(
-        value is not None for value in (rdcc_nbytes, rdcc_nslots, rdcc_w0))
-    if efile_prefix is not None or virtual_prefix is not None or have_cache_settings:
-        dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
-
-    if efile_prefix is not None:
-        dapl.set_efile_prefix(efile_prefix)
-
-    if virtual_prefix is not None:
-        dapl.set_virtual_prefix(virtual_prefix)
-
-    if have_cache_settings:
-        cache_settings = list(dapl.get_chunk_cache())
-        if rdcc_nslots is not None:
-            cache_settings[0] = rdcc_nslots
-        if rdcc_nbytes is not None:
-            cache_settings[1] = rdcc_nbytes
-        if rdcc_w0 is not None:
-            cache_settings[2] = rdcc_w0
-        dapl.set_chunk_cache(*cache_settings)
+    dapl = _make_dapl(dapl, efile_prefix, virtual_prefix,
+                      rdcc_nslots, rdcc_nbytes, rdcc_w0)
 
     if isinstance(data, Empty):
         sid = h5s.create(h5s.NULL)
@@ -233,26 +263,8 @@ def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None,
               rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, **kwds):
     """ Return an existing low-level dataset identifier """
 
-    have_cache_settings = any(
-        value is not None for value in (rdcc_nbytes, rdcc_nslots, rdcc_w0))
-    if efile_prefix is not None or virtual_prefix is not None or have_cache_settings:
-        dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
-
-    if efile_prefix is not None:
-        dapl.set_efile_prefix(efile_prefix)
-
-    if virtual_prefix is not None:
-        dapl.set_virtual_prefix(virtual_prefix)
-
-    if have_cache_settings:
-        cache_settings = list(dapl.get_chunk_cache())
-        if rdcc_nslots is not None:
-            cache_settings[0] = rdcc_nslots
-        if rdcc_nbytes is not None:
-            cache_settings[1] = rdcc_nbytes
-        if rdcc_w0 is not None:
-            cache_settings[2] = rdcc_w0
-        dapl.set_chunk_cache(*cache_settings)
+    dapl = _make_dapl(dapl, efile_prefix, virtual_prefix,
+                      rdcc_nslots, rdcc_nbytes, rdcc_w0)
 
     dset_id = h5d.open(parent.id, name, dapl=dapl)
 

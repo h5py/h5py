@@ -41,6 +41,11 @@ cdef extern from "hdf5.h":
 
 # === H5D - Dataset API =======================================================
 
+  # Chunk cache defaults.
+  size_t H5D_CHUNK_CACHE_NSLOTS_DEFAULT
+  size_t H5D_CHUNK_CACHE_NBYTES_DEFAULT
+  double H5D_CHUNK_CACHE_W0_DEFAULT
+
   ctypedef enum H5D_layout_t:
       H5D_LAYOUT_ERROR    = -1,
       H5D_COMPACT         = 0,
