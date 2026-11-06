@@ -179,7 +179,7 @@ from ._errors cimport set_exception, set_default_error_handler
 
 class LineProcessor:
 
-    def __init__(self, config) -> None:
+    def __init__(self, config: BuildConfig) -> None:
         self.config = config
 
     def run(self):
@@ -232,11 +232,11 @@ class LineProcessor:
     def check_settings(self) -> bool:
         """ Return True if and only if the code block should be compiled within given settings """
         if (
-            (self.line.mpi and not self.config.mpi)
-            or (self.line.ros3 and not self.config.ros3)
-            or (self.line.direct_vfd and not self.config.direct_vfd)
-            or (self.line.min_version is not None and self.config.hdf5_version < self.line.min_version)
-            or (self.line.max_version is not None and self.config.hdf5_version > self.line.max_version)
+            (self.line.mpi and not self.config.flags.mpi)
+            or (self.line.ros3 and not self.config.flags.ros3)
+            or (self.line.direct_vfd and not self.config.flags.direct_vfd)
+            or (self.line.min_version is not None and self.config.hdf5.version < self.line.min_version)
+            or (self.line.max_version is not None and self.config.hdf5.version > self.line.max_version)
         ):
             return False
         else:
