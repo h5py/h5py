@@ -1522,6 +1522,13 @@ class TestChunkIterator(BaseDataset):
         with self.assertRaises(ValueError):
             dset.iter_chunks((slice(19,67), 9))
 
+    def test_invalid_slices(self):
+        dset = self.f.create_dataset(make_name(), (20,), chunks=(8,), dtype='f4')
+        # Empty or reversed slices ending at 0, and slices with a step
+        for sel in (np.s_[0:0], np.s_[5:0], np.s_[0:20:3], np.s_[10:2:-1]):
+            with self.assertRaises(ValueError):
+                dset.iter_chunks(sel)
+
     def test_1d(self):
         dset = self.f.create_dataset(make_name(), (100,), chunks=(32,), dtype='f4')
         expected = ((slice(0,32,1),), (slice(32,64,1),), (slice(64,96,1),),
