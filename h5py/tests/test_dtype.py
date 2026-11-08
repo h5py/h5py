@@ -4,6 +4,7 @@
 
 from itertools import count
 import platform
+import sys
 import numpy as np
 import h5py
 try:
@@ -126,6 +127,22 @@ class TestVlen(TestCase):
         self.assertEqual(arr1, arr2)
         self.assertEqual(h5py.check_enum_dtype(h5py.check_vlen_dtype(dt1)),
                          h5py.check_enum_dtype(h5py.check_vlen_dtype(dt2)))
+
+    def test_vlen_read_does_not_leak_elem_dtype_ref(self):
+        # https://github.com/h5py/h5py/issues/2839
+        elem_dtype = np.dtype('int64')
+        name = make_name()
+        self.f.create_dataset(
+            name,
+            data=np.array([np.arange(i + 1) for i in range(10)], dtype=object),
+            dtype=h5py.vlen_dtype(elem_dtype),
+        )
+        dset = self.f[name]
+        _ = dset[...]  # warm up any lazily created references
+        refcount = sys.getrefcount(elem_dtype)
+        for _ in range(5):
+            _ = dset[...]
+        self.assertEqual(sys.getrefcount(elem_dtype), refcount)
 
 
 def test_write_empty_vlen(writable_file):

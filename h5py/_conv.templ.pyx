@@ -766,7 +766,6 @@ cdef int conv_vlen2ndarray(void* ipt,
     # Write the new ndarray object to the buffer in-place and ensure it is not destroyed
     buf_obj[0] = ndarray_obj
     Py_INCREF(ndarray)
-    Py_INCREF(elem_dtype)
     return 0
 
 cdef herr_t ndarray2vlen(hid_t src_id,
