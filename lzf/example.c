@@ -83,6 +83,12 @@ int main(){
     r = H5Dwrite(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
     if(r<0) goto failed;
 
+    /* Reopen the dataset so the read exercises decompression, not the chunk cache. */
+    r = H5Dclose(dset);
+    if(r<0) goto failed;
+    dset = H5Dopen(fid, "dset");
+    if(dset<0) goto failed;
+
     r = H5Dread(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data_out);
     if(r<0) goto failed;
 
