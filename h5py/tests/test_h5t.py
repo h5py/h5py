@@ -12,7 +12,7 @@ import numpy as np
 import h5py
 from h5py import h5t
 
-from .common import TestCase, ut
+from .common import TestCase, make_name, ut
 
 
 class TestCompound(ut.TestCase):
@@ -186,3 +186,46 @@ class TestTypeFloatID(TestCase):
         # long double floats
         dset = f[dataset5]
         self.assertEqual(dset.dtype, np.longdouble)
+
+
+class TestEnum(TestCase):
+
+    def test_uint64_values(self):
+        """ Values >= 2**63 of a uint64 enum round trip (issue 2996) """
+        tid = h5t.enum_create(h5t.STD_U64LE)
+        tid.enum_insert(b'ZERO', 0)
+        tid.enum_insert(b'HIGH', 2**63)
+        tid.enum_insert(b'MAX', np.uint64(2**64 - 1))
+
+        self.assertEqual(tid.enum_valueof(b'HIGH'), 2**63)
+        self.assertEqual(tid.enum_valueof(b'MAX'), 2**64 - 1)
+        self.assertEqual(tid.enum_nameof(2**63), b'HIGH')
+        self.assertEqual(tid.enum_nameof(2**64 - 1), b'MAX')
+        values = {tid.get_member_value(i) for i in range(tid.get_nmembers())}
+        self.assertEqual(values, {0, 2**63, 2**64 - 1})
+
+    def test_int64_values(self):
+        """ Full range of an int64 enum is unchanged """
+        tid = h5t.enum_create(h5t.STD_I64LE)
+        tid.enum_insert(b'MIN', -2**63)
+        tid.enum_insert(b'MAX', 2**63 - 1)
+
+        self.assertEqual(tid.enum_valueof(b'MIN'), -2**63)
+        self.assertEqual(tid.enum_valueof(b'MAX'), 2**63 - 1)
+        self.assertEqual(tid.enum_nameof(-2**63), b'MIN')
+
+    def test_value_too_large(self):
+        tid = h5t.enum_create(h5t.STD_U64LE)
+        with self.assertRaises(OverflowError):
+            tid.enum_insert(b'A', 2**64)
+
+    def test_uint64_dataset(self):
+        mapping = {'OFF': 0, 'HIGH': 2**63, 'MAX': 2**64 - 1}
+        dt = h5py.enum_dtype(mapping, basetype='uint64')
+        data = np.array([0, 2**63, 2**64 - 1], dtype='uint64')
+        name = make_name()
+        self.f.create_dataset(name, data=data, dtype=dt)
+
+        ds = self.f[name]
+        self.assertEqual(h5py.check_enum_dtype(ds.dtype), mapping)
+        self.assertArrayEqual(ds[()], data)
