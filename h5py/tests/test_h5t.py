@@ -186,3 +186,49 @@ class TestTypeFloatID(TestCase):
         # long double floats
         dset = f[dataset5]
         self.assertEqual(dset.dtype, np.longdouble)
+
+
+class TestEnumWideBase(TestCase):
+    """Enum base types wider than a C long long must be refused, not overflow
+    the fixed-width buffer used to read and write member values.
+    """
+
+    def _wide_enum(self):
+        # HDF5 permits integer types wider than long long; build an enum on one.
+        base = h5t.STD_I64LE.copy()
+        base.set_size(16)
+        base.set_precision(128)
+        return h5t.enum_create(base)
+
+    def test_enum_insert_rejects_wide_base(self):
+        # enum_convert() runs H5Tconvert(LLONG, base, 1, &buf): with a 16-byte
+        # base it writes 16 bytes into the 8-byte `long long buf`.
+        etype = self._wide_enum()
+        with self.assertRaises(ValueError):
+            etype.enum_insert(b"A", 1)
+
+    def test_enum_nameof_rejects_wide_base(self):
+        etype = self._wide_enum()
+        with self.assertRaises(ValueError):
+            etype.enum_nameof(1)
+
+    def test_enum_valueof_rejects_wide_base(self):
+        # H5Tenum_valueof(self.id, name, &buf) writes base-sized bytes into the
+        # 8-byte `long long buf` before anything else.
+        etype = self._wide_enum()
+        with self.assertRaises(ValueError):
+            etype.enum_valueof(b"A")
+
+    def test_get_member_value_rejects_wide_base(self):
+        # H5Tget_member_value(self.id, idx, &val) writes base-sized bytes into
+        # the 8-byte `long long val`.
+        etype = self._wide_enum()
+        with self.assertRaises(ValueError):
+            etype.get_member_value(0)
+
+    def test_normal_enum_still_works(self):
+        etype = h5t.enum_create(h5t.STD_I32LE.copy())
+        etype.enum_insert(b"A", 7)
+        self.assertEqual(etype.get_member_value(0), 7)
+        self.assertEqual(etype.enum_valueof(b"A"), 7)
+        self.assertEqual(etype.enum_nameof(7), b"A")
