@@ -2609,20 +2609,21 @@ def test_dset_chunk_cache():
                   'rdcc_w0': None}, id='explicit_none'),
     pytest.param({}, id='defaults'),
 ])
-def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options, request):
+def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options):
     path = tmp_path / 'cache.h5'
+    name = make_name()
     shape = (10, 20)
     if method == 'require_existing':
         with h5py.File(path, 'w') as f:
-            f.create_dataset('data', shape=shape, chunks=(5, 4), dtype='i4')
+            f.create_dataset(name, shape=shape, chunks=(5, 4), dtype='i4')
 
     with h5py.File(path, 'a', rdcc_nbytes=1048576,
                    rdcc_nslots=521, rdcc_w0=0.75) as f:
         if method == 'create':
-            ds = f.create_dataset('data', shape=shape, chunks=(5, 4),
+            ds = f.create_dataset(name, shape=shape, chunks=(5, 4),
                                   dtype='i4', **cache_options)
         else:
-            ds = f.require_dataset('data', shape=shape, chunks=(5, 4),
+            ds = f.require_dataset(name, shape=shape, chunks=(5, 4),
                                    dtype='i4', **cache_options)
 
         cache = ds.id.get_access_plist().get_chunk_cache()
@@ -2642,20 +2643,11 @@ def test_dset_chunk_cache_zero_values(tmp_path, method, cache_options, request):
                 or cache_options.get('rdcc_nslots') == 0):
             return
 
-        # Keep the explicit-option and data checks above outside this xfail.
-        # https://github.com/h5py/h5py/pull/2986#issuecomment-6351674253
+        # Naming one option must not pin the other two: whatever was left
+        # out still comes from the file.  The file is opened above with a
+        # cache that differs from the library's defaults, so this would fail
+        # if the unnamed options had been filled in from those defaults.
         file_cache = f.id.get_access_plist().get_cache()[1:]
-        library_cache = h5py.h5p.create(h5py.h5p.DATASET_ACCESS).get_chunk_cache()
-        if supplied_options and any(
-            option not in supplied_options
-            and file_cache[index] != library_cache[index]
-            for index, option in enumerate(('rdcc_nslots', 'rdcc_nbytes', 'rdcc_w0'))
-        ):
-            request.applymarker(pytest.mark.xfail(
-                reason='Unspecified chunk cache options use HDF5 defaults',
-                strict=True,
-                raises=AssertionError,
-            ))
         for index, option in enumerate(('rdcc_nslots', 'rdcc_nbytes', 'rdcc_w0')):
             if option in supplied_options:
                 assert cache[index] == supplied_options[option]
@@ -2684,6 +2676,89 @@ def test_dset_empty_prefix(tmp_path, method, prefix_name, prefix):
         data = np.arange(4, dtype='i4')
         ds[:] = data
         np.testing.assert_array_equal(ds[:], data)
+
+
+@pytest.mark.parametrize('method', ['create', 'require_new', 'require_existing'])
+def test_dset_chunk_cache_supplied_dapl(tmp_path, method):
+    """Cache settings already on a caller's dapl are kept.
+
+    A dapl handed to us may carry settings the caller meant to apply, and
+    nothing in the HDF5 API distinguishes those from parameters that were
+    never touched, so the values on the dapl stand for anything not named in
+    the call.
+    """
+    path = tmp_path / 'supplied.h5'
+    name = make_name()
+    shape = (10, 20)
+    if method == 'require_existing':
+        with h5py.File(path, 'w') as f:
+            f.create_dataset(name, shape=shape, chunks=(5, 4), dtype='i4')
+
+    with h5py.File(path, 'a', rdcc_nbytes=1048576, rdcc_nslots=521, rdcc_w0=0.75) as f:
+        dapl = h5py.h5p.create(h5py.h5p.DATASET_ACCESS)
+        dapl.set_chunk_cache(1009, 2 * 1024 * 1024, 0.5)
+
+        options = {'dapl': dapl, 'rdcc_w0': 0.25}
+        if method == 'create':
+            ds = f.create_dataset(name, shape=shape, chunks=(5, 4),
+                                  dtype='i4', **options)
+        else:
+            ds = f.require_dataset(name, shape=shape, chunks=(5, 4),
+                                   dtype='i4', **options)
+
+        # rdcc_w0 overrides what is on the dapl; the other two come from the
+        # dapl rather than from the file.
+        assert ds.id.get_access_plist().get_chunk_cache() == (1009, 2 * 1024 * 1024, 0.25)
+
+        # The caller's dapl is left as they set it.
+        assert dapl.get_chunk_cache() == (1009, 2 * 1024 * 1024, 0.5)
+
+
+def test_dset_dapl_reused_across_calls(tmp_path):
+    """One dapl used for several datasets does not accumulate."""
+    with h5py.File(tmp_path / 'reuse.h5', 'w', rdcc_nbytes=1048576,
+                   rdcc_nslots=521, rdcc_w0=0.75) as f:
+        dapl = h5py.h5p.create(h5py.h5p.DATASET_ACCESS)
+        untouched = dapl.get_chunk_cache()
+
+        first = f.create_dataset(make_name('first'), shape=(10,),
+                                 chunks=(5,), dtype='i4', dapl=dapl,
+                                 rdcc_nbytes=4096)
+        assert dapl.get_chunk_cache() == untouched
+
+        second = f.create_dataset(make_name('second'), shape=(10,),
+                                  chunks=(5,), dtype='i4', dapl=dapl,
+                                  rdcc_w0=0.25)
+
+        assert first.id.get_access_plist().get_chunk_cache() == (
+            untouched[0], 4096, untouched[2])
+        assert second.id.get_access_plist().get_chunk_cache() == (
+            untouched[0], untouched[1], 0.25)
+
+
+@pytest.mark.parametrize('prefix_name', ['efile_prefix', 'virtual_prefix'])
+def test_dset_empty_prefix_clears(tmp_path, prefix_name):
+    """An empty prefix is applied, not treated as nothing having been asked.
+
+    An untouched property list also reads back an empty prefix, so this
+    starts from a list carrying a prefix and checks that the empty value
+    replaces it.
+    """
+    with h5py.File(tmp_path / 'prefix.h5', 'w') as f:
+        dapl = h5py.h5p.create(h5py.h5p.DATASET_ACCESS)
+        getattr(dapl, 'set_' + prefix_name)(b'/somewhere')
+
+        cleared = f.create_dataset(make_name('cleared'), shape=(4,),
+                                   dtype='i4', dapl=dapl,
+                                   **{prefix_name: ''})
+        assert getattr(cleared.id.get_access_plist(),
+                       'get_' + prefix_name)() == b''
+
+        # Not naming the prefix leaves the one on the list in place.
+        kept = f.create_dataset(make_name('kept'), shape=(4,), dtype='i4',
+                                dapl=dapl)
+        assert getattr(kept.id.get_access_plist(),
+                       'get_' + prefix_name)() == b'/somewhere'
 
 
 class TestCommutative(BaseDataset):
