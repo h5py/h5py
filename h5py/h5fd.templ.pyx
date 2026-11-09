@@ -156,16 +156,19 @@ cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) exce
 
 cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1 with gil:
     cdef unsigned char[:] mview
+    cdef Py_ssize_t bytes_read
     (<object>f.fileobj).seek(addr)
     if hasattr(<object>f.fileobj, 'readinto'):
         mview = <unsigned char[:size]>(buf)
-        (<object>f.fileobj).readinto(mview)
+        bytes_read = (<object>f.fileobj).readinto(mview)
+        if bytes_read != size:
+            return -1
     else:
         b = (<object>f.fileobj).read(size)
         if <size_t>len(b) == size:
             memcpy(buf, <unsigned char *>b, size)
         else:
-            return 1
+            return -1
     return 0
 
 cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1 with gil:
