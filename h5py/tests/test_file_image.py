@@ -52,3 +52,17 @@ def test_in_memory():
     # Reuse image now that previous files are closed
     with h5py.File.in_memory(img) as f3:
         np.testing.assert_array_equal(f3['a'][:], arr)
+
+
+def test_in_memory_libver():
+    arr = np.arange(10)
+    with h5py.File.in_memory(libver='v108') as f1:
+        f1['a'] = arr
+        f1.flush()
+        img = f1.id.get_file_image()
+
+        with h5py.File.in_memory(img, libver='v108') as f2:
+            np.testing.assert_array_equal(f2['a'][:], arr)
+
+    with h5py.File.in_memory(img, libver='v108') as f3:
+        np.testing.assert_array_equal(f3['a'][:], arr)
