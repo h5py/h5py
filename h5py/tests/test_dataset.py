@@ -16,6 +16,7 @@
     2. Type conversion for read and write (currently untested)
 """
 
+from enum import StrEnum
 import pathlib
 import os
 import sys
@@ -216,6 +217,24 @@ class TestCreateData(BaseDataset):
         check_vlen_utf8(self.f.create_dataset(
             make_name("d"), data=np.array(['abc', 'def'], dtype=object)
         ))
+
+    def test_create_str_and_bytes_subclasses(self):
+        """ str and bytes subclasses, e.g. StrEnum members, store like str and bytes """
+        class Color(StrEnum):
+            RED = "red"
+            BLUE = "blue"
+
+        class Label(bytes):
+            pass
+
+        def check_vlen(dset, cset):
+            self.check_h5_string(dset, cset, length=None)
+        check_vlen(self.f.create_dataset(make_name("a"), data=Color.RED), h5t.CSET_UTF8)
+        check_vlen(self.f.create_dataset(
+            make_name("b"), data=[Color.RED, Color.BLUE]
+        ), h5t.CSET_UTF8)
+        check_vlen(self.f.create_dataset(make_name("c"), data=Label(b'abc')), h5t.CSET_ASCII)
+        check_vlen(self.f.create_dataset(make_name("d"), data=[Label(b'abc')]), h5t.CSET_ASCII)
 
     def test_create_np_u(self):
         with self.assertRaises(TypeError):
