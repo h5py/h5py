@@ -9,7 +9,7 @@
 
 import unittest as ut
 
-from h5py import h5p, h5f, version
+from h5py import h5, h5p, h5f, version
 
 from .common import TestCase
 
@@ -231,3 +231,24 @@ def test_proplaid():
 
     fapl.close()
     lapl.close()
+
+
+@ut.skipUnless(h5.get_config().internal_threads,
+               "HDF5 not built with internal I/O thread support")
+class TestIOThreads(TestCase):
+
+    """
+        Feature: enabling and disabling internal threading for a transfer
+    """
+
+    def test_default_is_enabled(self):
+        """ io_threads defaults to True on a new transfer plist """
+        plist = h5p.create(h5p.DATASET_XFER)
+        self.assertTrue(plist.get_io_threads())
+
+    def test_roundtrip(self):
+        """ io_threads round-trips through set/get """
+        plist = h5p.create(h5p.DATASET_XFER)
+        for value in (False, True):
+            plist.set_io_threads(value)
+            self.assertEqual(plist.get_io_threads(), value)

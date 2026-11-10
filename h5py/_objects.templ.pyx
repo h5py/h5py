@@ -62,25 +62,64 @@ def with_phil(func):
     functools.update_wrapper(wrapper, func)
     return wrapper
 
+### {{if INTERNAL_THREADS}}
+# Size of HDF5's internal thread pool as last set through h5py.  HDF5 has no
+# getter, and the fork handlers below need it to restore the pool.
+cdef unsigned int _internal_threads = 0
+
+def _set_internal_threads(unsigned int num_threads):
+    """ Set the size of HDF5's internal thread pool, and record it for the
+    fork handlers.
+
+    Call with phil held.
+    """
+    global _internal_threads
+    H5TSset_internal_threads(num_threads)
+    _internal_threads = num_threads
+### {{endif}}
+
 def _phil_before_fork():
     """
     Acquire the `phil` lock before forking so no thread other
     than the current (forking) thread is holding the lock.
     """
     _phil.acquire()
+    ### {{if INTERNAL_THREADS}}
+    # A child inherits HDF5's thread pool but not its threads, so its first
+    # threaded read would wait forever.  Shut the pool down across the fork.
+    if _internal_threads:
+        H5TSset_internal_threads(0)
+    ### {{endif}}
 
-def _phil_after_fork():
+def _phil_after_fork_in_parent():
     """
-    Release the lock after forking in both the parent and the child.
+    Restore the internal thread pool, then release the lock.
     """
+    try:
+        ### {{if INTERNAL_THREADS}}
+        if _internal_threads:
+            H5TSset_internal_threads(_internal_threads)
+        ### {{endif}}
+        pass
+    finally:
+        _phil.release()
+
+def _phil_after_fork_in_child():
+    """
+    Release the lock.  The child starts with the internal thread pool off.
+    """
+    ### {{if INTERNAL_THREADS}}
+    global _internal_threads
+    _internal_threads = 0
+    ### {{endif}}
     _phil.release()
 
 # Register fork handlers to safely handle `phil` Lock in forked child processes
 # in the presence of other threads which might potentially hold the lock.
 if hasattr(os, "register_at_fork"):
     os.register_at_fork(before=_phil_before_fork,
-                        after_in_child=_phil_after_fork,
-                        after_in_parent=_phil_after_fork)
+                        after_in_child=_phil_after_fork_in_child,
+                        after_in_parent=_phil_after_fork_in_parent)
 
 # --- End locking code --------------------------------------------------------
 

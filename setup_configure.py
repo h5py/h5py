@@ -21,6 +21,7 @@ import platform
 import re
 import sys
 import json
+import warnings
 from pathlib import Path
 
 
@@ -57,7 +58,7 @@ def mpi_enabled():
 
 class BuildConfig:
     def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros,
-                 hdf5_version, mpi, ros3, direct_vfd):
+                 hdf5_version, mpi, ros3, direct_vfd, internal_threads):
         self.hdf5_includedirs = hdf5_includedirs
         self.hdf5_libdirs = hdf5_libdirs
         self.hdf5_define_macros = hdf5_define_macros
@@ -65,6 +66,7 @@ class BuildConfig:
         self.mpi = mpi
         self.ros3 = ros3
         self.direct_vfd = direct_vfd
+        self.internal_threads = internal_threads
 
         if self.mpi and os.environ.get('H5PY_MSMPI') == 'ON':
             self.msmpi = True
@@ -89,12 +91,29 @@ class BuildConfig:
         h5_version_s = os.environ.get('HDF5_VERSION')
         h5py_ros3 = os.environ.get('H5PY_ROS3')
         h5py_direct_vfd = os.environ.get('H5PY_DIRECT_VFD')
+        h5py_internal_threads = os.environ.get('H5PY_INTERNAL_THREADS')
 
         if h5_version_s and not mpi and h5py_ros3 and h5py_direct_vfd:
             # if we know config, don't use wrapper, it may not be supported
+            h5_version = validate_version(h5_version_s)
+            # Unlike the VFD flags, this one is optional here, so that builds
+            # which already skip the wrapper keep doing so. Unset means off.
+            internal_threads = h5py_internal_threads == '1'
+            # Nothing was probed here, so these two are both unverified
+            # claims. When they contradict each other, believe the version,
+            # because building as if the API were there fails in Cython with
+            # an error that does not mention either variable.
+            if internal_threads and h5_version < (2, 3, 0):
+                warnings.warn(
+                    "H5PY_INTERNAL_THREADS is set but will be ignored "
+                    f"because HDF5_VERSION is {h5_version_s!r}, older than "
+                    "the 2.3.0 that HDF5's internal I/O threads require."
+                )
+                internal_threads = False
             return cls(
-                h5_inc, h5_lib, h5_macros, validate_version(h5_version_s), mpi,
-                h5py_ros3 == '1', h5py_direct_vfd == '1')
+                h5_inc, h5_lib, h5_macros, h5_version, mpi,
+                h5py_ros3 == '1', h5py_direct_vfd == '1',
+                internal_threads)
 
         h5_wrapper = HDF5LibWrapper(h5_lib)
         if h5_version_s:
@@ -114,7 +133,13 @@ class BuildConfig:
         else:
             direct_vfd = h5_wrapper.has_direct_vfd_support()
 
-        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3, direct_vfd)
+        if h5py_internal_threads:
+            internal_threads = h5py_internal_threads == '1'
+        else:
+            internal_threads = h5_wrapper.has_internal_threads_support()
+
+        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3,
+                   direct_vfd, internal_threads)
 
     @staticmethod
     def _find_hdf5_compiler_settings(mpi=False):
@@ -203,6 +228,7 @@ class BuildConfig:
             'mpi': self.mpi,
             'ros3': self.ros3,
             'direct_vfd': self.direct_vfd,
+            'internal_threads': self.internal_threads,
             'msmpi': self.msmpi,
             'msmpi_inc_dirs': self.msmpi_inc_dirs,
             'msmpi_lib_dirs': self.msmpi_lib_dirs,
@@ -229,6 +255,7 @@ class BuildConfig:
         print("        MPI Enabled:", self.mpi)
         print("   ROS3 VFD Enabled:", self.ros3)
         print(" DIRECT VFD Enabled:", self.direct_vfd)
+        print("   Internal threads:", self.internal_threads)
         print("   Rebuild Required:", self.changed())
         print("     MS-MPI Enabled:", self.msmpi)
         print("MS-MPI include dirs:", self.msmpi_inc_dirs)
@@ -348,3 +375,10 @@ class HDF5LibWrapper:
 
     def has_direct_vfd_support(self):
         return self.has_functions("H5Pget_fapl_direct", "H5Pset_fapl_direct")
+
+    def has_internal_threads_support(self):
+        # HDF5 2.3.0+ builds these whenever it finds a threading package
+        # (H5_HAVE_THREADS), except as a static library on Windows.
+        return self.has_functions(
+            "H5Pget_io_threads", "H5Pset_io_threads", "H5TSset_internal_threads"
+        )
