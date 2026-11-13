@@ -630,7 +630,7 @@ cdef class DatasetID(ObjectID):
         """
         cdef haddr_t byte_offset
         cdef hsize_t size
-        cdef hsize_t *chunk_offset
+        cdef hsize_t *chunk_offset = NULL
         cdef unsigned filter_mask
         cdef hid_t space_id = 0
         cdef int rank
@@ -642,7 +642,9 @@ cdef class DatasetID(ObjectID):
             space_id = space.id
 
         try:
-            rank = H5Sget_simple_extent_ndims(space_id)
+            # HDF5 writes one offset per dimension of the dataset, whatever
+            # the rank of the space passed in, so size the buffer for that.
+            rank = self.rank
             chunk_offset = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
 
             H5Dget_chunk_info(self.id, space_id, index, chunk_offset,
