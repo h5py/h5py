@@ -2479,6 +2479,24 @@ def test_get_chunk_details():
         assert si.size > 0
 
 
+def test_get_chunk_info_space_rank():
+    """HDF5 fills in the chunk offset using the dataset's rank, not the rank
+    of the space passed in, so a lower rank space must not shrink the buffer.
+    """
+    from io import BytesIO
+    buf = BytesIO()
+    shape = (4,) * 8
+    with h5py.File(buf, 'w') as f:
+        ds = f.create_dataset(make_name(), shape=shape, chunks=(1,) * 8, dtype='u1')
+        ds[...] = 1
+        space = h5py.h5s.create_simple((4,))
+
+        for j in range(4):
+            si = ds.id.get_chunk_info(j, space)
+            assert si.chunk_offset == tuple(np.unravel_index(j, shape))
+            assert si.byte_offset is not None
+
+
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 12, 3) or
                (h5py.version.hdf5_version_tuple >= (1, 10, 10) and h5py.version.hdf5_version_tuple < (1, 10, 99)),
                "chunk iteration requires  HDF5 1.10.10 and later 1.10, or 1.12.3 and later")
