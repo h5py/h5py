@@ -21,6 +21,9 @@ def read_gzip_threaded(dataset, max_workers=None):
         raise ValueError("Only for datasets with the gzip filter alone")
     if dataset.dtype.hasobject or dataset.dtype.subdtype:
         raise ValueError("Only for datasets with a plain fixed size element type")
+    # The raw chunks skip HDF5's type conversion, e.g. of space padded strings
+    if not dataset.id.get_type().equal(h5py.h5t.py_create(dataset.dtype, logical=True)):
+        raise ValueError("Only for datasets stored as their NumPy element type")
     if dataset.size == 0:
         return dataset[()]
     slices = list(dataset.iter_chunks())
