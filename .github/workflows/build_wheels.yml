@@ -72,7 +72,7 @@ jobs:
             arch: AMD64
           - os: windows-11-arm
             arch: ARM64
-          - os: macos-14
+          - os: macos-latest
             arch: arm64
           - os: macos-15-intel
             arch: x86_64
