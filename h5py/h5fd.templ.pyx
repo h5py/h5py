@@ -109,7 +109,7 @@ ctypedef struct H5FD_fileobj_t:
 # A minimal subset of callbacks is implemented. Non-essential
 # parameters (dxpl, type) are ignored.
 
-from cpython cimport Py_INCREF, Py_DECREF
+from cpython cimport Py_INCREF, Py_DECREF, PyErr_Occurred
 from libc.stdlib cimport free as stdlib_free
 cimport libc.stdio
 cimport libc.stdint
@@ -151,6 +151,10 @@ cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t add
     return 0
 
 cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) except -1 with gil:  # HADDR_UNDEF
+    # HDF5 may retry this callback while a previous Python error is pending.
+    # Preserve that error instead of calling Python with an error already set.
+    if PyErr_Occurred():
+        return -1
     (<object>f.fileobj).seek(0, libc.stdio.SEEK_END)
     return (<object>f.fileobj).tell()
 
