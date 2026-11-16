@@ -84,6 +84,21 @@ class TestDA(TestCase):
         self.assertEqual((nslots, nbytes, w0),
                          dalist.get_chunk_cache())
 
+    def test_chunk_cache_unset(self):
+        '''test that a chunk cache parameter given as None is left unset'''
+        dalist = h5p.create(h5p.DATASET_ACCESS)
+        untouched = dalist.get_chunk_cache()
+
+        # H5Pget_chunk_cache() has no way to say that a parameter is unset, so
+        # the read-back cannot show this directly. What it does show is that
+        # naming one parameter leaves the other two alone.
+        dalist.set_chunk_cache(rdcc_w0=0.25)
+        self.assertEqual((untouched[0], untouched[1], 0.25),
+                         dalist.get_chunk_cache())
+
+        dalist.set_chunk_cache()
+        self.assertEqual(untouched, dalist.get_chunk_cache())
+
     def test_efile_prefix(self):
         '''test get/set efile prefix '''
         dalist = h5p.create(h5p.DATASET_ACCESS)

@@ -205,8 +205,8 @@ class Group(HLObject, MutableMappingHDF5):
             This should only be used with ``write_direct_chunk``, where the caller
             compresses the data before handing it to h5py.
         rdcc_nbytes
-            Total size of the dataset's chunk cache in bytes. The default size
-            is 1024**2 (1 MiB) for HDF5 before 2.0 and 8 MiB for HDF5 2.0 or later.
+            Total size of the dataset's chunk cache in bytes. Left out, the
+            dataset uses the value the file was opened with.
         rdcc_w0
             The chunk preemption policy for this dataset.  This must be
             between 0 and 1 inclusive and indicates the weighting according to
@@ -217,8 +217,8 @@ class Group(HLObject, MutableMappingHDF5):
             means fully read or written chunks are always preempted before
             other chunks.  If your application only reads or writes data once,
             this can be safely set to 1.  Otherwise, this should be set lower
-            depending on how often you re-read or re-write the same data.  The
-            default value is 0.75.
+            depending on how often you re-read or re-write the same data.
+            Left out, the dataset uses the value the file was opened with.
         rdcc_nslots
             The number of chunk slots in the dataset's chunk cache. Increasing
             this value reduces the number of cache collisions, but slightly
@@ -226,8 +226,8 @@ class Group(HLObject, MutableMappingHDF5):
             should ideally be a prime number. As a rule of thumb, this value
             should be at least 10 times the number of chunks that can fit in
             rdcc_nbytes bytes. For maximum performance, this value should be set
-            approximately 100 times that number of chunks. The default value is
-            521.
+            approximately 100 times that number of chunks. Left out, the
+            dataset uses the value the file was opened with.
         """
         if 'track_order' not in kwds:
             kwds['track_order'] = h5.get_config().track_order
@@ -322,7 +322,8 @@ class Group(HLObject, MutableMappingHDF5):
         instead.
 
         If any of the keywords "rdcc_nslots", "rdcc_nbytes", or "rdcc_w0" are
-        given, they will be used to configure the dataset's chunk cache.
+        given, they will be used to configure the dataset's chunk cache.  Any
+        of the three left out comes from the file instead.
 
         Other dataset keywords (see create_dataset) may be provided, but are
         only used if a new dataset is to be created.

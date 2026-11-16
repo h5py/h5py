@@ -1959,12 +1959,29 @@ cdef class PropDAID(PropInstanceID):
         efree(self._virtual_prefix_buf)
 
     @with_phil
-    def set_chunk_cache(self, size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0):
-        """(size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0)
+    def set_chunk_cache(self, rdcc_nslots=None, rdcc_nbytes=None,
+                        rdcc_w0=None):
+        """(UINT rdcc_nslots=None, UINT rdcc_nbytes=None, DOUBLE rdcc_w0=None)
 
-        Sets the raw data chunk cache parameters.
+        Set the raw data chunk cache parameters for a dataset.
+
+        A parameter given as None is left unset on this property list, and the
+        dataset then uses the value the file was opened with.  The three are
+        resolved separately when the dataset is opened, so naming one of them
+        does not pin the other two.
         """
-        H5Pset_chunk_cache(self.id,rdcc_nslots,rdcc_nbytes,rdcc_w0)
+        cdef size_t nslots = H5D_CHUNK_CACHE_NSLOTS_DEFAULT
+        cdef size_t nbytes = H5D_CHUNK_CACHE_NBYTES_DEFAULT
+        cdef double w0 = H5D_CHUNK_CACHE_W0_DEFAULT
+
+        if rdcc_nslots is not None:
+            nslots = rdcc_nslots
+        if rdcc_nbytes is not None:
+            nbytes = rdcc_nbytes
+        if rdcc_w0 is not None:
+            w0 = rdcc_w0
+
+        H5Pset_chunk_cache(self.id, nslots, nbytes, w0)
 
 
     @with_phil
