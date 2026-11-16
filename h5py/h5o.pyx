@@ -316,6 +316,7 @@ def get_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
     cdef char* buf
 
     size = H5Oget_comment_by_name(loc.id, obj_name, NULL, 0, pdefault(lapl))
+    assert size >= 0
     buf = <char*>emalloc(size+1)
     try:
         H5Oget_comment_by_name(loc.id, obj_name, buf, size+1, pdefault(lapl))
