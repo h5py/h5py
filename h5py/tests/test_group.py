@@ -217,6 +217,14 @@ class TestRequire(BaseGroup):
         with self.assertRaises(TypeError):
             self.f.require_dataset(n, shape=(10, 3), dtype=int)
 
+    def test_require_dataset_integer_maxshape(self):
+        name = make_name()
+        ds = self.f.create_dataset(name, shape=2, maxshape=10, dtype='i4')
+
+        assert self.f.require_dataset(
+            name, shape=3, maxshape=10, dtype='i4'
+        ) == ds
+
 
 class TestDelete(BaseGroup):
 
