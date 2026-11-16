@@ -459,6 +459,9 @@ cdef class GroupID(ObjectID):
         if not self:
             return False
 
+        if isinstance(name, str):
+            name = name.encode('utf-8', 'surrogateescape')
+
         with phil:
             return _path_valid(self, name)
 
@@ -481,18 +484,13 @@ cdef class GroupID(ObjectID):
 
 
 @with_phil
-def _path_valid(GroupID grp not None, object path not None, PropID lapl=None):
+def _path_valid(GroupID grp not None, bytes path not None, PropID lapl=None):
     """ Determine if *path* points to an object in the file.
 
     If *path* represents an external or soft link, the link's validity is not
     checked.
     """
     from . import h5o
-
-    if isinstance(path, bytes):
-        path = path.decode('utf-8')
-    else:
-        path = unicode(path)
 
     # Empty names are not allowed by HDF5
     if len(path) == 0:
@@ -501,7 +499,7 @@ def _path_valid(GroupID grp not None, object path not None, PropID lapl=None):
     # Note: we cannot use pp.normpath as it resolves ".." components,
     # which don't exist in HDF5
 
-    path_parts = path.split('/')
+    path_parts = path.split(b'/')
 
     # Absolute path (started with slash)
     if path_parts[0] == '':
@@ -510,13 +508,13 @@ def _path_valid(GroupID grp not None, object path not None, PropID lapl=None):
         current_loc = grp
 
     # HDF5 ignores duplicate or trailing slashes
-    path_parts = [x for x in path_parts if x != '']
+    path_parts = [x for x in path_parts if x != b'']
 
     # Special case: path was entirely composed of slashes!
     if len(path_parts) == 0:
-        path_parts = ['.']  # i.e. the root group
+        path_parts = [b'.']  # i.e. the root group
 
-    path_parts = [x.encode('utf-8') for x in path_parts]
+    #path_parts = [x.encode('utf-8') for x in path_parts]
     nparts = len(path_parts)
 
     for idx, p in enumerate(path_parts):
