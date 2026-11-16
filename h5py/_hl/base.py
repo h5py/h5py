@@ -83,10 +83,12 @@ def guess_dtype(data):
         if item_type is h5r.Reference:
             return h5t.ref_dtype
 
-        if item_type is bytes:
-            return h5t.string_dtype(encoding='ascii')
-        if item_type is str:
-            return h5t.string_dtype()
+        # np.bytes_/np.str_ subclass bytes/str; they keep NumPy's fixed width.
+        if item_type is not None and not issubclass(item_type, np.generic):
+            if issubclass(item_type, bytes):
+                return h5t.string_dtype(encoding='ascii')
+            if issubclass(item_type, str):
+                return h5t.string_dtype()
 
         return None
 

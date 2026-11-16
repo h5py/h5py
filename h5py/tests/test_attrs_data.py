@@ -13,6 +13,8 @@
     Covers all data read/write and type-conversion operations for attributes.
 """
 
+from enum import StrEnum
+
 import numpy as np
 
 from .common import TestCase, make_name
@@ -249,6 +251,43 @@ class TestTypes(BaseAttrs):
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
         self.assertTrue(tid.is_variable_str())
+
+    def test_str_subclass_scalar(self):
+        """ str subclasses, e.g. StrEnum members, store like str """
+        class Color(StrEnum):
+            RED = "red"
+
+        name = make_name()
+        self.f.attrs[name] = Color.RED
+        out = self.f.attrs[name]
+        self.assertEqual(out, "red")
+        self.assertEqual(type(out), str)
+
+        tid = h5py.h5a.open(self.f.id, name.encode('utf-8')).get_type()
+        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        self.assertTrue(tid.is_variable_str())
+
+    def test_bytes_subclass_scalar(self):
+        """ bytes subclasses store like bytes """
+        class Label(bytes):
+            pass
+
+        name = make_name()
+        self.f.attrs[name] = Label(b'Hello')
+        self.assertEqual(self.f.attrs[name], 'Hello')
+
+        tid = h5py.h5a.open(self.f.id, name.encode('utf-8')).get_type()
+        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assertTrue(tid.is_variable_str())
+
+    def test_numpy_bytes_scalar_stays_fixed_length(self):
+        """ np.bytes_ scalars keep NumPy's fixed-width dtype """
+        name = make_name()
+        self.f.attrs[name] = np.bytes_(b'abc')
+
+        tid = h5py.h5a.open(self.f.id, name.encode('utf-8')).get_type()
+        self.assertFalse(tid.is_variable_str())
+        self.assertEqual(tid.get_size(), 3)
 
 
 class TestEmpty(BaseAttrs):
