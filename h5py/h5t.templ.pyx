@@ -24,6 +24,7 @@ from .h5p cimport PropID, propwrap
 
 from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
                      convert_tuple
+from libc.limits cimport LLONG_MAX
 
 # Python imports
 import codecs
@@ -1332,18 +1333,30 @@ cdef class TypeCompoundID(TypeCompositeID):
         return typeobj
 
 
+cdef bint _enum_base_unsigned(hid_t enum_id) except -1:
+    # True if the integer base type of an enum is unsigned
+    cdef hid_t basetype = H5Tget_super(enum_id)
+    try:
+        return H5Tget_sign(basetype) == H5T_SGN_NONE
+    finally:
+        H5Tclose(basetype)
+
+
 cdef class TypeEnumID(TypeCompositeID):
 
     """
         Represents an enumerated type
     """
 
-    cdef int enum_convert(self, long long *buf, int reverse) except -1:
+    cdef int enum_convert(self, long long *buf, int reverse, bint as_unsigned=False) except -1:
         # Convert the long long value in "buf" to the native representation
         # of this (enumerated) type.  Conversion performed in-place.
         # Reverse: false => llong->type; true => type->llong
+        # as_unsigned: "buf" holds an unsigned long long instead, so that
+        # values >= 2**63 (e.g. of a uint64 base type) fit.
 
         cdef hid_t basetype
+        cdef hid_t native = H5T_NATIVE_ULLONG if as_unsigned else H5T_NATIVE_LLONG
         cdef H5T_class_t class_code
 
         class_code = H5Tget_class(self.id)
@@ -1355,15 +1368,15 @@ cdef class TypeEnumID(TypeCompositeID):
 
         try:
             if not reverse:
-                H5Tconvert(H5T_NATIVE_LLONG, basetype, 1, buf, NULL, H5P_DEFAULT)
+                H5Tconvert(native, basetype, 1, buf, NULL, H5P_DEFAULT)
             else:
-                H5Tconvert(basetype, H5T_NATIVE_LLONG, 1, buf, NULL, H5P_DEFAULT)
+                H5Tconvert(basetype, native, 1, buf, NULL, H5P_DEFAULT)
         finally:
             H5Tclose(basetype)
 
 
     @with_phil
-    def enum_insert(self, char* name, long long value):
+    def enum_insert(self, char* name, value):
         """(STRING name, INT/LONG value)
 
         Define a new member of an enumerated type.  The value will be
@@ -1372,14 +1385,18 @@ cdef class TypeEnumID(TypeCompositeID):
         clipped.
         """
         cdef long long buf
+        cdef bint as_unsigned = value > LLONG_MAX
 
-        buf = value
-        self.enum_convert(&buf, 0)
+        if as_unsigned:
+            (<unsigned long long *>&buf)[0] = value
+        else:
+            buf = value
+        self.enum_convert(&buf, 0, as_unsigned)
         H5Tenum_insert(self.id, name, &buf)
 
 
     @with_phil
-    def enum_nameof(self, long long value):
+    def enum_nameof(self, value):
         """(LONG value) => STRING name
 
         Determine the name associated with the given value.  Due to a
@@ -1389,9 +1406,13 @@ cdef class TypeEnumID(TypeCompositeID):
         cdef herr_t retval
         cdef char name[1024]
         cdef long long buf
+        cdef bint as_unsigned = value > LLONG_MAX
 
-        buf = value
-        self.enum_convert(&buf, 0)
+        if as_unsigned:
+            (<unsigned long long *>&buf)[0] = value
+        else:
+            buf = value
+        self.enum_convert(&buf, 0, as_unsigned)
         retval = H5Tenum_nameof(self.id, &buf, name, 1024)
         assert retval >= 0
         retstring = name
@@ -1405,9 +1426,12 @@ cdef class TypeEnumID(TypeCompositeID):
         Get the value associated with an enum name.
         """
         cdef long long buf
+        cdef bint as_unsigned = _enum_base_unsigned(self.id)
 
         H5Tenum_valueof(self.id, name, &buf)
-        self.enum_convert(&buf, 1)
+        self.enum_convert(&buf, 1, as_unsigned)
+        if as_unsigned:
+            return (<unsigned long long *>&buf)[0]
         return buf
 
 
@@ -1420,13 +1444,17 @@ cdef class TypeEnumID(TypeCompositeID):
         cdef herr_t retval
         cdef hid_t ptype
         cdef long long val
+        cdef bint as_unsigned
         ptype = 0
 
         if idx < 0:
             raise ValueError("Index must be non-negative.")
 
+        as_unsigned = _enum_base_unsigned(self.id)
         H5Tget_member_value(self.id, idx, &val)
-        self.enum_convert(&val, 1)
+        self.enum_convert(&val, 1, as_unsigned)
+        if as_unsigned:
+            return (<unsigned long long *>&val)[0]
         return val
 
     cdef object py_dtype(self):
