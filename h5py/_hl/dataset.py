@@ -437,8 +437,8 @@ class ChunkIterator:
                         stop = s + 1
                         step = None
                     case slice():
-                        start = s.start or 0
-                        stop = s.stop or self._shape[dim]
+                        start = 0 if s.start is None else s.start
+                        stop = self._shape[dim] if s.stop is None else s.stop
                         step = s.step
                     case _:
                         # TODO: use typing.assert_never when Python 3.10 is dropped
@@ -451,6 +451,8 @@ class ChunkIterator:
             s = self._sel[dim]
             if s.start < 0 or s.stop > self._shape[dim] or s.stop <= s.start:
                 raise ValueError("Invalid selection - selection region must be within dataset space")
+            if s.step not in (None, 1):
+                raise ValueError("Invalid selection - slices with a step are not supported")
             index = s.start // self._layout[dim]
             self._chunk_index.append(index)
 
