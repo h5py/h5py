@@ -10,6 +10,7 @@
 from warnings import warn
 from .defs cimport *
 from ._objects import phil, with_phil
+from . import _objects
 from .h5py_warnings import H5pyDeprecationWarning
 
 ITER_INC    = H5_ITER_INC     # Increasing order
@@ -156,6 +157,11 @@ cdef class H5PYConfig:
         return {{DIRECT_VFD}}
 
     @property
+    def internal_threads(self):
+        """ Boolean indicating if multi-threaded chunk I/O is available """
+        return {{INTERNAL_THREADS}}
+
+    @property
     def swmr_min_hdf5_version(self):
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
         warn(
@@ -235,3 +241,24 @@ def get_libversion():
     H5get_libversion(&major, &minor, &release)
 
     return (major, minor, release)
+
+
+### {{if INTERNAL_THREADS}}
+@with_phil
+def set_internal_threads(unsigned int num_threads):
+    """ (UINT num_threads)
+
+        Set the size of the thread pool HDF5 uses internally, or 0 to
+        disable internal threading.  Only reads of chunked datasets are
+        threaded at present.
+
+        Threading stays off until this is called with a non-zero count.  The
+        setting is process-global.  A child made with os.fork() starts with it
+        off.
+
+        Available only when h5py was built against HDF5 2.3.0 or later with
+        a threading package, which h5py.get_config().internal_threads
+        reports.
+    """
+    _objects._set_internal_threads(num_threads)
+### {{endif}}

@@ -14,6 +14,7 @@
 
 from warnings import warn as _warn
 import atexit
+import operator
 
 
 # --- Library setup -----------------------------------------------------------
@@ -55,7 +56,7 @@ _register_lzf()
 
 # --- Public API --------------------------------------------------------------
 
-from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z, h5pl
+from . import h5, h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z, h5pl
 
 from ._hl import filters
 from ._hl.base import is_hdf5, HLObject, Empty
@@ -83,6 +84,33 @@ from .h5t import (special_dtype, check_dtype,
 from .h5s import UNLIMITED
 
 from .version import version as __version__
+
+
+def set_internal_threads(num_threads):
+    """ Set the size of the thread pool HDF5 uses internally, or 0 to disable
+    internal threading.
+
+    Only reads of chunked datasets are threaded, and only with a non-threadsafe
+    HDF5 build and for files not opened with an MPI-based driver.
+
+    Threading stays off until this is called with a non-zero count. The
+    setting is process-global. A child made with os.fork() starts with it off.
+
+    Requires HDF5 2.3.0 or later built with a threading package; raises
+    RuntimeError otherwise. h5py.get_config().internal_threads reports whether
+    it is available.
+    """
+    num_threads = operator.index(num_threads)
+    if num_threads < 0:
+        raise ValueError(f"num_threads must be 0 or greater, not {num_threads}")
+    if not get_config().internal_threads:
+        raise RuntimeError(
+            "h5py was built against an HDF5 library without internal "
+            "threading support, which requires HDF5 2.3.0 or later built "
+            "with a threading package"
+        )
+
+    h5.set_internal_threads(num_threads)
 
 
 def run_tests(args=''):
