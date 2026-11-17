@@ -11,13 +11,14 @@
     Implements support for high-level access to HDF5 groups.
 """
 
+from collections import deque
 from contextlib import contextmanager
 import posixpath as pp
 import numpy
 
 from .compat import filename_decode, filename_encode
 
-from .. import h5, h5f, h5g, h5i, h5o, h5r, h5t, h5l, h5p
+from .. import h5, h5d, h5f, h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
@@ -71,6 +72,101 @@ def make_lapl(file, elink_mode=None, elink_swmr=None, elink_locking=None):
         lapl.set_elink_fapl(fapl)
 
     return lapl
+
+
+def _path_components(path):
+    """Split an HDF5 path (bytes) into link names, dropping '' and '.'"""
+    return [c for c in path.split(b'/') if c not in (b'', b'.')]
+
+
+def _open_internal(loc, path):
+    """Resolve *path* (bytes) from the group *loc*, staying inside the file.
+
+    Links are inspected one path component at a time.  Hard links are
+    followed by opening the object, and soft links are expanded in place, but
+    no other kind of link is followed.
+
+    Returns the low-level ID of the object at *path*, or None if reaching it
+    needs an external (or user-defined) link.  Raises KeyError if the path
+    doesn't exist, or RuntimeError if it needs more soft links than HDF5 would
+    follow (e.g. because of a cycle of soft links).
+    """
+    shown = path.decode('utf-8', 'replace')  # For error messages
+    # Use the same limit as HDF5's own path traversal (H5Pget_nlinks).
+    links_left = h5p.create(h5p.LINK_ACCESS).get_nlinks()
+
+    obj = h5g.open(loc, b'/') if path.startswith(b'/') else loc
+    todo = deque(_path_components(path))
+    while todo:
+        if not isinstance(obj, h5g.GroupID):
+            raise KeyError(f"Unable to resolve {shown!r}: not a group")
+        grp = obj
+        name = todo.popleft()
+        if not grp.links.exists(name):
+            missing = name.decode('utf-8', 'replace')
+            raise KeyError(
+                f"Unable to resolve {shown!r}: {missing!r} doesn't exist")
+
+        ltype = grp.links.get_info(name).type
+        if ltype == h5l.TYPE_HARD:
+            obj = h5o.open(grp, name)
+        elif ltype == h5l.TYPE_SOFT:
+            if links_left <= 0:
+                raise RuntimeError(
+                    f"Unable to resolve {shown!r}: too many soft links")
+            links_left -= 1
+            target = grp.links.get_val(name)
+            # Relative soft links are resolved from the group containing them
+            obj = h5g.open(grp, b'/') if target.startswith(b'/') else grp
+            todo.extendleft(reversed(_path_components(target)))
+        else:
+            # External link, or a user-defined link type
+            return None
+
+    return obj
+
+
+def _dataset_is_external(dsid):
+    """Check if a dataset's data is stored outside its HDF5 file
+
+    Same-file sources of virtual datasets are checked in turn, so a virtual
+    dataset is external if any dataset it (indirectly) maps is external.
+    """
+    todo = [dsid]
+    seen = set()  # Virtual datasets may map each other in a cycle
+    while todo:
+        dsid = todo.pop()
+        if dsid in seen:
+            continue
+        seen.add(dsid)
+
+        dcpl = dsid.get_create_plist()
+        if dcpl.get_external_count() > 0:
+            return True  # Raw data in external (non-HDF5) files
+        if dcpl.get_layout() != h5d.VIRTUAL:
+            continue
+
+        root = h5g.open(dsid, b'/')
+        for i in range(dcpl.get_virtual_count()):
+            try:
+                if dcpl.get_virtual_filename(i) != '.':
+                    return True  # Source data in another file
+                src_name = dcpl.get_virtual_dsetname(i)
+            except UnicodeDecodeError:
+                return True  # Can't check a name we can't decode
+            if '%b' in src_name.replace('%%', ''):
+                # printf-style source names can match many datasets
+                return True
+            try:
+                src = _open_internal(root, src_name.encode('utf-8'))
+            except KeyError:
+                continue  # Missing sources read as the fill value
+            if src is None:
+                return True  # Source reached through an external link
+            if isinstance(src, h5d.DatasetID):
+                todo.append(src)
+
+    return False
 
 
 class Group(HLObject, MutableMappingHDF5):
@@ -619,6 +715,35 @@ class Group(HLObject, MutableMappingHDF5):
                 return False
             return h5g._path_valid(self.id, self._e(name), self._lapl)
         return self._e(name) in self.id
+
+    def is_external(self, name):
+        """Check if accessing a path would use anything outside this file.
+
+        Returns True if resolving ``name`` (absolute, or relative to this
+        group) needs an external link, or if it refers to a dataset whose data
+        is stored outside this HDF5 file: a dataset with external storage, or a
+        virtual dataset with sources in other files.  Returns False if the
+        object and its data are all within this file.
+
+        This only inspects links and dataset properties stored in this file; it
+        never opens other files.  Soft links are followed, but other links are
+        not, so the target of an external link need not exist.
+
+        Raises KeyError if the path doesn't exist, or RuntimeError if
+        resolving it needs more soft links than HDF5 allows (e.g. a cycle).
+
+        Example:
+
+        >>> if not f.is_external('foo/bar'):
+        ...     bar = f['foo/bar']
+        """
+        with phil:
+            obj = _open_internal(self.id, self._e(name))
+            if obj is None:
+                return True
+            if isinstance(obj, h5d.DatasetID):
+                return _dataset_is_external(obj)
+            return False
 
     def copy(self, source, dest, name=None,
              shallow=False, expand_soft=False, expand_external=False,
