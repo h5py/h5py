@@ -1338,6 +1338,26 @@ cdef class TypeEnumID(TypeCompositeID):
         Represents an enumerated type
     """
 
+    cdef int _check_base_width(self) except -1:
+        # enum_convert (H5Tconvert), get_member_value (H5Tget_member_value) and
+        # enum_valueof (H5Tenum_valueof) all read or write H5Tget_size(super)
+        # bytes through a `long long` buffer.  HDF5 allows an enum base wider
+        # than long long (a >64-bit integer), and such a type can arrive from a
+        # committed enum datatype in a file, so a base that does not fit the
+        # buffer must be refused before any read or write happens.
+        cdef hid_t basetype
+        cdef size_t base_size
+        basetype = H5Tget_super(self.id)
+        try:
+            base_size = H5Tget_size(basetype)
+        finally:
+            H5Tclose(basetype)
+        if base_size > sizeof(long long):
+            raise ValueError(
+                "Enum base type is %d bytes, too wide for this API (max %d)"
+                % (base_size, sizeof(long long)))
+        return 0
+
     cdef int enum_convert(self, long long *buf, int reverse) except -1:
         # Convert the long long value in "buf" to the native representation
         # of this (enumerated) type.  Conversion performed in-place.
@@ -1349,6 +1369,8 @@ cdef class TypeEnumID(TypeCompositeID):
         class_code = H5Tget_class(self.id)
         if class_code != H5T_ENUM:
             raise ValueError("This type (class %d) is not of class ENUM" % class_code)
+
+        self._check_base_width()
 
         basetype = H5Tget_super(self.id)
         assert basetype > 0
@@ -1406,6 +1428,7 @@ cdef class TypeEnumID(TypeCompositeID):
         """
         cdef long long buf
 
+        self._check_base_width()
         H5Tenum_valueof(self.id, name, &buf)
         self.enum_convert(&buf, 1)
         return buf
@@ -1425,6 +1448,7 @@ cdef class TypeEnumID(TypeCompositeID):
         if idx < 0:
             raise ValueError("Index must be non-negative.")
 
+        self._check_base_width()
         H5Tget_member_value(self.id, idx, &val)
         self.enum_convert(&val, 1)
         return val
