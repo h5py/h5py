@@ -28,6 +28,13 @@ steps:
   displayName: 'Use Python $(python.version) $(python.architecture)'
   condition: and(succeeded(), ne(variables['python.version'], 'Pre'))
 
+- script: |
+    python -m pip install uv
+    python -m uv python install 3.14t
+    echo "##vso[task.prependpath]$(dirname "$(python -m uv python find 3.14t --managed-python)")"
+  displayName: 'Install free-threaded Python'
+  condition: and(succeeded(), eq(variables['python.flavor'], 'freethreaded'))
+
   #- task: stevedower.python.InstallPython.InstallPython@1
   #  displayName: 'Use prerelease Python'
   #  inputs:
