@@ -9,7 +9,7 @@
 
 import unittest as ut
 
-from h5py import h5p, h5f, version
+from h5py import h5p, h5f, h5z, version
 
 from .common import TestCase
 
@@ -231,3 +231,24 @@ def test_proplaid():
 
     fapl.close()
     lapl.close()
+
+
+def test_get_filter_many_values():
+    """get_filter must not read past its cd_values buffer
+
+    A filter may carry more than 256 client data values.  get_filter and
+    get_filter_by_id read into a fixed 256-element buffer, so HDF5 reports the
+    full count but only fills 256 entries; reading all of them overran the
+    buffer.  The result is now clamped to the values actually returned.
+    """
+    dcpl = h5p.create(h5p.DATASET_CREATE)
+    values = tuple(range(300))
+    dcpl.set_filter(h5z.FILTER_DEFLATE, h5z.FLAG_OPTIONAL, values)
+
+    _, _, got, _ = dcpl.get_filter(0)
+    assert len(got) <= 256
+    assert got == values[:len(got)]
+
+    _, got_by_id, _ = dcpl.get_filter_by_id(h5z.FILTER_DEFLATE)
+    assert len(got_by_id) <= 256
+    assert got_by_id == values[:len(got_by_id)]
