@@ -342,6 +342,8 @@ class Group(HLObject, MutableMappingHDF5):
 
             if isinstance(shape, int):
                 shape = (shape,)
+            if isinstance(kwds.get("maxshape"), int):
+                kwds["maxshape"] = (kwds["maxshape"],)
 
             try:
                 dsid = dataset.open_dset(self, self._e(name), **kwds)

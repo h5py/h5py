@@ -69,6 +69,17 @@ steps:
     pip install tox codecov
   displayName: 'Install pip dependencies'
 
+- script: |
+    python -m pip install uv
+    uv python install 3.14t
+    ft_python="$(uv python find 3.14t --managed-python)"
+    ft_venv="$(Agent.TempDirectory)/free-threaded"
+    uv venv --python "$ft_python" "$ft_venv"
+    uv pip install --python "$ft_venv/bin/python" tox codecov
+    echo "##vso[task.prependpath]$ft_venv/bin"
+  displayName: 'Install free-threaded Python'
+  condition: and(succeeded(), eq(variables['python.flavor'], 'freethreaded'))
+
 - script: env
   displayName: 'print env'
 
@@ -78,8 +89,8 @@ steps:
       displayName: 'ensure HDF5'
 - ${{ if eq(parameters.shell, 'cmd') }}:
     - script: |
-        py -3.10 -m pip install requests
-        py -3.10 ci\\get_hdf5_win.py
+        python -m pip install requests
+        python ci\\get_hdf5_win.py
       displayName: 'ensure HDF5'
 
 - script: env
