@@ -78,7 +78,7 @@ Source installation
 To install h5py from source, you need:
 
 * A supported Python version with development headers
-* HDF5 1.10.4 or newer with development headers
+* HDF5 1.10.7 or newer with development headers, excluding 1.12.0
 
   * HDF5 versions newer than the h5py version you're using might not work.
   * Odd minor versions of HDF5 (e.g. 1.13) are experimental, and might not work.
