@@ -2131,6 +2131,28 @@ cdef class PropDXID(PropInstanceID):
 
     """ Data transfer property list """
 
+    ### {{if HDF5_VERSION >= (2, 4, 0)}}
+    def set_sub_chunk(self, size_t byte_offset, size_t byte_size):
+        """ (UINT byte_offset, UINT byte_size)
+
+        Read only ``byte_size`` bytes, starting ``byte_offset`` bytes into
+        the raw stored chunk, in DatasetID.read_direct_chunk(). Both 0, the
+        default, reads the whole chunk. The range must lie within the
+        chunk.
+        """
+        H5Pset_sub_chunk(self.id, byte_offset, byte_size)
+
+    def get_sub_chunk(self):
+        """ () => TUPLE (UINT byte_offset, UINT byte_size)
+
+        Get the byte range set by set_sub_chunk().
+        """
+        cdef size_t byte_offset
+        cdef size_t byte_size
+        H5Pget_sub_chunk(self.id, &byte_offset, &byte_size)
+        return byte_offset, byte_size
+    ### {{endif}}
+
     ### {{if MPI}}
     def set_dxpl_mpio(self, int xfer_mode):
         """ Set the transfer mode for MPI I/O.
