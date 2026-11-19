@@ -210,3 +210,33 @@ def test_read_direct_chunk_sub_chunk(writable_file):
     dxpl.set_sub_chunk(60, 5)
     with pytest.raises(ValueError):
         dataset.id.read_direct_chunk((0, 0), dxpl=dxpl)
+
+
+@pytest.mark.skipif(
+    h5py.version.hdf5_version_tuple < (2, 4, 0),
+    reason="Direct chunk reads through a virtual dataset need HDF5 2.4",
+)
+def test_read_direct_chunk_virtual(tmp_path):
+    frames = numpy.arange(3 * 8 * 6, dtype='uint16').reshape(3, 8, 6)
+    layout = h5py.VirtualLayout(frames.shape, frames.dtype)
+    for index, frame in enumerate(frames):
+        with h5py.File(tmp_path / f'frame{index}.h5', 'w') as f:
+            f.create_dataset('data', data=frame, chunks=frame.shape, compression='gzip')
+        layout[index] = h5py.VirtualSource(f'frame{index}.h5', 'data', shape=frame.shape)
+    with h5py.File(tmp_path / 'vds.h5', 'w') as f:
+        f.create_virtual_dataset('data', layout)
+
+    dxpl = h5py.h5p.create(h5py.h5p.DATASET_XFER)
+    dxpl.set_sub_chunk(2, 5)
+    with h5py.File(tmp_path / 'vds.h5', 'r') as f:
+        dataset = f['data']
+        for index in range(len(frames)):
+            with h5py.File(tmp_path / f'frame{index}.h5', 'r') as source:
+                expected = source['data'].id.read_direct_chunk((0, 0))
+            assert dataset.id.read_direct_chunk((index, 0, 0)) == expected
+            _, chunk = dataset.id.read_direct_chunk((index, 0, 0), dxpl=dxpl)
+            assert chunk == expected[1][2:7]
+            info = dataset.id.get_chunk_info_by_coord((index, 0, 0))
+            assert info.size == len(expected[1])
+        with pytest.raises(RuntimeError, match="not the image of the first element"):
+            dataset.id.read_direct_chunk((0, 1, 0))
