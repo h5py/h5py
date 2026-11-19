@@ -569,7 +569,7 @@ cdef class DatasetID(ObjectID):
         cdef hsize_t *offset = NULL
         cdef int rank
         cdef uint32_t filters
-        cdef hsize_t chunk_bytes, out_bytes
+        cdef hsize_t chunk_bytes, out_bytes, stored_bytes
         cdef size_t buf_size
         cdef size_t sub_chunk_offset = 0
         cdef size_t sub_chunk_size = 0
@@ -590,19 +590,14 @@ cdef class DatasetID(ObjectID):
         offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
         try:
             convert_tuple(offsets, offset, rank)
-            H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
             ### {{if HDF5_VERSION >= (2, 4, 0)}}
             if dxpl is not None:
                 H5Pget_sub_chunk(dxpl_id, &sub_chunk_offset, &sub_chunk_size)
-                if sub_chunk_size > 0:
-                    if sub_chunk_offset + sub_chunk_size > chunk_bytes:
-                        raise ValueError(
-                            f"sub-chunk range {sub_chunk_offset}:"
-                            f"{sub_chunk_offset + sub_chunk_size} exceeds the "
-                            f"{chunk_bytes} byte chunk"
-                        )
-                    chunk_bytes = sub_chunk_size
             ### {{endif}}
+            if sub_chunk_size > 0:
+                chunk_bytes = sub_chunk_size
+            else:
+                H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
 
             if out is None:
                 retval = PyBytes_FromStringAndSize(NULL, chunk_bytes)
@@ -618,7 +613,18 @@ cdef class DatasetID(ObjectID):
 
             ### {{if HDF5_VERSION >= (2, 0, 0)}}
             buf_size = chunk_bytes
-            H5Dread_chunk2(dset_id, dxpl_id, offset, &filters, chunk_buffer, &buf_size)
+            try:
+                H5Dread_chunk2(dset_id, dxpl_id, offset, &filters, chunk_buffer, &buf_size)
+            except Exception:
+                if sub_chunk_size > 0:
+                    H5Dget_chunk_storage_size(dset_id, offset, &stored_bytes)
+                    if sub_chunk_offset + sub_chunk_size > stored_bytes:
+                        raise ValueError(
+                            f"sub-chunk range {sub_chunk_offset}:"
+                            f"{sub_chunk_offset + sub_chunk_size} exceeds the "
+                            f"{stored_bytes} byte chunk"
+                        ) from None
+                raise
             ### {{else}}
             H5Dread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
             ### {{endif}}
