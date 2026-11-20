@@ -11,6 +11,8 @@
     Tests the h5py.File object.
 """
 
+import numpy as np
+
 import h5py
 from h5py._hl.files import _drivers
 from h5py import File
@@ -212,6 +214,43 @@ class TestFileObj(TestCase):
                           driver='fileobj', mode='x')
         self.assertRaises(Exception, h5py.File, self,
                           driver='fileobj', mode='x')
+
+    def test_short_reads(self):
+        # File objects may return fewer bytes than requested from read()
+        # and readinto(); the rest of the request must still be read.
+        bio = io.BytesIO()
+        data = np.arange(100000, dtype='f8')
+        with h5py.File(bio, 'w') as f:
+            f.create_dataset('test', data=data)
+        raw = bio.getvalue()
+
+        class ShortReadinto(io.RawIOBase):
+            def __init__(self, raw):
+                self._bio = io.BytesIO(raw)
+            def readable(self):
+                return True
+            def seekable(self):
+                return True
+            def seek(self, *args):
+                return self._bio.seek(*args)
+            def tell(self):
+                return self._bio.tell()
+            def readinto(self, b):
+                return self._bio.readinto(memoryview(b)[:4096])
+
+        class ShortRead:
+            def __init__(self, raw):
+                self._bio = io.BytesIO(raw)
+            def seek(self, *args):
+                return self._bio.seek(*args)
+            def tell(self):
+                return self._bio.tell()
+            def read(self, size=-1):
+                return self._bio.read(min(size, 4096))
+
+        for fileobj in (ShortReadinto(raw), ShortRead(raw)):
+            with h5py.File(fileobj, 'r') as f:
+                np.testing.assert_array_equal(f['test'][:], data)
 
     def test_exception_read(self):
 

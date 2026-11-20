@@ -156,16 +156,34 @@ cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) exce
 
 cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1 with gil:
     cdef unsigned char[:] mview
+    cdef size_t done = 0
+    cdef size_t n
     (<object>f.fileobj).seek(addr)
+    # A file object may return fewer bytes than requested, so keep reading
+    # until the buffer is full or the end of the file is reached.
     if hasattr(<object>f.fileobj, 'readinto'):
         mview = <unsigned char[:size]>(buf)
-        (<object>f.fileobj).readinto(mview)
+        while done < size:
+            n = (<object>f.fileobj).readinto(mview[done:]) or 0
+            if n == 0:
+                break
+            if n > size - done:
+                raise ValueError("readinto() returned more bytes than requested")
+            done += n
     else:
-        b = (<object>f.fileobj).read(size)
-        if <size_t>len(b) == size:
-            memcpy(buf, <unsigned char *>b, size)
-        else:
-            return 1
+        while done < size:
+            b = (<object>f.fileobj).read(size - done)
+            n = len(b)
+            if n == 0:
+                break
+            if n > size - done:
+                raise ValueError("read() returned more bytes than requested")
+            memcpy(<unsigned char *>buf + done, <unsigned char *>b, n)
+            done += n
+    if done < size:
+        # Like the sec2 driver, read zeros past the end of the file rather
+        # than leaving whatever was in the buffer.
+        memset(<unsigned char *>buf + done, 0, size - done)
     return 0
 
 cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1 with gil:
