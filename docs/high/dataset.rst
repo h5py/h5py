@@ -109,6 +109,16 @@ Broadcasting is implemented using repeated hyperslab selections, and is
 safe to use with very large target selections.  It is supported for the above
 "simple" (integer, slice and ellipsis) slicing only.
 
+To update values in an existing file, open it in ``r+`` mode and assign
+directly to a selection on the dataset::
+
+    with h5py.File('measurements.h5', 'r+') as f:
+        readings = f['readings']
+        readings[0:2] = [10, 20]
+
+This updates the first two values of an existing one-dimensional dataset
+without recreating it or changing its attributes, shape, or data type.
+
 .. warning::
    Currently h5py does not support nested compound types, see :issue:`1197` for
    more information.
