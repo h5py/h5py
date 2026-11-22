@@ -116,6 +116,7 @@ hdf5:
   herr_t H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf) nogil
   herr_t H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_nbytes) nogil
   herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf) nogil
+  2.0.0 herr_t H5Dread_chunk2(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf, size_t *buf_size) nogil
 
   # Chunk query functions
   herr_t H5Dget_num_chunks(hid_t dset_id, hid_t fspace_id, hsize_t *nchunks)
@@ -378,6 +379,9 @@ hdf5:
   herr_t H5Pget_virtual_printf_gap(hid_t plist_id, hsize_t *gap_size)
   ssize_t H5Pget_virtual_prefix(hid_t dapl_id, char *prefix, ssize_t size)
   herr_t H5Pset_virtual_prefix(hid_t dapl_id, char *prefix)
+
+  2.4.0 herr_t H5Pset_sub_chunk(hid_t plist_id, size_t byte_offset, size_t byte_size)
+  2.4.0 herr_t H5Pget_sub_chunk(hid_t plist_id, size_t *byte_offset, size_t *byte_size)
 
   MPI herr_t H5Pset_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode )
   MPI herr_t H5Pget_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t* xfer_mode )

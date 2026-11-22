@@ -558,6 +558,10 @@ cdef class DatasetID(ObjectID):
         If the `out` argument is not None, it must be a writeable
         contiguous 1D array-like of bytes (e.g., `bytearray` or
         `numpy.ndarray`) and large enough to contain the whole chunk.
+
+        With HDF5 2.4 or later, a `dxpl` with a byte range set by
+        `PropDXID.set_sub_chunk` reads only that range of the stored chunk,
+        and `out` need only hold the range.
         """
         cdef hid_t dset_id
         cdef hid_t dxpl_id
@@ -565,7 +569,10 @@ cdef class DatasetID(ObjectID):
         cdef hsize_t *offset = NULL
         cdef int rank
         cdef uint32_t filters
-        cdef hsize_t chunk_bytes, out_bytes
+        cdef hsize_t chunk_bytes, out_bytes, stored_bytes
+        cdef size_t buf_size
+        cdef size_t sub_chunk_offset = 0
+        cdef size_t sub_chunk_size = 0
         cdef int nb_offsets = len(offsets)
         cdef void * chunk_buffer
 
@@ -583,7 +590,14 @@ cdef class DatasetID(ObjectID):
         offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
         try:
             convert_tuple(offsets, offset, rank)
-            H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
+            ### {{if HDF5_VERSION >= (2, 4, 0)}}
+            if dxpl is not None:
+                H5Pget_sub_chunk(dxpl_id, &sub_chunk_offset, &sub_chunk_size)
+            ### {{endif}}
+            if sub_chunk_size > 0:
+                chunk_bytes = sub_chunk_size
+            else:
+                H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
 
             if out is None:
                 retval = PyBytes_FromStringAndSize(NULL, chunk_bytes)
@@ -597,7 +611,23 @@ cdef class DatasetID(ObjectID):
                 retval = memoryview(out[:chunk_bytes])
                 chunk_buffer = &out[0]
 
+            ### {{if HDF5_VERSION >= (2, 0, 0)}}
+            buf_size = chunk_bytes
+            try:
+                H5Dread_chunk2(dset_id, dxpl_id, offset, &filters, chunk_buffer, &buf_size)
+            except Exception:
+                if sub_chunk_size > 0:
+                    H5Dget_chunk_storage_size(dset_id, offset, &stored_bytes)
+                    if sub_chunk_offset + sub_chunk_size > stored_bytes:
+                        raise ValueError(
+                            f"sub-chunk range {sub_chunk_offset}:"
+                            f"{sub_chunk_offset + sub_chunk_size} exceeds the "
+                            f"{stored_bytes} byte chunk"
+                        ) from None
+                raise
+            ### {{else}}
             H5Dread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
+            ### {{endif}}
         finally:
             efree(offset)
 
