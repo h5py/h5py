@@ -22,6 +22,14 @@ import numpy as np
 import logging
 from multiprocessing import Process, Event
 
+
+def configure_logging():
+    logging.basicConfig(
+        format='%(levelname)10s  %(asctime)s  %(name)10s  %(message)s',
+        level=logging.INFO,
+    )
+
+
 class SwmrReader(Process):
     def __init__(self, event, fname, dsetname, timeout = 2.0):
         super().__init__()
@@ -31,6 +39,7 @@ class SwmrReader(Process):
         self._timeout = timeout
 
     def run(self):
+        configure_logging()
         self.log = logging.getLogger('reader')
         self.log.info("Waiting for initial event")
         assert self._event.wait( self._timeout )
@@ -60,6 +69,7 @@ class SwmrWriter(Process):
         self._dsetname = dsetname
 
     def run(self):
+        configure_logging()
         self.log = logging.getLogger('writer')
         self.log.info("Creating file %s", self._fname)
         f = h5py.File(self._fname, 'w', libver='latest')
@@ -91,7 +101,7 @@ class SwmrWriter(Process):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(levelname)10s  %(asctime)s  %(name)10s  %(message)s',level=logging.INFO)
+    configure_logging()
     fname = 'swmrmp.h5'
     dsetname = 'data'
     if len(sys.argv) > 1:
@@ -105,7 +115,7 @@ if __name__ == "__main__":
 
     logging.info("Starting reader")
     reader.start()
-    logging.info("Starting reader")
+    logging.info("Starting writer")
     writer.start()
 
     logging.info("Waiting for writer to finish")
