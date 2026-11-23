@@ -92,6 +92,35 @@ the first dimension scale whose name matches the string is the one that will be
 returned. There is no guarantee that the name of the dimension scale is unique.
 
 
+Selecting data using a scale
+----------------------------
+
+An attached scale records coordinates for an axis, such as timestamps for
+the rows of a time series. Attaching it does not change how the data is
+indexed. To select by coordinate, read the scale, compare its values and
+use the resulting boolean mask to index the data along that axis.
+
+For example, this selects the observations at times of 20 seconds or later:
+
+.. code-block:: python
+
+    import h5py
+
+    with h5py.File("series.h5", "w", driver="core", backing_store=False) as f:
+        readings = f.create_dataset("readings", data=[[1, 2], [3, 4], [5, 6]])
+        time = f.create_dataset("time", data=[10, 20, 30])
+        time.make_scale("seconds")
+        readings.dims[0].label = "time"
+        readings.dims[0].attach_scale(time)
+
+        timestamps = readings.dims[0]["seconds"][:]
+        selected = readings[timestamps >= 20, :]
+
+    print(selected.tolist())  # [[3, 4], [5, 6]]
+
+Make sure the scale has one value per row before using it as a mask. HDF5
+does not require attached scales to match the length of the axis.
+
 
 Nested dimension scales are not permitted: if a dataset has a dimension scale
 attached to it, converting the dataset to a dimension scale will fail, since the
