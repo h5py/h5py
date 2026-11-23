@@ -434,6 +434,21 @@ possible to adjust the behavior of the chunk *cache* when opening the file.
 The parameters controlling this behavior are prefixed by ``rdcc``, for *raw data
 chunk cache*. They apply to all datasets unless specifically changed for each one.
 
+The raw data chunk cache is associated with an open dataset. Keep a reference
+to that dataset while reading overlapping slices:
+
+.. code-block:: python
+
+    with h5py.File("observations.h5", "r") as f:
+        readings = f["readings"]
+        first = readings[:100]
+        second = readings[50:150]
+
+Repeatedly evaluating ``f["readings"][...]`` can open and close the dataset
+between reads, discarding its cached chunks even while the file stays open.
+Reusing the open dataset allows overlapping reads to use chunks that are
+still in its cache.
+
 * ``rdcc_nbytes`` sets the total size (measured in bytes) of the raw data chunk
   cache for each dataset. The default size is 1 MiB for HDF5 before 2.0 and 8
   MiB for HDF5 2.0 and later.
