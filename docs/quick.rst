@@ -24,6 +24,36 @@ the GUI package manager or::
 
 To install from source see :ref:`install`.
 
+Inspect an existing file
+------------------------
+
+Open an existing HDF5 file in read-only mode (``"r"``) to see what it
+contains. The file acts as the root group. Use ``keys()`` to list its direct
+children, or ``visititems()`` to walk the hierarchy and inspect each object.
+
+.. code-block:: python
+
+    import h5py
+
+    def describe(name, obj):
+        if isinstance(obj, h5py.Dataset):
+            print(name, obj.shape, obj.dtype)
+        else:
+            print(name, "(group)")
+
+    with h5py.File("observations.h5", "r") as f:
+        print(list(f.keys()))
+        f.visititems(describe)
+        dataset = f["measurements/signal"]
+        first_samples = dataset[:10]
+
+This example assumes that the listing shows a dataset at
+``measurements/signal``. Substitute the path you want to read. ``shape``
+and ``dtype`` describe the dataset before you read any values. The
+slice reads only the first ten entries along the first axis. For a scalar
+dataset, use ``dataset[()]`` to read its value.
+
+
 Core concepts
 -------------
 
