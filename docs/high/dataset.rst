@@ -626,6 +626,49 @@ Reference
        The two 'space' members are low-level
        :class:`SpaceID <low:h5py.h5s.SpaceID>` objects.
 
+       ``vspace`` describes the virtual side of a mapping. Its ``shape`` is
+       the dataspace extent, which can be larger than the selected region.
+       This example uses finite, non-empty hyperslab selections. In these
+       cases, ``get_select_bounds()`` returns the inclusive lower and upper
+       corners of a bounding box. The box can include unselected points.
+       Check the selection type before inspecting its details; for these
+       hyperslabs, ``get_select_hyper_blocklist()`` lists the selected blocks.
+
+       This example creates a contiguous mapping and a strided mapping::
+
+           import tempfile
+           from pathlib import Path
+           import h5py
+
+           with tempfile.TemporaryDirectory() as directory:
+               path = Path(directory) / "example.h5"
+               with h5py.File(path, "w") as f:
+                   source = f.create_dataset("source", data=[0, 1, 2, 3])
+                   for name, selection in (
+                       ("contiguous", slice(2, 6)),
+                       ("strided", slice(0, 8, 2)),
+                   ):
+                       layout = h5py.VirtualLayout(shape=(8,), dtype="i8")
+                       layout[selection] = h5py.VirtualSource(source)
+                       f.create_virtual_dataset(name, layout)
+
+               with h5py.File(path, "r") as f:
+                   for name in ("contiguous", "strided"):
+                       space = f[name].virtual_sources()[0].vspace
+                       assert space.select_valid()
+                       if space.get_select_type() == h5py.h5s.SEL_HYPERSLABS:
+                           print(name, space.shape, space.get_select_bounds(),
+                                 space.get_select_npoints())
+                           print(space.get_select_hyper_blocklist().tolist())
+
+       The output shows that the strided selection has four points even though
+       its bounding box spans seven positions::
+
+           contiguous (8,) ((2,), (5,)) 4
+           [[[2], [5]]]
+           strided (8,) ((0,), (6,)) 4
+           [[[0], [0]], [[2], [2]], [[4], [4]], [[6], [6]]]
+
     .. attribute:: shape
 
         NumPy-style shape tuple giving dataset dimensions.
