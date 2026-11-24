@@ -95,9 +95,9 @@ Dataset monitor with inotify
 
 The inotify example demonstrates how to use SWMR in a reading application which
 monitors live progress as a dataset is being written by another process. This
-example uses the the linux inotify
-(`pyinotify <https://pypi.python.org/pypi/pyinotify>`_ python bindings) to
-receive a signal each time the target file has been updated.
+example uses Linux inotify via the `watchdog <https://pypi.org/project/watchdog/>`_
+package to receive a signal each time the target file has been updated. Install
+watchdog with ``python -m pip install watchdog`` before running the example.
 
 .. literalinclude:: ../examples/swmr_inotify_example.py
 
