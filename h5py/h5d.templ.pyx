@@ -548,6 +548,12 @@ cdef class DatasetID(ObjectID):
         Returns a tuple containing the `filter_mask` and the raw data
         storing this chunk as bytes if `out` is None, else as a memoryview.
 
+        The chunk must have allocated storage. To check before reading, call
+        ``get_chunk_info_by_coord(tuple(offsets))`` on this dataset ID and check
+        that the returned ``byte_offset`` is not ``None``. For an unallocated
+        chunk, use regular dataset slicing if you need the dataset's fill
+        values.
+
         `filter_mask` is a bit field of up to 32 values. It records which
         filters have been applied to this chunk, of the filter pipeline
         defined for that dataset. Each bit set to `1` means that the filter
