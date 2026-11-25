@@ -22,7 +22,7 @@ from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
 from ..h5py_warnings import H5pyDeprecationWarning
 from .base import (
     array_for_new_object, cached_property, Empty, find_item_type, HLObject,
-    phil, product, with_phil,
+    phil, product, STR_TYPES, with_phil,
 )
 from . import filters
 from . import selections as sel
@@ -1062,7 +1062,7 @@ class Dataset(HLObject):
                     val = val.view(cast_dtype).reshape(cast_shape)
         elif (self.dtype.kind == 'S'
               and (h5t.check_string_dtype(self.dtype).encoding == 'utf-8')
-              and (find_item_type(val) is str)
+              and (find_item_type(val) in STR_TYPES)
         ):
             # Writing str objects to a fixed-length UTF-8 string dataset.
             # Numpy's normal conversion only handles ASCII characters, but

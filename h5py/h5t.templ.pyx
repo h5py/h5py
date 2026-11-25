@@ -1852,6 +1852,14 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
 
             return PYTHON_OBJECT
 
+        # Fixed-width unicode
+        elif kind == c'U':
+            raise TypeError(
+                "HDF5 has no equivalent of NumPy's fixed-width unicode dtype "
+                '(got "%r"). Convert arrays with arr.astype(h5py.string_dtype()) and '
+                "scalars with str() to store variable-length strings." % (dt,)
+            )
+
         # Unrecognized
         else:
             raise TypeError("No conversion path for dtype: %s" % repr(dt))

@@ -38,6 +38,10 @@ def is_hdf5(fname):
         return False
 
 
+# A future NumPy may give StringDType elements their own str subclass
+STR_TYPES = {str, getattr(getattr(np.dtypes, "StringDType", None), "type", str)}
+
+
 def find_item_type(data):
     """Find the item type of a simple object or collection of objects.
 
@@ -85,7 +89,7 @@ def guess_dtype(data):
 
         if item_type is bytes:
             return h5t.string_dtype(encoding='ascii')
-        if item_type is str:
+        if item_type in STR_TYPES:
             return h5t.string_dtype()
 
         return None
