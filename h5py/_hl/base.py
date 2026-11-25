@@ -39,7 +39,10 @@ def is_hdf5(fname):
 
 
 # A future NumPy may give StringDType elements their own str subclass
-STR_TYPES = {str, getattr(getattr(np.dtypes, "StringDType", None), "type", str)}
+try:
+    STR_TYPES = {str, np.dtypes.StringDType.type}
+except AttributeError:
+    STR_TYPES = {str}
 
 
 def find_item_type(data):
